@@ -1,16 +1,274 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="0; url=frv-menu-cliente.html">
-    <title>FRV Catacaos — Carta de Bebidas</title>
-    <link rel="canonical" href="frv-menu-cliente.html">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FRV Catacaos — Carta de Bebidas | Menú Digital</title>
+<meta name="description" content="FRV Catacaos - Carta de bebidas digital. Pide desde tu mesa: Pisco Sour, Chilcano, Mojito, Cervezas Cristal, Pilsen y más. Envío directo a tu anfitriona por WhatsApp.">
+<meta name="keywords" content="FRV Catacaos, carta de bebidas, pisco sour, chilcano, mojito, cerveza cristal, pilsen, cusqueña, bar, tragos, shots, menú digital">
+<meta name="author" content="FRV Producciones">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fundorioverde.netlify.app/">
+<meta property="og:title" content="FRV Catacaos — Carta de Bebidas">
+<meta property="og:description" content="Pide desde tu mesa: Pisco Sour, Chilcano, Cervezas y más. Envío directo a tu anfitriona por WhatsApp.">
+<meta property="og:image" content="https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=1200&h=630&fit=crop">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://frvcatacaos.com/menu">
+<meta property="twitter:title" content="FRV Catacaos — Carta de Bebidas">
+<meta property="twitter:description" content="Pide desde tu mesa: Pisco Sour, Chilcano, Cervezas y más. Envío directo a tu anfitriona por WhatsApp.">
+<meta property="twitter:image" content="https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=1200&h=630&fit=crop">
+
+<!-- Canonical URL -->
+<link rel="canonical" href="https://fundorioverde.netlify.app/">
+
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="frv-menu.css">
+
+<!-- Structured Data for SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "FRV Catacaos",
+  "description": "Carta de bebidas digital con envío directo a tu anfitriona por WhatsApp",
+  "url": "https://fundorioverde.netlify.app/",
+  "servesCuisine": "Bebidas y Tragos",
+  "hasMenu": {
+    "@type": "Menu",
+    "name": "Carta de Bebidas",
+    "hasMenuSection": [
+      {
+        "@type": "MenuSection",
+        "name": "Tragos",
+        "hasMenuItem": [
+          {"@type": "MenuItem", "name": "Pisco Sour", "price": "18", "priceCurrency": "PEN"},
+          {"@type": "MenuItem", "name": "Chilcano", "price": "15", "priceCurrency": "PEN"},
+          {"@type": "MenuItem", "name": "Mojito", "price": "16", "priceCurrency": "PEN"}
+        ]
+      },
+      {
+        "@type": "MenuSection",
+        "name": "Cervezas",
+        "hasMenuItem": [
+          {"@type": "MenuItem", "name": "Cristal", "price": "8", "priceCurrency": "PEN"},
+          {"@type": "MenuItem", "name": "Pilsen", "price": "8", "priceCurrency": "PEN"},
+          {"@type": "MenuItem", "name": "Cusqueña", "price": "10", "priceCurrency": "PEN"}
+        ]
+      }
+    ]
+  }
+}
+</script>
+
 </head>
 <body>
-    <p>Redirigiendo al menú...</p>
-    <script>
-        window.location.href = 'frv-menu-cliente.html';
-    </script>
+
+<!-- WATER EFFECT BACKGROUND -->
+<div class="water-bg">
+  <div class="water-wave"></div>
+  <div class="water-wave"></div>
+  <div class="water-wave"></div>
+</div>
+
+<!-- MIKES EFFECT -->
+<div class="mikes-container">
+  <div class="mike"></div>
+  <div class="mike"></div>
+  <div class="mike"></div>
+  <div class="mike"></div>
+  <div class="mike"></div>
+  <div class="mike"></div>
+  <div class="mike"></div>
+  <div class="mike"></div>
+</div>
+
+<header>
+  <div class="header-brand">
+    <div class="waves">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+    <div class="brand-logo">
+      <div class="brand-frv">F<span>R</span>V</div>
+      <div class="brand-sub">Catacaos</div>
+    </div>
+  </div>
+  <div class="mesa-tag" id="mesaTag">⚡ MESA 7</div>
+</header>
+
+<!-- MESA SELECTOR -->
+<div class="mesa-selector" id="mesaSelector">
+  <div class="mesa-selector-content">
+    <h3>🪑 Selecciona tu Mesa</h3>
+    <div class="mesa-grid" id="mesaGrid"></div>
+    <button class="mesa-confirm-btn" onclick="confirmarMesa()">Confirmar Mesa</button>
+  </div>
+</div>
+
+<div class="hero">
+  <svg class="hero-rays" viewBox="0 0 300 300" fill="none">
+    <g transform="translate(150,150)">
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#F5C800" stroke-width="3" stroke-linecap="round"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#F5C800" stroke-width="3" stroke-linecap="round" transform="rotate(30)"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#D4006A" stroke-width="3" stroke-linecap="round" transform="rotate(60)"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#00848A" stroke-width="3" stroke-linecap="round" transform="rotate(90)"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#F5C800" stroke-width="3" stroke-linecap="round" transform="rotate(120)"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#D4006A" stroke-width="3" stroke-linecap="round" transform="rotate(150)"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#00848A" stroke-width="3" stroke-linecap="round" transform="rotate(180)"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#F5C800" stroke-width="3" stroke-linecap="round" transform="rotate(210)"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#D4006A" stroke-width="3" stroke-linecap="round" transform="rotate(240)"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#00848A" stroke-width="3" stroke-linecap="round" transform="rotate(270)"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#F5C800" stroke-width="3" stroke-linecap="round" transform="rotate(300)"/>
+      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#D4006A" stroke-width="3" stroke-linecap="round" transform="rotate(330)"/>
+    </g>
+  </svg>
+
+  <h1>
+    <div class="line-yellow">CARTA DE</div>
+    <div class="line-white">BEBIDAS</div>
+  </h1>
+  <div class="hero-sub">Pedí y pagá desde tu mesa · <span>FRV Catacaos</span></div>
+</div>
+
+<div class="cats" id="catsBar">
+  <div class="cat-pill active" onclick="filterCat('all',this)">TODO</div>
+  <div class="cat-pill" onclick="filterCat('cervezas',this)">🍺 CERVEZAS</div>
+  <div class="cat-pill" onclick="filterCat('tragos',this)">🍹 TRAGOS</div>
+  <div class="cat-pill" onclick="filterCat('shots',this)">🥃 SHOTS</div>
+  <div class="cat-pill" onclick="filterCat('sin-alcohol',this)">🧃 SIN ALCOHOL</div>
+</div>
+
+<div id="menuContainer"></div>
+
+<!-- SALUDOS AL ANIMADOR - EN CARTA -->
+<div class="animador-carta-section">
+  <div class="animador-carta-label">🎤 ¿Quieres saludar al Animador?</div>
+  <div class="animador-carta-card" onclick="enviarSaludoAnimador()">
+    <div class="animador-carta-avatar">
+      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="Yaruc" onerror="this.parentElement.innerHTML='🎤'">
+    </div>
+    <div class="animador-carta-info">
+      <div class="animador-carta-name">Yaruc</div>
+      <div class="animador-carta-role">Animador Principal</div>
+    </div>
+    <div class="animador-carta-action">
+      <span>Enviar Saludo</span>
+      <span class="whatsapp-icon">💬</span>
+    </div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- CART FLOAT -->
+<button class="cart-float" id="cartBtn" onclick="toggleCart()">
+  🛒 VER MI PEDIDO
+  <span class="cart-count" id="cartCount">0</span>
+</button>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="toggleCart()"></div>
+
+<!-- CART SHEET -->
+<div class="cart-sheet" id="cartSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-top">
+    <div class="sheet-title">MI <span>PEDIDO</span></div>
+  </div>
+
+  <div id="cartItems"></div>
+
+  <div class="cart-total">
+    <div class="cart-total-label">Total</div>
+    <div class="cart-total-val" id="cartTotal">S/ 0.00</div>
+  </div>
+
+  <textarea class="note-input" id="orderNote" rows="2" placeholder="Alguna aclaración para el barman..."></textarea>
+
+  <!-- ANFITRIONA SELECTOR -->
+  <div class="anfitriona-section">
+    <div class="anfitriona-label">👩‍💼 Selecciona tu Anfitriona</div>
+    <div class="anfitriona-list" id="anfitrionaList">
+      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51924996961">
+        <div class="anfitriona-avatar">
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" alt="María García" onerror="this.parentElement.innerHTML='👩'">
+        </div>
+        <div class="anfitriona-info">
+          <div class="anfitriona-name">María García</div>
+          <div class="anfitriona-role">Anfitriona Principal</div>
+        </div>
+        <div class="anfitriona-check">✓</div>
+      </div>
+      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51912345678')" data-phone="51912345678">
+        <div class="anfitriona-avatar">
+          <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" alt="Ana Rodríguez" onerror="this.parentElement.innerHTML='👩'">
+        </div>
+        <div class="anfitriona-info">
+          <div class="anfitriona-name">Ana Rodríguez</div>
+          <div class="anfitriona-role">Anfitriona VIP</div>
+        </div>
+        <div class="anfitriona-check">✓</div>
+      </div>
+      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51998877665')" data-phone="51998877665">
+        <div class="anfitriona-avatar">
+          <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" alt="Laura Martínez" onerror="this.parentElement.innerHTML='👩'">
+        </div>
+        <div class="anfitriona-info">
+          <div class="anfitriona-name">Laura Martínez</div>
+          <div class="anfitriona-role">Anfitriona Premium</div>
+        </div>
+        <div class="anfitriona-check">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pm-label">Forma de pago</div>
+  <div class="payment-methods">
+    <div class="pm selected" onclick="selectPM(this)">
+      <span class="pm-icon">💳</span>TARJETA
+    </div>
+    <div class="pm" onclick="selectPM(this)">
+      <span class="pm-icon">📱</span>YAPE
+    </div>
+    <div class="pm" onclick="selectPM(this)">
+      <span class="pm-icon">💜</span>PLIN
+    </div>
+    <div class="pm" onclick="selectPM(this)">
+      <span class="pm-icon">💵</span>EFECTIVO
+    </div>
+  </div>
+
+  <button class="pay-btn" onclick="placeOrder()">
+    ⚡ Confirmar Pedido
+  </button>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="success-modal" id="successModal">
+  <div class="success-waves">
+    <div class="sw-bar"></div><div class="sw-bar"></div><div class="sw-bar"></div>
+    <div class="sw-bar"></div><div class="sw-bar"></div><div class="sw-bar"></div>
+    <div class="sw-bar"></div>
+  </div>
+  <h2>¡Pedido Enviado!</h2>
+  <p>Tu pedido fue enviado al bar de FRV.<br>Lo están preparando ahora mismo 🎉</p>
+  <div class="order-chip">
+    <small>Número de pedido</small>
+    <span>#<span id="orderNum">---</span></span>
+  </div>
+</div>
+
+<script src="frv-menu.js"></script>
+
 </body>
 </html>
