@@ -229,12 +229,50 @@ xdg-open frv-menu-cliente.html
 
 ### Opción 3: Despliegue en Netlify
 
+#### Paso 1: Preparar el proyecto
 ```bash
-# Instalar Netlify CLI (opcional)
-npm install -g netlify-cli
+# Clonar o descargar el repositorio
+git clone <tu-repositorio>
+cd FRV-Catacaos-Carta-Pedidos
+```
 
-# Desplegar
-netlify deploy --prod --dir=.
+#### Paso 2: Instalar Netlify CLI (opcional)
+```bash
+npm install -g netlify-cli
+```
+
+#### Paso 3: Desplegar
+```bash
+# Iniciar sesión en Netlify
+netlify login
+
+# Inicializar sitio
+netlify init
+
+# Desplegar a producción
+netlify deploy --prod
+```
+
+#### Paso 4: Configurar Variables de Entorno (si es necesario)
+En el dashboard de Netlify:
+1. Ve a **Site settings** > **Environment variables**
+2. Agrega las variables necesarias
+
+#### Paso 5: Verificar URLs
+Después del despliegue, tendrás:
+- **Menú del cliente:** `https://tu-sitio.netlify.app/`
+- **Panel de administración:** `https://tu-sitio.netlify.app/panel-bar.html`
+- **API de pedidos:** `https://tu-sitio.netlify.app/api/orders`
+- **Stream en tiempo real:** `https://tu-sitio.netlify.app/api/orders/stream`
+
+### Estructura de Netlify Functions
+```
+netlify/
+└── functions/
+    ├── orders.js          # API de pedidos (POST/GET/PUT)
+    ├── orders-stream.js   # Server-Sent Events (tiempo real)
+    └── utils/
+        └── store.js       # Almacenamiento compartido
 ```
 
 ---
@@ -281,30 +319,33 @@ netlify deploy --prod --dir=.
 
 ### Para Administradores
 
-#### Panel de Administración
-El sistema envía los pedidos a una API REST que puede ser consumida por un panel de administración:
+#### Panel de Administración en Tiempo Real
+El sistema incluye un panel de administración completo con actualizaciones en tiempo real:
 
-```javascript
-// Estructura del pedido enviado
-{
-  mesa: "7",
-  items: [
-    {
-      name: "Cristal",
-      emoji: "🍺",
-      qty: 2,
-      price: 8,
-      total: 16,
-      cat: "cervezas"
-    }
-  ],
-  note: "Bien fría por favor",
-  paymentMethod: "💳 TARJETA",
-  total: 34,
-  anfitriona: "María García",
-  anfitrionaPhone: "51924996961"
-}
-```
+**Acceso:** `https://tu-sitio.netlify.app/panel-bar.html`
+
+**Características del Panel:**
+- 🔄 **Actualizaciones en tiempo real** via Server-Sent Events (SSE)
+- 📊 **Estadísticas en vivo:** Pedidos pendientes, preparando, completados y recaudación
+- 🎯 **Gestión de pedidos:** Cambiar estado de pedidos (pendiente → preparando → listo → completado)
+- 📋 **Feed de actividad:** Historial de todos los eventos en tiempo real
+- 🔔 **Notificaciones:** Sonido y notificaciones visuales para nuevos pedidos
+- 📈 **Reportes:** Ventas por mesa, anfitriona, método de pago y productos
+- 🔌 **Botón de prueba:** Verificar conexión con la API
+
+**Flujo de Pedidos:**
+1. Cliente realiza pedido desde el menú digital
+2. Pedido aparece automáticamente en el panel (sin recargar página)
+3. Barista cambia estado a "Preparando"
+4. Al terminar, cambia estado a "Listo"
+5. Cliente retira pedido, se marca como "Completado"
+
+**Conexión en Tiempo Real:**
+El panel se conecta al endpoint `/api/orders/stream` usando Server-Sent Events. Recibe:
+- Nuevos pedidos instantáneamente
+- Actualizaciones de estado
+- Estadísticas actualizadas
+- Notificaciones de conexión/desconexión
 
 #### Reportes de Ventas
 Los reportes se almacenan en `localStorage` bajo la clave `frv_sales_report`:
@@ -397,14 +438,12 @@ Modifica las variables CSS en `frv-menu.css`:
 
 ## 🔌 API
 
-### Endpoint de Pedidos
+### Endpoints Disponibles
 
-**POST** `/api/orders`
+#### **POST** `/api/orders`
+Crea un nuevo pedido.
 
-Envía un nuevo pedido al panel de administración.
-
-#### Request Body
-
+**Request Body:**
 ```json
 {
   "mesa": "7",
@@ -426,15 +465,60 @@ Envía un nuevo pedido al panel de administración.
 }
 ```
 
-#### Response (200 OK)
-
+**Response (201 Created):**
 ```json
 {
-  "id": "order_1234567890",
-  "status": "received",
+  "id": "order_1001",
+  "mesa": "7",
+  "items": [...],
+  "status": "pending",
+  "createdAt": "2024-01-15T20:30:00.000Z",
+  "updatedAt": "2024-01-15T20:30:00.000Z"
+}
+```
+
+#### **GET** `/api/orders`
+Obtiene lista de pedidos.
+
+**Query Parameters:**
+- `status` - Filtrar por estado (pending, preparing, ready, completed)
+- `limit` - Limitar cantidad de resultados
+
+**Response (200 OK):**
+```json
+{
+  "orders": [...],
+  "total": 10,
+  "stats": {
+    "pending": 3,
+    "preparing": 2,
+    "completed": 5,
+    "revenue": 450
+  },
   "timestamp": "2024-01-15T20:30:00.000Z"
 }
 ```
+
+#### **PUT** `/api/orders`
+Actualiza estado de un pedido.
+
+**Request Body:**
+```json
+{
+  "orderId": "order_1001",
+  "status": "preparing"
+}
+```
+
+#### **GET** `/api/orders/stream`
+Server-Sent Events para actualizaciones en tiempo real.
+
+**Eventos SSE:**
+- `connected` - Conexión establecida
+- `new_order` - Nuevo pedido recibido
+- `order_updated` - Pedido actualizado
+- `stats` - Estadísticas actualizadas
+- `ping` - Keep-alive
 
 ### Fallback a LocalStorage
 

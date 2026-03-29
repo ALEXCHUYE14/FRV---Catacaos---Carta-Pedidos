@@ -311,7 +311,7 @@ function sendWhatsApp(phone) {
 }
 
 // ── SEND TO API SERVER ──────────────────────────
-const API_URL = 'https://frv-api.netlify.app'; // Cambiar por tu URL de API
+const API_URL = 'https://frv-api.netlify.app'; // URL de la API
 
 async function sendToAdminPanel() {
   const items = Object.values(cart);
@@ -348,14 +348,16 @@ async function sendToAdminPanel() {
     
     if (response.ok) {
       const savedOrder = await response.json();
-      console.log('Pedido enviado a API:', savedOrder);
+      console.log('✅ Pedido enviado a API:', savedOrder);
+      // Guardar también en localStorage como respaldo
+      sendToLocalStorage(orderData);
     } else {
-      console.error('Error al enviar pedido a API');
+      console.error('❌ Error al enviar pedido a API:', response.status);
       // Fallback a localStorage si la API falla
       sendToLocalStorage(orderData);
     }
   } catch (error) {
-    console.error('Error de conexión con API:', error);
+    console.error('❌ Error de conexión con API:', error);
     // Fallback a localStorage si la API no está disponible
     sendToLocalStorage(orderData);
   }

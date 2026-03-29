@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FRV Catacaos — Panel de Bar</title>
+<meta property="og:url" content="https://frv-api.netlify.app/panel-bar.html">
+<meta name="description" content="Panel de administración FRV Catacaos - Control de pedidos y ventas en tiempo real">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;800;900&family=DM+Mono:wght@400;500&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="frv-panel.css">
+<style>
+/* Estilos adicionales para el panel */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.connection-status.connected {
+  background: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.connection-status.disconnected {
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+}
+
+.connection-status.connecting {
+  background: rgba(255, 200, 0, 0.1);
+  color: #ffc800;
+  border: 1px solid rgba(255, 200, 0, 0.3);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.connection-status.connected .status-dot {
+  background: #00ff88;
+  box-shadow: 0 0 10px #00ff88;
+}
+
+.connection-status.disconnected .status-dot {
+  background: #ff4444;
+  box-shadow: 0 0 10px #ff4444;
+}
+
+.connection-status.connecting .status-dot {
+  background: #ffc800;
+  box-shadow: 0 0 10px #ffc800;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: white;
+  font-family: 'Exo 2', sans-serif;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  animation: slideIn 0.3s ease-out;
+  max-width: 350px;
+}
+
+.notification.success {
+  border-color: rgba(0, 255, 136, 0.5);
+}
+
+.notification.error {
+  border-color: rgba(255, 68, 68, 0.5);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notification-message {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.notification-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.notification-close:hover {
+  color: white;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="brand">
+        <div class="waves">
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+        <div>
+          <div class="brand-name">F<span>R</span>V</div>
+          <div class="brand-sub">Catacaos — Panel Bar</div>
+        </div>
+      </div>
+      <div class="live-pill">
+        <div class="live-dot"></div>
+        EN VIVO
+      </div>
+      <div class="connection-status connecting" id="connectionStatus">
+        <div class="status-dot"></div>
+        <span id="connectionText">Conectando...</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span style="color:var(--teal);font-family:'Exo 2',sans-serif;font-size:12px;font-weight:700;">🎵 NOCHE EN CURSO</span>
+      <span class="clock" id="clock">--:--</span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- SIDEBAR STATS -->
+    <div class="sidebar">
+      <div class="sidebar-section">Esta Noche</div>
+
+      <div class="stat-box">
+        <div class="stat-num" id="s-pending">0</div>
+        <div class="stat-label">⏳ Pendientes</div>
+      </div>
+
+      <div class="stat-box magenta">
+        <div class="stat-num" id="s-preparing">0</div>
+        <div class="stat-label">⚡ Preparando</div>
+      </div>
+
+      <div class="stat-box green">
+        <div class="stat-num" id="s-done">0</div>
+        <div class="stat-label">✅ Completados</div>
+      </div>
+
+      <div class="stat-box teal">
+        <div class="stat-num" id="s-revenue" style="font-size:24px;">S/ 0</div>
+        <div class="stat-label">💰 Recaudado</div>
+      </div>
+
+      <div class="sidebar-section" style="margin-top:6px;">Acciones</div>
+
+      <button class="ctrl-btn" onclick="toggleSound()">🔔 <span id="sndLabel">Sonido activo</span></button>
+      <button class="ctrl-btn" onclick="loadOrders()">🔄 Actualizar</button>
+      <button class="ctrl-btn" onclick="showReports()">📊 Ver Reportes</button>
+      <button class="ctrl-btn" onclick="testConnection()">🔌 Probar Conexión</button>
+    </div>
+
+    <!-- ORDERS BOARD -->
+    <div class="board">
+      <div class="board-header">
+        <div class="board-title">PEDIDOS <span>EN CURSO</span></div>
+        <div class="filter-tabs">
+          <div class="ftab active" onclick="setFilter('all',this)">TODO</div>
+          <div class="ftab" onclick="setFilter('pending',this)">⏳ NUEVOS</div>
+          <div class="ftab" onclick="setFilter('preparing',this)">⚡ PREP.</div>
+          <div class="ftab" onclick="setFilter('ready',this)">✅ LISTOS</div>
+        </div>
+      </div>
+      <div class="orders-grid" id="grid"></div>
+    </div>
+
+    <!-- FEED PANEL -->
+    <div class="feed-panel">
+      <div class="feed-head">📋 Actividad en Tiempo Real</div>
+      <div class="feed-list" id="feed">
+        <div class="feed-item">
+          <div class="fi-top"><span>Sistema</span><span>Ahora</span></div>
+          <div class="fi-msg">🟢 Panel <strong>FRV Catacaos</strong> iniciado. Conectando al servidor...</div>
+        </div>
+      </div>
+      <div class="demo-section">
+        <div class="demo-label">⚡ Demo — Simular pedido</div>
+        <button class="demo-btn" onclick="newDemoOrder()">+ Nuevo Pedido Demo</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- REPORTS MODAL -->
+<div class="reports-modal" id="reportsModal">
+  <div class="reports-content">
+    <div class="reports-header">
+      <h2>📊 Reportes de Ventas</h2>
+      <button class="close-btn" onclick="closeReports()">✕</button>
+    </div>
+    <div class="reports-body">
+      
+      <!-- MESAS SECTION -->
+      <div class="report-section">
+        <h3>🪑 Ventas por Mesa</h3>
+        <div id="mesasReport"></div>
+        <div class="report-total-box">
+          <span>Total por Mesas</span>
+          <span id="mesasTotal">S/ 0.00</span>
+        </div>
+      </div>
+
+      <!-- ANFITRIONAS SECTION -->
+      <div class="report-section">
+        <h3>👩‍💼 Ventas por Anfitriona</h3>
+        <div id="anfitrionasReport"></div>
+      </div>
+
+      <!-- PAYMENT METHODS SECTION -->
+      <div class="report-section">
+        <h3>💳 Métodos de Pago</h3>
+        <div id="paymentReport"></div>
+      </div>
+
+      <!-- PRODUCTS SECTION -->
+      <div class="report-section">
+        <h3>📦 Productos Vendidos</h3>
+        <div id="productsReport"></div>
+        <div class="report-total-box">
+          <span>Total Productos</span>
+          <span id="productsTotal">S/ 0.00</span>
+        </div>
+      </div>
+
+      <!-- GENERAL TOTAL -->
+      <div class="report-general-total">
+        <div class="report-general-label">💰 TOTAL GENERAL</div>
+        <div class="report-general-value" id="generalTotal">S/ 0.00</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="frv-panel.js"></script>
+
+</body>
+</html>
