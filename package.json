@@ -1,0 +1,27 @@
+{
+  "name": "frv-catacaos-pedidos",
+  "version": "1.0.0",
+  "description": "Sistema de pedidos digital para FRV Catacaos con panel de administración en tiempo real",
+  "main": "index.html",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step required'",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "keywords": [
+    "pedidos",
+    "bar",
+    "restaurante",
+    "tiempo-real",
+    "netlify",
+    "supabase"
+  ],
+  "author": "FRV Producciones",
+  "license": "MIT"
+}

@@ -12,6 +12,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/test-connection"
+  to = "/.netlify/functions/test-connection"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

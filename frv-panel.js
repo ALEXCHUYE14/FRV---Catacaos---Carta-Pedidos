@@ -393,12 +393,21 @@ async function testConnection() {
   addFeedItem('Sistema', '🔌 Probando conexión con la API...');
   
   try {
-    const response = await fetch(`${API_URL}/api/orders`);
+    const response = await fetch(`${API_URL}/api/test-connection`);
     
     if (response.ok) {
       const data = await response.json();
-      addFeedItem('Sistema', `✅ Conexión exitosa - ${data.total || 0} pedidos en sistema`);
-      showNotification('✅ Conexión Exitosa', `API respondiendo correctamente`, 'success');
+      const source = data.source || 'desconocido';
+      const sourceEmoji = source === 'supabase' ? '💾' : '🧠';
+      const statusEmoji = data.success ? '✅' : '❌';
+      
+      if (data.success) {
+        addFeedItem('Sistema', `${statusEmoji} ${data.message || 'Conexión exitosa'} - ${data.ordersCount || 0} pedidos en sistema ${sourceEmoji} (${source})`);
+        showNotification('✅ Conexión Exitosa', `${data.message || 'API respondiendo correctamente'} (${source})`, 'success');
+      } else {
+        addFeedItem('Sistema', `${statusEmoji} Error: ${data.error || 'Error desconocido'}`);
+        showNotification('❌ Error de Conexión', data.error || 'No se pudo conectar', 'error');
+      }
     } else {
       addFeedItem('Sistema', `❌ Error de conexión: ${response.status}`);
       showNotification('❌ Error', `API respondió con status ${response.status}`, 'error');

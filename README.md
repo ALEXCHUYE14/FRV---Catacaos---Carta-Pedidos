@@ -363,6 +363,75 @@ Los reportes se almacenan en `localStorage` bajo la clave `frv_sales_report`:
 }
 ```
 
+#### 💾 Base de Datos Persistente (Supabase)
+
+El sistema soporta **Supabase** para almacenamiento persistente. Sin configuración, usa almacenamiento en memoria (se pierde al reiniciar).
+
+**Configuración de Supabase:**
+
+1. **Crear cuenta y proyecto**
+   - Ve a [https://supabase.com](https://supabase.com)
+   - Crea una cuenta gratuita
+   - Crea un nuevo proyecto
+   - Espera a que se inicialice (1-2 minutos)
+
+2. **Crear tabla de pedidos**
+   En el SQL Editor de Supabase, ejecuta:
+
+```sql
+CREATE TABLE orders (
+  id TEXT PRIMARY KEY,
+  mesa TEXT NOT NULL,
+  items JSONB NOT NULL,
+  note TEXT,
+  payment_method TEXT,
+  total DECIMAL(10,2) NOT NULL,
+  anfitriona TEXT,
+  anfitriona_phone TEXT,
+  status TEXT DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Índices para mejor rendimiento
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_created_at ON orders(created_at DESC);
+```
+
+3. **Obtener credenciales**
+   - Ve a **Settings** > **API**
+   - Copia **Project URL** (ej: `https://xxxxx.supabase.co`)
+   - Copia **anon public** key (empieza con `eyJ...`)
+
+4. **Configurar en Netlify**
+   - Ve a tu sitio en Netlify Dashboard
+   - **Site settings** > **Environment variables**
+   - Agrega estas variables:
+     - `SUPABASE_URL`: Tu Project URL
+     - `SUPABASE_ANON_KEY`: Tu anon public key
+
+5. **Instalar dependencias y desplegar**
+```bash
+# Instalar dependencias
+npm install
+
+# Desplegar
+netlify deploy --prod
+```
+
+**Verificar que funciona:**
+1. Abre el panel de administración
+2. Haz clic en "🔌 Probar Conexión"
+3. Debe mostrar: `✅ Conexión exitosa - X pedidos en sistema (supabase)`
+4. Los pedidos ahora se guardan permanentemente
+
+**Ventajas de Supabase:**
+- ✅ **Datos persistentes** - No se pierden al reiniciar
+- ✅ **Escalable** - Maneja miles de pedidos
+- ✅ **Backup automático** - Tus datos están seguros
+- ✅ **Gratis** - Hasta 500MB de almacenamiento
+- ✅ **API REST** - Acceso desde cualquier lugar
+
 ---
 
 ## ⚙️ Configuración

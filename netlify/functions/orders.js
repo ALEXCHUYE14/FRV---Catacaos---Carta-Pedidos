@@ -1,7 +1,8 @@
 // Netlify Function: /api/orders
-// Almacena pedidos y permite consultarlos
+// Almacena pedidos en Supabase (persistente) o en memoria (fallback)
 
 const { getStore } = require('./utils/store');
+const supabase = require('./utils/supabase');
 
 // CORS headers
 const headers = {
@@ -13,6 +14,7 @@ const headers = {
 
 exports.handler = async (event, context) => {
   const store = getStore();
+  const useSupabase = supabase.isSupabaseConfigured();
 
   // Manejar preflight CORS
   if (event.httpMethod === 'OPTIONS') {
@@ -37,15 +39,35 @@ exports.handler = async (event, context) => {
         };
       }
 
-      // Crear pedido
-      const newOrder = store.addOrder(orderData);
+      // Crear pedido con ID y timestamp
+      const newOrder = {
+        id: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        ...orderData,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
 
-      console.log(`✅ Nuevo pedido recibido: ${newOrder.id} - Mesa ${newOrder.mesa}`);
+      let savedOrder;
+
+      if (useSupabase) {
+        // Guardar en Supabase
+        savedOrder = await supabase.insertOrder(newOrder);
+        if (!savedOrder) {
+          console.error('Error al guardar en Supabase, usando fallback en memoria');
+          savedOrder = store.addOrder(newOrder);
+        }
+      } else {
+        // Guardar en memoria
+        savedOrder = store.addOrder(newOrder);
+      }
+
+      console.log(`✅ Nuevo pedido recibido: ${savedOrder.id} - Mesa ${savedOrder.mesa}`);
 
       return {
         statusCode: 201,
         headers,
-        body: JSON.stringify(newOrder)
+        body: JSON.stringify(savedOrder)
       };
     } catch (error) {
       console.error('Error al procesar pedido:', error);
@@ -63,10 +85,20 @@ exports.handler = async (event, context) => {
     
     const filters = {};
     if (status) filters.status = status;
-    if (limit) filters.limit = limit;
+    if (limit) filters.limit = parseInt(limit);
 
-    const orders = store.getOrders(filters);
-    const stats = store.getStats();
+    let orders;
+    let stats;
+
+    if (useSupabase) {
+      // Obtener de Supabase
+      orders = await supabase.getOrders(filters);
+      stats = await supabase.getStats();
+    } else {
+      // Obtener de memoria
+      orders = store.getOrders(filters);
+      stats = store.getStats();
+    }
 
     return {
       statusCode: 200,
@@ -75,6 +107,7 @@ exports.handler = async (event, context) => {
         orders,
         total: orders.length,
         stats,
+        source: useSupabase ? 'supabase' : 'memory',
         timestamp: new Date().toISOString()
       })
     };
@@ -93,7 +126,19 @@ exports.handler = async (event, context) => {
         };
       }
 
-      const updatedOrder = store.updateOrderStatus(orderId, status);
+      let updatedOrder;
+
+      if (useSupabase) {
+        // Actualizar en Supabase
+        updatedOrder = await supabase.updateOrderStatus(orderId, status);
+        if (!updatedOrder) {
+          console.error('Error al actualizar en Supabase, usando fallback en memoria');
+          updatedOrder = store.updateOrderStatus(orderId, status);
+        }
+      } else {
+        // Actualizar en memoria
+        updatedOrder = store.updateOrderStatus(orderId, status);
+      }
       
       if (!updatedOrder) {
         return {
