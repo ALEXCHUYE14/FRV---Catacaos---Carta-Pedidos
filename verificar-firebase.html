@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificar Conexión Firebase - FRV Catacaos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Exo 2', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: white;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #F5C800;
+    }
+    .card {
+      background: rgba(30, 30, 30, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      color: #00ff88;
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+    .status {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .status.success { background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.3); }
+    .status.error { background: rgba(255, 68, 68, 0.1); border: 1px solid rgba(255, 68, 68, 0.3); }
+    .status.warning { background: rgba(255, 200, 0, 0.1); border: 1px solid rgba(255, 200, 0, 0.3); }
+    .status.info { background: rgba(0, 132, 138, 0.1); border: 1px solid rgba(0, 132, 138, 0.3); }
+    button {
+      background: linear-gradient(135deg, #F5C800 0%, #FFD93D 100%);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      color: #0a0a0a;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Exo 2', sans-serif;
+      margin: 5px;
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(245, 200, 0, 0.3); }
+    .log {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .config-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .config-item:last-child { border-bottom: none; }
+    .config-label { color: #888; }
+    .config-value { color: #00ff88; font-family: 'DM Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Verificar Conexión Firebase</h1>
+    
+    <div class="card">
+      <h2>📋 Estado de la Configuración</h2>
+      <div id="configStatus"></div>
+    </div>
+    
+    <div class="card">
+      <h2>🔌 Pruebas de Conexión</h2>
+      <button onclick="testFirebaseConnection()">Probar Conexión Firebase</button>
+      <button onclick="testCreateOrder()">Crear Pedido de Prueba</button>
+      <button onclick="testGetOrders()">Obtener Pedidos</button>
+      <div id="testResults" style="margin-top: 16px;"></div>
+    </div>
+    
+    <div class="card">
+      <h2>📝 Log de Consola</h2>
+      <div class="log" id="consoleLog"></div>
+    </div>
+    
+    <div class="card">
+      <h2>⚙️ Configuración Firebase</h2>
+      <div id="firebaseConfig"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="firebase-client.js"></script>
+  <script>
+    // Interceptar console.log para mostrar en pantalla
+    const originalLog = console.log;
+    const originalError = console.error;
+    const logDiv = document.getElementById('consoleLog');
+    
+    function addToLog(message, type = 'log') {
+      const timestamp = new Date().toLocaleTimeString('es-PE');
+      const prefix = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : '✅';
+      logDiv.innerHTML += `[${timestamp}] ${prefix} ${message}\n`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      addToLog(args.join(' '), 'log');
+    };
+    
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      addToLog(args.join(' '), 'error');
+    };
+    
+    // Verificar configuración
+    function checkConfig() {
+      const configStatus = document.getElementById('configStatus');
+      const checks = [];
+      
+      // Verificar Firebase SDK
+      if (typeof firebase !== 'undefined') {
+        checks.push({ status: 'success', text: 'Firebase SDK cargado correctamente' });
+      } else {
+        checks.push({ status: 'error', text: 'Firebase SDK NO está cargado' });
+      }
+      
+      // Verificar FirebaseClient
+      if (typeof FirebaseClient !== 'undefined') {
+        checks.push({ status: 'success', text: 'FirebaseClient está disponible' });
+      } else {
+        checks.push({ status: 'error', text: 'FirebaseClient NO está disponible' });
+      }
+      
+      // Verificar configuración
+      if (typeof firebaseConfig !== 'undefined') {
+        checks.push({ status: 'success', text: 'Configuración de Firebase encontrada' });
+        
+        // Mostrar configuración
+        const configDiv = document.getElementById('firebaseConfig');
+        configDiv.innerHTML = `
+          <div class="config-item"><span class="config-label">Project ID:</span><span class="config-value">${firebaseConfig.projectId}</span></div>
+          <div class="config-item"><span class="config-label">Database URL:</span><span class="config-value">${firebaseConfig.databaseURL}</span></div>
+          <div class="config-item"><span class="config-label">Auth Domain:</span><span class="config-value">${firebaseConfig.authDomain}</span></div>
+          <div class="config-item"><span class="config-label">API Key:</span><span class="config-value">${firebaseConfig.apiKey.substring(0, 20)}...</span></div>
+        `;
+      } else {
+        checks.push({ status: 'error', text: 'Configuración de Firebase NO encontrada' });
+      }
+      
+      configStatus.innerHTML = checks.map(c => 
+        `<div class="status ${c.status}">${c.text}</div>`
+      ).join('');
+    }
+    
+    // Probar conexión Firebase
+    async function testFirebaseConnection() {
+      const resultsDiv = document.getElementById('testResults');
+      resultsDiv.innerHTML = '<div class="status info">Probando conexión...</div>';
+      
+      try {
+        const result = await FirebaseClient.testConnection();
+        
+        if (result.success) {
+          resultsDiv.innerHTML = `
+            <div class="status success">✅ ${result.message}</div>
+            <div class="status info">📊 Pedidos encontrados: ${result.ordersCount || 0}</div>
+            <div class="status info">💾 Fuente: ${result.source}</div>
+          `;
+        } else {
+          resultsDiv.innerHTML = `
+            <div class="status error">❌ ${result.error}</div>
+            <div class="status warning">💡 ${result.details}</div>
+          `;
+        }
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Crear pedido de prueba
+    async function testCreateOrder() {
+      const resultsDiv = document.getElementById('testResults');
+      resultsDiv.innerHTML = '<div class="status info">Creando pedido de prueba...</div>';
+      
+      const testOrder = {
+        mesa: 99,
+        items: [
+          { name: 'Pisco Sour', emoji: '🍋', qty: 1, price: 18, total: 18, cat: 'tragos' }
+        ],
+        note: 'Pedido de prueba - Verificación',
+        paymentMethod: '💳 TARJETA',
+        total: 18,
+        anfitriona: 'Test',
+        anfitrionaPhone: '51999999999'
+      };
+      
+      try {
+        const result = await FirebaseClient.createOrder(testOrder);
+        
+        if (result) {
+          resultsDiv.innerHTML = `
+            <div class="status success">✅ Pedido creado exitosamente</div>
+            <div class="status info">🆔 ID: ${result.id}</div>
+            <div class="status info">🪑 Mesa: ${result.mesa}</div>
+            <div class="status info">💰 Total: S/ ${result.total}</div>
+          `;
+        } else {
+          resultsDiv.innerHTML = '<div class="status error">❌ No se pudo crear el pedido</div>';
+        }
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Obtener pedidos
+    async function testGetOrders() {
+      const resultsDiv = document.getElementById('testResults');
+      resultsDiv.innerHTML = '<div class="status info">Obteniendo pedidos...</div>';
+      
+      try {
+        const orders = await FirebaseClient.getOrders();
+        
+        resultsDiv.innerHTML = `
+          <div class="status success">✅ ${orders.length} pedidos obtenidos</div>
+          ${orders.slice(0, 5).map(o => `
+            <div class="status info">
+              🆔 ${o.id} | 🪑 Mesa ${o.mesa} | 💰 S/ ${o.total} | 📊 ${o.status}
+            </div>
+          `).join('')}
+          ${orders.length > 5 ? `<div class="status info">... y ${orders.length - 5} más</div>` : ''}
+        `;
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Inicializar
+    window.addEventListener('DOMContentLoaded', () => {
+      checkConfig();
+      addToLog('Página de verificación cargada');
+    });
+  </script>
+</body>
+</html>

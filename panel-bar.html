@@ -130,6 +130,349 @@
 .notification-close:hover {
   color: white;
 }
+
+/* Grid de 6 columnas para tarjetas más pequeñas */
+.orders-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  padding: 16px;
+}
+
+@media (max-width: 1400px) {
+  .orders-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1000px) {
+  .orders-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .orders-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tarjetas más compactas */
+.order-card {
+  background: rgba(30, 30, 30, 0.8);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 12px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mesa-num {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.mesa-label {
+  font-size: 9px;
+  color: #888;
+}
+
+.order-time {
+  font-size: 10px;
+  color: #888;
+}
+
+.order-items {
+  max-height: 80px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 11px;
+}
+
+.item-emoji {
+  font-size: 14px;
+}
+
+.item-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-qty {
+  color: #888;
+  font-size: 10px;
+}
+
+.item-price {
+  color: #00ff88;
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.order-note {
+  background: rgba(255, 200, 0, 0.1);
+  border-radius: 6px;
+  padding: 6px;
+  margin-bottom: 8px;
+  font-size: 10px;
+}
+
+.note-label {
+  color: #ffc800;
+  font-weight: 600;
+}
+
+.note-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.total-label {
+  color: #888;
+  font-size: 10px;
+}
+
+.total-value {
+  color: #00ff88;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.order-status {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.order-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.action-btn {
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.action-btn.preparing {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.action-btn.ready {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.action-btn.completed {
+  background: rgba(136, 136, 136, 0.2);
+  color: #888;
+  border: 1px solid rgba(136, 136, 136, 0.3);
+}
+
+.action-btn.cancel {
+  background: rgba(255, 68, 68, 0.2);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+}
+
+.action-btn.delete {
+  background: rgba(255, 68, 68, 0.3);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.5);
+}
+
+.action-btn:hover {
+  transform: scale(1.02);
+  opacity: 0.9;
+}
+
+/* Botón de ver más/menos pedidos */
+.expand-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #888;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 9px;
+  cursor: pointer;
+  margin-top: 4px;
+  width: 100%;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.expand-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Botón de ocultar/mostrar monto */
+.revenue-toggle {
+  background: rgba(0, 132, 138, 0.2);
+  border: 1px solid rgba(0, 132, 138, 0.3);
+  color: #00848A;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  margin-top: 4px;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.revenue-toggle:hover {
+  background: rgba(0, 132, 138, 0.3);
+}
+
+/* Botón de limpiar */
+.clear-btn {
+  background: rgba(255, 68, 68, 0.2);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ff4444;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 600;
+}
+
+.clear-btn:hover {
+  background: rgba(255, 68, 68, 0.3);
+}
+
+/* Botón de imprimir PDF */
+.pdf-btn {
+  background: linear-gradient(135deg, #F5C800 0%, #FFD93D 100%);
+  border: none;
+  color: #0a0a0a;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 700;
+}
+
+.pdf-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(245, 200, 0, 0.3);
+}
+
+/* Modal de confirmación */
+.confirm-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+}
+
+.confirm-modal.show {
+  display: flex;
+}
+
+.confirm-content {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.confirm-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ff4444;
+  margin-bottom: 12px;
+}
+
+.confirm-message {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 20px;
+}
+
+.confirm-input {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.confirm-input:focus {
+  outline: none;
+  border-color: #F5C800;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.confirm-btn.cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.confirm-btn.confirm {
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  color: white;
+}
+
+.confirm-btn:hover {
+  transform: translateY(-1px);
+}
 </style>
 </head>
 <body>
@@ -149,10 +492,7 @@
           <div class="brand-sub">Catacaos — Panel Bar</div>
         </div>
       </div>
-      <div class="live-pill">
-        <div class="live-dot"></div>
-        EN VIVO
-      </div>
+
       <div class="connection-status connecting" id="connectionStatus">
         <div class="status-dot"></div>
         <span id="connectionText">Conectando...</span>
@@ -161,6 +501,10 @@
     <div class="topbar-right">
       <span style="color:var(--teal);font-family:'Exo 2',sans-serif;font-size:12px;font-weight:700;">🎵 NOCHE EN CURSO</span>
       <span class="clock" id="clock">--:--</span>
+      <button class="clear-btn" onclick="showClearModal()">🗑️ Limpiar</button>
+      <button class="pdf-btn" onclick="generatePDF()">📄 PDF</button>
+      <button class="clear-btn" onclick="logout()">🚪 Salir</button>
+      <button class="clear-btn" onclick="sendSafetyAlert()" style="background:linear-gradient(135deg,#ff4444 0%,#cc0000 100%);">🚨 Alerta</button>
     </div>
   </div>
 
@@ -189,6 +533,7 @@
       <div class="stat-box teal">
         <div class="stat-num" id="s-revenue" style="font-size:24px;">S/ 0</div>
         <div class="stat-label">💰 Recaudado</div>
+        <button class="revenue-toggle" onclick="toggleRevenue()">👁️ Ocultar</button>
       </div>
 
       <div class="sidebar-section" style="margin-top:6px;">Acciones</div>
@@ -282,6 +627,22 @@
   </div>
 </div>
 
+<!-- CLEAR CONFIRMATION MODAL -->
+<div class="confirm-modal" id="clearModal">
+  <div class="confirm-content">
+    <div class="confirm-title">⚠️ Limpiar Todos los Pedidos</div>
+    <div class="confirm-message">Esta acción eliminará todos los pedidos del día. Ingresa la contraseña de administrador para confirmar.</div>
+    <input type="password" class="confirm-input" id="clearPassword" placeholder="Contraseña de administrador">
+    <div class="confirm-buttons">
+      <button class="confirm-btn cancel" onclick="closeClearModal()">Cancelar</button>
+      <button class="confirm-btn confirm" onclick="confirmClear()">Limpiar Todo</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="firebase-client.js"></script>
 <script src="frv-panel.js"></script>
 
 </body>

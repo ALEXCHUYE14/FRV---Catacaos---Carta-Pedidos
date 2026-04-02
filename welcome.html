@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rio Verde Catacaos — Bienvenido</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Exo 2', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Animated background */
+    .bg-animation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bg-animation::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: radial-gradient(circle, rgba(0, 255, 136, 0.05) 0%, transparent 50%);
+      animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .floating-orbs {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.4;
+      animation: float 10s ease-in-out infinite;
+    }
+
+    .orb:nth-child(1) {
+      width: 400px;
+      height: 400px;
+      background: #00ff88;
+      top: 10%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .orb:nth-child(2) {
+      width: 300px;
+      height: 300px;
+      background: #F5C800;
+      top: 60%;
+      right: 15%;
+      animation-delay: 3s;
+    }
+
+    .orb:nth-child(3) {
+      width: 350px;
+      height: 350px;
+      background: #00848A;
+      bottom: 10%;
+      left: 30%;
+      animation-delay: 6s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-40px) scale(1.1); }
+    }
+
+    /* Welcome container */
+    .welcome-container {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 40px;
+      max-width: 600px;
+    }
+
+    /* Logo section */
+    .logo-section {
+      margin-bottom: 40px;
+      animation: fadeInDown 1s ease-out;
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo-waves {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      height: 60px;
+      margin-bottom: 20px;
+    }
+
+    .logo-wave-bar {
+      width: 6px;
+      height: 100%;
+      background: linear-gradient(180deg, #00ff88 0%, #00cc66 100%);
+      border-radius: 3px;
+      animation: wave 1.5s ease-in-out infinite;
+    }
+
+    .logo-wave-bar:nth-child(1) { animation-delay: 0s; }
+    .logo-wave-bar:nth-child(2) { animation-delay: 0.15s; }
+    .logo-wave-bar:nth-child(3) { animation-delay: 0.3s; }
+    .logo-wave-bar:nth-child(4) { animation-delay: 0.45s; }
+    .logo-wave-bar:nth-child(5) { animation-delay: 0.6s; }
+    .logo-wave-bar:nth-child(6) { animation-delay: 0.75s; }
+    .logo-wave-bar:nth-child(7) { animation-delay: 0.9s; }
+
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+
+    .logo-text {
+      font-size: 72px;
+      font-weight: 900;
+      color: white;
+      letter-spacing: 8px;
+      margin-bottom: 8px;
+      text-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+      animation: glow 2s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { text-shadow: 0 0 40px rgba(0, 255, 136, 0.3); }
+      50% { text-shadow: 0 0 60px rgba(0, 255, 136, 0.6), 0 0 80px rgba(0, 255, 136, 0.4); }
+    }
+
+    .logo-text span {
+      color: #00ff88;
+    }
+
+    .logo-subtitle {
+      font-size: 14px;
+      color: #888;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    /* Welcome message */
+    .welcome-message {
+      animation: fadeInUp 1s ease-out 0.3s both;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .welcome-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    .welcome-title span {
+      color: #00ff88;
+    }
+
+    .welcome-text {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    /* Enter button */
+    .enter-btn {
+      background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+      border: none;
+      padding: 18px 50px;
+      border-radius: 50px;
+      color: #0a0a0a;
+      font-family: 'Exo 2', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 1s ease-out 0.6s both;
+    }
+
+    .enter-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.5s;
+    }
+
+    .enter-btn:hover::before {
+      left: 100%;
+    }
+
+    .enter-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(0, 255, 136, 0.4);
+    }
+
+    .enter-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #00ff88;
+      border-radius: 50%;
+      animation: particleFloat 15s linear infinite;
+      opacity: 0.6;
+    }
+
+    @keyframes particleFloat {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.6;
+      }
+      90% {
+        opacity: 0.6;
+      }
+      100% {
+        transform: translateY(-100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .logo-text {
+        font-size: 48px;
+        letter-spacing: 4px;
+      }
+
+      .logo-waves {
+        height: 40px;
+        gap: 4px;
+      }
+
+      .logo-wave-bar {
+        width: 4px;
+      }
+
+      .welcome-title {
+        font-size: 22px;
+      }
+
+      .welcome-text {
+        font-size: 14px;
+      }
+
+      .enter-btn {
+        padding: 14px 40px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-animation">
+    <div class="floating-orbs">
+      <div class="orb"></div>
+      <div class="orb"></div>
+      <div class="orb"></div>
+    </div>
+  </div>
+
+  <div class="particles" id="particles"></div>
+
+  <div class="welcome-container">
+    <div class="logo-section">
+      <div class="logo-waves">
+        <div class="logo-wave-bar"></div>
+        <div class="logo-wave-bar"></div>
+        <div class="logo-wave-bar"></div>
+        <div class="logo-wave-bar"></div>
+        <div class="logo-wave-bar"></div>
+        <div class="logo-wave-bar"></div>
+        <div class="logo-wave-bar"></div>
+      </div>
+      <div class="logo-text">R<span>IO</span> VERDE</div>
+      <div class="logo-subtitle">Catacaos</div>
+    </div>
+
+    <div class="welcome-message">
+      <h1 class="welcome-title">¡Qué gusto tenerte en <span>Rio Verde Catacaos!</span></h1>
+      <p class="welcome-text">
+        Estás a un paso de disfrutar lo mejor. Explora nuestra carta y sigue tu pedido en tiempo real mientras la música hace lo suyo.
+      </p>
+      <button class="enter-btn" onclick="enterSystem()">
+        Explorar Carta →
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Create floating particles
+    function createParticles() {
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = 30;
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 15 + 's';
+        particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    // Enter system
+    function enterSystem() {
+      // Add transition effect
+      document.body.style.transition = 'opacity 0.5s ease';
+      document.body.style.opacity = '0';
+      
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 500);
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      createParticles();
+    });
+
+    // Keyboard support
+    document.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        enterSystem();
+      }
+    });
+  </script>
+</body>
+</html>

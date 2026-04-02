@@ -28,6 +28,232 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="frv-menu.css">
+<style>
+/* Carrusel de promociones */
+.promo-carousel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.carousel-container {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  position: relative;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.carousel-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  padding: 20px;
+  color: white;
+  border-radius: 0 0 12px 12px;
+}
+
+.carousel-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.carousel-subtitle {
+  font-size: 12px;
+  color: #00ff88;
+  font-weight: 600;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.carousel-dot.active {
+  background: #00ff88;
+  transform: scale(1.2);
+}
+
+/* Menú hamburguesa */
+.hamburger-menu {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hamburger-line {
+  width: 20px;
+  height: 2px;
+  background: white;
+  transition: all 0.3s;
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+.mobile-categories {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.95);
+  z-index: 999;
+  padding: 80px 20px 20px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-categories.show {
+  display: flex;
+}
+
+.mobile-cat-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 16px;
+  color: white;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mobile-cat-btn:hover {
+  background: rgba(0,255,136,0.2);
+  border-color: #00ff88;
+}
+
+/* Alerta de seguridad */
+.safety-alert-btn {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  z-index: 100;
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 5px 20px rgba(255,68,68,0.4);
+  animation: pulse-alert 2s infinite;
+}
+
+@keyframes pulse-alert {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.safety-alert-btn:hover {
+  transform: scale(1.1);
+}
+
+.safety-alert-icon {
+  font-size: 28px;
+}
+
+/* Vista móvil - 2 columnas */
+@media (max-width: 768px) {
+  .hamburger-menu {
+    display: block;
+  }
+  
+  .header-brand {
+    margin-left: 50px !important;
+  }
+  
+  .cats {
+    display: none !important;
+  }
+  
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+  
+  .card-img {
+    height: 120px !important;
+  }
+  
+  .card-body {
+    padding: 8px !important;
+  }
+  
+  .card-name {
+    font-size: 12px !important;
+  }
+  
+  .card-desc {
+    font-size: 10px !important;
+    display: none !important;
+  }
+  
+  .card-price {
+    font-size: 12px !important;
+  }
+  
+  .add-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+}
+</style>
 
 <!-- Structured Data for SEO -->
 <script type="application/ld+json">
@@ -87,7 +313,33 @@
   <div class="mike"></div>
 </div>
 
+<!-- MENÚ HAMBURGUESA MÓVIL -->
+<button class="hamburger-menu" id="hamburgerMenu" onclick="toggleMobileMenu()">
+  <div class="hamburger-icon">
+    <div class="hamburger-line"></div>
+    <div class="hamburger-line"></div>
+    <div class="hamburger-line"></div>
+  </div>
+</button>
+
+<div class="mobile-categories" id="mobileCategories">
+  <button class="mobile-cat-btn" onclick="filterCat('all',this);closeMobileMenu()">🏠 TODO</button>
+  <button class="mobile-cat-btn" onclick="filterCat('cervezas',this);closeMobileMenu()">🍺 CERVEZAS</button>
+  <button class="mobile-cat-btn" onclick="filterCat('tragos',this);closeMobileMenu()">🍹 TRAGOS</button>
+  <button class="mobile-cat-btn" onclick="filterCat('shots',this);closeMobileMenu()">🥃 SHOTS</button>
+  <button class="mobile-cat-btn" onclick="filterCat('sin-alcohol',this);closeMobileMenu()">🧃 SIN ALCOHOL</button>
+</div>
+
 <header>
+  <!-- MENÚ HAMBURGUESA MÓVIL -->
+  <button class="hamburger-menu" id="hamburgerMenu" onclick="toggleMobileMenu()">
+    <div class="hamburger-icon">
+      <div class="hamburger-line"></div>
+      <div class="hamburger-line"></div>
+      <div class="hamburger-line"></div>
+    </div>
+  </button>
+
   <div class="header-brand">
     <div class="waves">
       <div class="wave-bar"></div>
@@ -105,6 +357,38 @@
   </div>
   <div class="mesa-tag" id="mesaTag">⚡ MESA 7</div>
 </header>
+
+<!-- CARRUSEL DE PROMOCIONES -->
+<div class="promo-carousel">
+  <div class="carousel-container" id="carouselContainer">
+    <div class="carousel-slide">
+      <img src="https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=800&h=400&fit=crop" alt="Promoción 1">
+      <div class="carousel-overlay">
+        <div class="carousel-title">🎉 PROMO PISCO SOUR</div>
+        <div class="carousel-subtitle">2x1 en Pisco Sours - Solo hoy!</div>
+      </div>
+    </div>
+    <div class="carousel-slide">
+      <img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&h=400&fit=crop" alt="Promoción 2">
+      <div class="carousel-overlay">
+        <div class="carousel-title">🍺 CERVEZA CRISTAL</div>
+        <div class="carousel-subtitle">Pack 3 cervezas por S/ 20</div>
+      </div>
+    </div>
+    <div class="carousel-slide">
+      <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&h=400&fit=crop" alt="Promoción 3">
+      <div class="carousel-overlay">
+        <div class="carousel-title">🍹 MOJITO ESPECIAL</div>
+        <div class="carousel-subtitle">Mojito + Shot gratis</div>
+      </div>
+    </div>
+  </div>
+  <div class="carousel-dots" id="carouselDots">
+    <div class="carousel-dot active" onclick="goToSlide(0)"></div>
+    <div class="carousel-dot" onclick="goToSlide(1)"></div>
+    <div class="carousel-dot" onclick="goToSlide(2)"></div>
+  </div>
+</div>
 
 <!-- MESA SELECTOR -->
 <div class="mesa-selector" id="mesaSelector">
@@ -268,7 +552,73 @@
   </div>
 </div>
 
+<!-- BOTÓN DE ALERTA DE SEGURIDAD -->
+<button class="safety-alert-btn" onclick="sendSafetyAlert()">
+  <span class="safety-alert-icon">🚨</span>
+</button>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="firebase-client.js"></script>
 <script src="frv-menu.js"></script>
+<script>
+// Carrusel de promociones
+let currentSlide = 0;
+const totalSlides = 3;
+
+function updateCarousel() {
+  const container = document.getElementById('carouselContainer');
+  container.style.transform = `translateX(-${currentSlide * 100}%)`;
+  
+  // Actualizar dots
+  document.querySelectorAll('.carousel-dot').forEach((dot, index) => {
+    dot.classList.toggle('active', index === currentSlide);
+  });
+}
+
+function nextSlide() {
+  currentSlide = (currentSlide + 1) % totalSlides;
+  updateCarousel();
+}
+
+function goToSlide(index) {
+  currentSlide = index;
+  updateCarousel();
+}
+
+// Auto-avanzar carrusel cada 5 segundos
+setInterval(nextSlide, 5000);
+
+// Menú hamburguesa móvil
+function toggleMobileMenu() {
+  const menu = document.getElementById('hamburgerMenu');
+  const categories = document.getElementById('mobileCategories');
+  
+  menu.classList.toggle('active');
+  categories.classList.toggle('show');
+}
+
+function closeMobileMenu() {
+  const menu = document.getElementById('hamburgerMenu');
+  const categories = document.getElementById('mobileCategories');
+  
+  menu.classList.remove('active');
+  categories.classList.remove('show');
+}
+
+// Alerta de seguridad a WhatsApp
+function sendSafetyAlert() {
+  const mesa = MESA || 'No especificada';
+  const message = `🚨 *ALERTA DE SEGURIDAD - FRV Catacaos*\n\n⚠️ Se necesita asistencia inmediata\n\n🪑 *Mesa:* ${mesa}\n⏰ *Hora:* ${new Date().toLocaleTimeString('es-PE')}\n\nPor favor, acudir lo antes posible.`;
+  
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappUrl = `https://wa.me/51924996961?text=${encodedMessage}`;
+  
+  if (confirm('¿Enviar alerta de seguridad al equipo de seguridad?')) {
+    window.open(whatsappUrl, '_blank');
+  }
+}
+</script>
 
 </body>
 </html>

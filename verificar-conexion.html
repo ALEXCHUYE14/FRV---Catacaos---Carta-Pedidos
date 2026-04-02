@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificar Conexión Firebase - FRV Catacaos</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #00ff88;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .card h2 {
+      color: #00ff88;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    
+    .status {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+    
+    .status.success {
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      color: #00ff88;
+    }
+    
+    .status.error {
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid rgba(255, 68, 68, 0.3);
+      color: #ff4444;
+    }
+    
+    .status.warning {
+      background: rgba(255, 200, 0, 0.1);
+      border: 1px solid rgba(255, 200, 0, 0.3);
+      color: #ffc800;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      color: #1a1a2e;
+      font-weight: 700;
+      cursor: pointer;
+      margin: 5px;
+      transition: transform 0.2s;
+    }
+    
+    button:hover {
+      transform: scale(1.05);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .log {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    
+    .log-entry.info {
+      background: rgba(0, 150, 255, 0.1);
+    }
+    
+    .log-entry.success {
+      background: rgba(0, 255, 136, 0.1);
+    }
+    
+    .log-entry.error {
+      background: rgba(255, 68, 68, 0.1);
+    }
+    
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .info-label {
+      color: #888;
+    }
+    
+    .info-value {
+      color: #00ff88;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Verificar Conexión Firebase</h1>
+    
+    <div class="card">
+      <h2>📊 Estado de Firebase</h2>
+      <div id="firebaseStatus" class="status warning">
+        ⏳ Verificando...
+      </div>
+      <div class="info-item">
+        <span class="info-label">Proyecto:</span>
+        <span class="info-value" id="projectId">-</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Database URL:</span>
+        <span class="info-value" id="databaseUrl">-</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">API Key:</span>
+        <span class="info-value" id="apiKey">-</span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>🔌 Prueba de Conexión</h2>
+      <button onclick="testConnection()" id="testBtn">
+        Probar Conexión
+      </button>
+      <button onclick="clearLog()">
+        Limpiar Log
+      </button>
+    </div>
+    
+    <div class="card">
+      <h2>📝 Log de Actividad</h2>
+      <div id="log" class="log">
+        <div class="log-entry info">⏳ Iniciando verificación...</div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>⚡ Acciones Rápidas</h2>
+      <button onclick="window.open('panel-bar.html', '_blank')">
+        📊 Abrir Panel de Bar
+      </button>
+      <button onclick="window.open('index.html', '_blank')">
+        🍽️ Abrir Menú Digital
+      </button>
+      <button onclick="window.open('diagnostico.html', '_blank')">
+        🔍 Diagnóstico Completo
+      </button>
+      <button onclick="location.reload()">
+        🔄 Recargar
+      </button>
+    </div>
+  </div>
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  
+  <!-- Firebase Client -->
+  <script src="firebase-client.js"></script>
+  
+  <script>
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', () => {
+      addLog('info', '🚀 Iniciando verificación...');
+      checkFirebase();
+    });
+    
+    // Verificar Firebase
+    async function checkFirebase() {
+      addLog('info', '🔍 Verificando Firebase...');
+      
+      try {
+        // Verificar que FirebaseClient esté disponible
+        if (typeof window.FirebaseClient === 'undefined') {
+          addLog('error', '❌ FirebaseClient no está cargado');
+          updateStatus('firebaseStatus', 'error', '❌ Cliente no cargado');
+          return;
+        }
+        
+        addLog('success', '✅ FirebaseClient cargado correctamente');
+        
+        // Inicializar cliente
+        const db = window.FirebaseClient.init();
+        
+        if (!db) {
+          addLog('error', '❌ No se pudo inicializar Firebase');
+          updateStatus('firebaseStatus', 'error', '❌ Error de inicialización');
+          return;
+        }
+        
+        addLog('success', '✅ Cliente Firebase inicializado');
+        updateStatus('firebaseStatus', 'success', '✅ Conectado');
+        
+        // Mostrar información
+        document.getElementById('projectId').textContent = 'frv-catacaos';
+        document.getElementById('databaseUrl').textContent = 'https://frv-catacaos-default-rtdb.firebaseio.com';
+        document.getElementById('apiKey').textContent = 'AIzaSyC7AniU...';
+        
+      } catch (error) {
+        addLog('error', `❌ Error: ${error.message}`);
+        updateStatus('firebaseStatus', 'error', `❌ ${error.message}`);
+      }
+    }
+    
+    // Probar conexión
+    async function testConnection() {
+      addLog('info', '🔌 Probando conexión...');
+      
+      const btn = document.getElementById('testBtn');
+      btn.disabled = true;
+      btn.textContent = 'Probando...';
+      
+      try {
+        const result = await window.FirebaseClient.testConnection();
+        
+        if (result.success) {
+          addLog('success', `✅ ${result.message}`);
+          if (result.details) {
+            addLog('info', `📊 ${result.details}`);
+          }
+          alert('✅ Conexión exitosa!');
+        } else {
+          addLog('error', `❌ ${result.error}`);
+          if (result.details) {
+            addLog('error', `💡 ${result.details}`);
+          }
+          alert(`❌ Error: ${result.error}`);
+        }
+        
+      } catch (error) {
+        addLog('error', `❌ Error: ${error.message}`);
+        alert(`❌ Error: ${error.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Probar Conexión';
+      }
+    }
+    
+    // Actualizar estado
+    function updateStatus(elementId, type, message) {
+      const element = document.getElementById(elementId);
+      element.className = `status ${type}`;
+      element.textContent = message;
+    }
+    
+    // Agregar log
+    function addLog(type, message) {
+      const log = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString('es-PE')}] ${message}`;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+    
+    // Limpiar log
+    function clearLog() {
+      document.getElementById('log').innerHTML = '<div class="log-entry info">📝 Log limpiado</div>';
+    }
+  </script>
+</body>
+</html>

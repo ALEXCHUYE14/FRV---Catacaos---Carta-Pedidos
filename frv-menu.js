@@ -310,8 +310,7 @@ function sendWhatsApp(phone) {
   window.open(whatsappUrl, '_blank');
 }
 
-// ── SEND TO API SERVER ──────────────────────────
-const API_URL = 'https://frv-api.netlify.app'; // URL de la API
+// ── SEND TO FIREBASE ──────────────────────────
 
 async function sendToAdminPanel() {
   const items = Object.values(cart);
@@ -337,28 +336,28 @@ async function sendToAdminPanel() {
   };
   
   try {
-    // Enviar a API
-    const response = await fetch(`${API_URL}/api/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(orderData)
-    });
+    // Verificar que FirebaseClient esté disponible
+    if (typeof FirebaseClient === 'undefined') {
+      console.error('❌ FirebaseClient no está cargado');
+      sendToLocalStorage(orderData);
+      return orderData;
+    }
     
-    if (response.ok) {
-      const savedOrder = await response.json();
-      console.log('✅ Pedido enviado a API:', savedOrder);
+    // Enviar a Firebase
+    const savedOrder = await FirebaseClient.createOrder(orderData);
+    
+    if (savedOrder) {
+      console.log('✅ Pedido enviado a Firebase:', savedOrder);
       // Guardar también en localStorage como respaldo
       sendToLocalStorage(orderData);
     } else {
-      console.error('❌ Error al enviar pedido a API:', response.status);
-      // Fallback a localStorage si la API falla
+      console.error('❌ Error al enviar pedido a Firebase');
+      // Fallback a localStorage si Firebase falla
       sendToLocalStorage(orderData);
     }
   } catch (error) {
-    console.error('❌ Error de conexión con API:', error);
-    // Fallback a localStorage si la API no está disponible
+    console.error('❌ Error de conexión con Firebase:', error);
+    // Fallback a localStorage si Firebase no está disponible
     sendToLocalStorage(orderData);
   }
   
