@@ -379,7 +379,7 @@
 
     // Enter system
     function enterSystem() {
-      // Add transition effect
+      sessionStorage.setItem('welcomeVisited', 'true');
       document.body.style.transition = 'opacity 0.5s ease';
       document.body.style.opacity = '0';
       

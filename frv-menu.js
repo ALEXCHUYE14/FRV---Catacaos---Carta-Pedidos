@@ -6,15 +6,15 @@ let anfitrionaSeleccionada = null;
 let anfitrionaPhone = null;
 let currentOrder = null;
 
-// Generate unique mesa number for each session (1-100)
+// Generate unique mesa number for each session (1-50)
 function generateUniqueMesa() {
   // Check if mesa already assigned in this session
   let sessionMesa = sessionStorage.getItem('frv_mesa');
   if (sessionMesa) {
     return sessionMesa;
   }
-  // Generate random mesa 1-100
-  const newMesa = Math.floor(Math.random() * 100) + 1;
+  // Generate random mesa 1-50
+  const newMesa = Math.floor(Math.random() * 50) + 1;
   sessionStorage.setItem('frv_mesa', newMesa);
   return newMesa.toString();
 }
@@ -26,7 +26,7 @@ function initMesaSelector() {
   const mesaGrid = document.getElementById('mesaGrid');
   mesaGrid.innerHTML = '';
   
-  for (let i = 1; i <= 100; i++) {
+  for (let i = 1; i <= 50; i++) {
     const btn = document.createElement('button');
     btn.className = 'mesa-btn';
     btn.textContent = i;
@@ -44,7 +44,14 @@ function selectMesa(num, btn) {
 
 function confirmarMesa() {
   sessionStorage.setItem('frv_mesa', MESA);
-  document.getElementById('mesaTag').textContent = `⚡ MESA ${MESA}`;
+  sessionStorage.setItem('user_selected_mesa', 'true');
+document.getElementById('mesaTag').textContent = `⚡ MESA ${MESA}`;
+
+// Check if user already selected a mesa before
+if (sessionStorage.getItem('user_selected_mesa')) {
+  document.getElementById('mesaTag').style.background = 'linear-gradient(135deg, #00ff88 0%, #00cc66 100%)';
+  document.getElementById('mesaTag').style.color = '#0a0a0a';
+}
   document.getElementById('mesaSelector').classList.remove('show');
 }
 
@@ -166,6 +173,14 @@ function enviarSaludoAnimador() {
 
 // ── CART LOGIC ───────────────────────────────────
 function addItem(id) {
+  // Check if user has selected their mesa
+  if (!sessionStorage.getItem('user_selected_mesa')) {
+    document.getElementById('mesaSelector').classList.add('show');
+    initMesaSelector();
+    alert('Por favor, selecciona la mesa en la que te encuentras ubicada antes de hacer tu pedido.');
+    return;
+  }
+  
   const p = products.find(x => x.id === id);
   if (!cart[id]) cart[id] = { ...p, qty: 0 };
   cart[id].qty++;

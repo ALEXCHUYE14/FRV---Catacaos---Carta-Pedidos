@@ -294,6 +294,12 @@
 </head>
 <body>
 
+<script>
+  if (!sessionStorage.getItem('welcomeVisited')) {
+    window.location.href = 'welcome.html';
+  }
+</script>
+
 <!-- WATER EFFECT BACKGROUND -->
 <div class="water-bg">
   <div class="water-wave"></div>
