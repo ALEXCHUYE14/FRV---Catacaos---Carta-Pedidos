@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// FIREBASE CLIENT - Conexión en tiempo real para FRV Catacaos
-// Reemplaza Netlify Functions y Supabase
+// FIREBASE CLIENT - FRV Catacaos - Versión Simplificada y Robusta
 // ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('📦 [Firebase] Iniciando...');
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -14,70 +15,68 @@ const firebaseConfig = {
   databaseURL: "https://frv-catacaos-default-rtdb.firebaseio.com"
 };
 
-// Variables globales
-let firebaseApp = null;
 let firebaseDatabase = null;
-let ordersRef = null;
-let ordersListener = null;
+let initialized = false;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // INICIALIZACIÓN
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function initFirebase() {
-  console.log('🔧 [FirebaseClient] Iniciando inicialización...');
+  console.log('🔧 [Firebase] initFirebase() llamado...');
   
-  if (firebaseApp) {
-    console.log('✅ [FirebaseClient] Firebase ya inicializado, retornando instancia existente');
+  if (initialized && firebaseDatabase) {
+    console.log('✅ [Firebase] Ya inicializado, retornando db existente');
     return firebaseDatabase;
   }
   
-  // Verificar que Firebase esté cargado
+  console.log('🔧 [Firebase] Verificando SDK...');
+  
   if (typeof firebase === 'undefined') {
-    console.error('❌ [FirebaseClient] Firebase no está cargado');
-    console.error('💡 [FirebaseClient] Solución: Verifica que los scripts de Firebase estén en el HTML:');
-    console.error('   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>');
-    console.error('   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>');
-    return null;
+    console.error('❌ [Firebase] SDK no está cargado');
+    throw new Error('Firebase SDK no cargado');
+  }
+  
+  console.log('✅ [Firebase] SDK detectado');
+  console.log('🔧 [Firebase] firebase:', typeof firebase);
+  console.log('🔧 [Firebase] firebase.database:', typeof firebase.database);
+  
+  // Verificar que firebase.database exista
+  if (typeof firebase.database !== 'function') {
+    console.error('❌ [Firebase] firebase.database no disponible');
+    console.log('🔧 [Firebase] firebase keys:', Object.keys(firebase));
+    throw new Error('firebase.database no disponible');
   }
   
   try {
-    // Verificar que la configuración sea válida
-    if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes('Dummy')) {
-      console.error('❌ [FirebaseClient] Configuración de Firebase inválida');
-      console.error('💡 [FirebaseClient] Solución: Actualiza firebaseConfig con credenciales reales');
-      console.error('   1. Ve a https://console.firebase.google.com/');
-      console.error('   2. Crea un proyecto o selecciona uno existente');
-      console.error('   3. Ve a Configuración del proyecto → Tus apps → Web');
-      console.error('   4. Copia la configuración y pégala en firebase-client.js');
-      return null;
+    let app;
+    try {
+      app = firebase.getApp();
+      console.log('📦 [Firebase] Usando app existente:', app ? app.name : 'sin nombre');
+    } catch (e) {
+      console.log('📦 [Firebase] Inicializando nueva app...');
+      console.log('🔧 [Firebase] Config:', JSON.stringify(firebaseConfig));
+      app = firebase.initializeApp(firebaseConfig);
+      console.log('✅ [Firebase] App inicializada:', app.name);
     }
     
-    console.log('📦 [FirebaseClient] Inicializando Firebase con configuración:');
-    console.log('   Proyecto:', firebaseConfig.projectId);
-    console.log('   Database URL:', firebaseConfig.databaseURL);
-    
-    // Inicializar Firebase
-    firebaseApp = firebase.initializeApp(firebaseConfig);
+    console.log('🔧 [Firebase] Obteniendo database...');
     firebaseDatabase = firebase.database();
+    console.log('✅ [Firebase] Database obtained:', !!firebaseDatabase);
     
-    console.log('✅ [FirebaseClient] Firebase inicializado correctamente');
-    console.log('📊 [FirebaseClient] Proyecto:', firebaseConfig.projectId);
-    console.log('🔗 [FirebaseClient] Database URL:', firebaseConfig.databaseURL);
+    // Verificar conexión
+    console.log('🔧 [Firebase] Verificando conexión...');
+    
+    initialized = true;
+    
+    console.log('✅ [Firebase] Inicializado correctamente');
+    console.log('🔗 [Firebase] Database:', firebaseConfig.databaseURL);
+    
     return firebaseDatabase;
   } catch (error) {
-    console.error('❌ [FirebaseClient] Error al inicializar Firebase:', error);
-    console.error('💡 [FirebaseClient] Código de error:', error.code);
-    console.error('💡 [FirebaseClient] Mensaje:', error.message);
-    
-    if (error.code === 'app/duplicate-app') {
-      console.log('💡 [FirebaseClient] Firebase ya fue inicializado. Obteniendo instancia existente...');
-      firebaseApp = firebase.app();
-      firebaseDatabase = firebase.database();
-      return firebaseDatabase;
-    }
-    
-    return null;
+    console.error('❌ [Firebase] Error de inicialización:', error.message);
+    console.error('❌ [Firebase] Error stack:', error.stack);
+    throw new Error('Error al inicializar Firebase: ' + error.message);
   }
 }
 
@@ -85,331 +84,185 @@ function initFirebase() {
 // OPERACIONES DE PEDIDOS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Obtener todos los pedidos
-async function getOrders(filters = {}) {
-  console.log('📥 [FirebaseClient] Obteniendo pedidos...');
+async function getOrders() {
+  console.log('📥 [Firebase] Obteniendo pedidos...');
   
-  const db = initFirebase();
-  if (!db) {
-    console.error('❌ [FirebaseClient] Firebase no inicializado');
-    return [];
+  let db;
+  try {
+    db = initFirebase();
+  } catch (error) {
+    console.error('❌ [Firebase] Error al inicializar:', error.message);
+    throw error;
   }
-
+  
+  if (!db) {
+    throw new Error('Firebase no inicializado');
+  }
+  
   try {
     const snapshot = await db.ref('orders').once('value');
-    const ordersData = snapshot.val() || {};
+    const data = snapshot.val() || {};
     
-    // Convertir objeto a array
-    let orders = Object.keys(ordersData).map(key => ({
-      id: key,
-      ...ordersData[key]
+    const ordersList = Object.entries(data).map(([id, order]) => ({
+      id: id,
+      ...order
     }));
     
-    // Ordenar por fecha de creación (más reciente primero)
-    orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    // Aplicar filtros
-    if (filters.status) {
-      orders = orders.filter(o => o.status === filters.status);
-    }
-    
-    if (filters.limit) {
-      orders = orders.slice(0, filters.limit);
-    }
-    
-    console.log(`✅ [FirebaseClient] ${orders.length} pedidos obtenidos`);
-    return orders;
+    console.log('📥 [Firebase] Pedidos obtenidos:', ordersList.length);
+    return ordersList;
   } catch (error) {
-    console.error('❌ [FirebaseClient] Error al obtener pedidos:', error);
-    
-    if (error.code === 'PERMISSION_DENIED') {
-      console.error('💡 [FirebaseClient] Las reglas de seguridad no permiten lectura');
-      console.error('💡 [FirebaseClient] Solución: Ve a Firebase Console → Realtime Database → Reglas');
-      console.error('   Configura: { "rules": { "orders": { ".read": true, ".write": true } } }');
-    }
-    
-    return [];
+    console.error('❌ [Firebase] Error al obtener pedidos:', error.message);
+    throw error;
   }
 }
 
-// Crear nuevo pedido
 async function createOrder(orderData) {
-  console.log('📤 [FirebaseClient] Creando nuevo pedido...');
+  console.log('📝 [Firebase] Creando pedido...');
   
   const db = initFirebase();
-  if (!db) {
-    console.error('❌ [FirebaseClient] Firebase no inicializado');
-    return null;
-  }
-
+  if (!db) return null;
+  
   try {
-    const newOrder = {
-      mesa: orderData.mesa,
-      items: orderData.items,
-      note: orderData.note || null,
-      paymentMethod: orderData.paymentMethod || null,
-      total: orderData.total,
-      anfitriona: orderData.anfitriona || null,
-      anfitrionaPhone: orderData.anfitrionaPhone || null,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    // Generar ID único
     const newOrderRef = db.ref('orders').push();
-    await newOrderRef.set(newOrder);
-    
-    const savedOrder = {
+    const order = {
+      ...orderData,
       id: newOrderRef.key,
-      ...newOrder
+      createdAt: new Date().toISOString(),
+      status: 'pending'
     };
     
-    console.log('✅ [FirebaseClient] Pedido creado:', savedOrder.id);
-    return savedOrder;
+    await newOrderRef.set(order);
+    console.log('✅ [Firebase] Pedido creado:', newOrderRef.key);
+    return order;
   } catch (error) {
-    console.error('❌ [FirebaseClient] Error al crear pedido:', error);
-    
-    if (error.code === 'PERMISSION_DENIED') {
-      console.error('💡 [FirebaseClient] Las reglas de seguridad no permiten escritura');
-      console.error('💡 [FirebaseClient] Solución: Ve a Firebase Console → Realtime Database → Reglas');
-      console.error('   Configura: { "rules": { "orders": { ".read": true, ".write": true } } }');
-    }
-    
+    console.error('❌ [Firebase] Error:', error.message);
     return null;
   }
 }
 
-// Actualizar estado de pedido
 async function updateOrderStatus(orderId, status) {
-  console.log(`🔄 [FirebaseClient] Actualizando pedido ${orderId} a estado: ${status}`);
+  console.log('📝 [Firebase] Actualizando pedido:', orderId, status);
   
   const db = initFirebase();
-  if (!db) {
-    console.error('❌ [FirebaseClient] Firebase no inicializado');
-    return null;
-  }
-
+  if (!db) return null;
+  
   try {
-    const updates = {
+    await db.ref(`orders/${orderId}`).update({
       status: status,
       updatedAt: new Date().toISOString()
-    };
+    });
     
-    await db.ref(`orders/${orderId}`).update(updates);
-    
-    // Obtener pedido actualizado
     const snapshot = await db.ref(`orders/${orderId}`).once('value');
-    const updatedOrder = {
-      id: orderId,
-      ...snapshot.val()
-    };
-    
-    console.log('✅ [FirebaseClient] Pedido actualizado:', orderId, '→', status);
-    return updatedOrder;
+    console.log('✅ [Firebase] Pedido actualizado');
+    return snapshot.val();
   } catch (error) {
-    console.error('❌ [FirebaseClient] Error al actualizar pedido:', error);
-    
-    if (error.code === 'PERMISSION_DENIED') {
-      console.error('💡 [FirebaseClient] Las reglas de seguridad no permiten escritura');
-      console.error('💡 [FirebaseClient] Solución: Ve a Firebase Console → Realtime Database → Reglas');
-      console.error('   Configura: { "rules": { "orders": { ".read": true, ".write": true } } }');
-    }
-    
+    console.error('❌ [Firebase] Error:', error.message);
     return null;
   }
 }
 
-// Obtener estadísticas
 async function getStats() {
-  console.log('📊 [FirebaseClient] Obteniendo estadísticas...');
-  
   const db = initFirebase();
-  if (!db) {
-    console.error('❌ [FirebaseClient] Firebase no inicializado');
-    return { pending: 0, preparing: 0, completed: 0, revenue: 0 };
-  }
-
+  if (!db) return { pending: 0, preparing: 0, completed: 0 };
+  
   try {
     const snapshot = await db.ref('orders').once('value');
-    const ordersData = snapshot.val() || {};
+    const data = snapshot.val() || {};
     
-    const orders = Object.values(ordersData);
-    
-    const stats = {
-      pending: orders.filter(o => o.status === 'pending').length,
-      preparing: orders.filter(o => o.status === 'preparing').length,
-      completed: orders.filter(o => o.status === 'completed').length,
-      revenue: orders
-        .filter(o => o.status === 'completed')
-        .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0)
+    const ordersList = Object.values(data);
+    return {
+      pending: ordersList.filter(o => o.status === 'pending').length,
+      preparing: ordersList.filter(o => o.status === 'preparing').length,
+      completed: ordersList.filter(o => o.status === 'completed' || o.status === 'ready').length
     };
-    
-    console.log('✅ [FirebaseClient] Estadísticas obtenidas:', stats);
-    return stats;
   } catch (error) {
-    console.error('❌ [FirebaseClient] Error al obtener estadísticas:', error);
-    return { pending: 0, preparing: 0, completed: 0, revenue: 0 };
+    return { pending: 0, preparing: 0, completed: 0 };
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// TIEMPO REAL - Suscripciones
-// ═══════════════════════════════════════════════════════════════════════════════
-
-// Suscribirse a cambios en tiempo real
 function subscribeToOrders(callback) {
-  console.log('🔌 [FirebaseClient] Suscribiéndose a cambios en tiempo real...');
+  console.log('📡 [Firebase] Suscribiendo a pedidos...');
   
   const db = initFirebase();
-  if (!db) {
-    console.error('❌ [FirebaseClient] Firebase no inicializado');
-    return null;
-  }
-
-  // Cancelar suscripción anterior si existe
-  if (ordersListener) {
-    console.log('🔄 [FirebaseClient] Cancelando suscripción anterior...');
-    ordersRef.off('value', ordersListener);
-  }
-
-  ordersRef = db.ref('orders');
+  if (!db) return () => {};
   
-  // Escuchar cambios en tiempo real
-  ordersListener = ordersRef.on('value', (snapshot) => {
-    console.log('📡 [FirebaseClient] Cambio detectado en tiempo real');
-    
-    const ordersData = snapshot.val() || {};
-    
-    // Convertir objeto a array
-    const orders = Object.keys(ordersData).map(key => ({
-      id: key,
-      ...ordersData[key]
-    }));
-    
-    // Ordenar por fecha de creación (más reciente primero)
-    orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    console.log(`📡 [FirebaseClient] ${orders.length} pedidos actualizados`);
-    
-    // Llamar al callback con los pedidos actualizados
-    callback({
-      eventType: 'update',
-      orders: orders,
-      timestamp: new Date().toISOString()
+  try {
+    const ref = db.ref('orders');
+    const listener = ref.on('value', (snapshot) => {
+      const data = snapshot.val() || {};
+      
+      const ordersList = Object.entries(data).map(([id, order]) => ({
+        id: id,
+        ...order
+      }));
+      
+      console.log('📡 [Firebase] Cambios detectados:', ordersList.length);
+      callback({ orders: ordersList });
     });
-  }, (error) => {
-    console.error('❌ [FirebaseClient] Error en suscripción en tiempo real:', error);
     
-    if (error.code === 'PERMISSION_DENIED') {
-      console.error('💡 [FirebaseClient] Las reglas de seguridad no permiten lectura');
-      console.error('💡 [FirebaseClient] Solución: Ve a Firebase Console → Realtime Database → Reglas');
-      console.error('   Configura: { "rules": { "orders": { ".read": true, ".write": true } } }');
+    return () => ref.off('value', listener);
+  } catch (error) {
+    console.error('❌ [Firebase] Error en suscripción:', error.message);
+    return () => {};
+  }
+}
+
+function testConnection() {
+  return new Promise(async (resolve) => {
+    console.log('🔌 [Firebase] Probando conexión...');
+    
+    try {
+      let db;
+      try {
+        db = initFirebase();
+      } catch (initError) {
+        resolve({ success: false, error: initError.message, details: 'Firebase SDK o configuración incorrecta' });
+        return;
+      }
+      
+      if (!db) {
+        resolve({ success: false, error: 'Firebase no inicializado', details: 'Verifica la configuración en Firebase Console' });
+        return;
+      }
+      
+      await db.ref('.info/connected').once('value');
+      const orders = await getOrders();
+      
+      resolve({ 
+        success: true, 
+        message: 'Conectado a Firebase',
+        ordersCount: orders.length,
+        source: 'Firebase Realtime Database'
+      });
+    } catch (error) {
+      resolve({ success: false, error: error.message, details: 'Verifica las reglas de Firebase y la conexión a internet' });
     }
   });
-
-  console.log('✅ [FirebaseClient] Suscrito a cambios en tiempo real');
-  return ordersListener;
-}
-
-// Cancelar suscripción
-function unsubscribeFromOrders() {
-  if (ordersListener && ordersRef) {
-    ordersRef.off('value', ordersListener);
-    ordersListener = null;
-    console.log('🔌 [FirebaseClient] Suscripción cancelada');
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// VERIFICACIÓN DE CONEXIÓN
+// EXPORTAR A VARIABLES GLOBALES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-async function testConnection() {
-  console.log('🔌 [FirebaseClient] Iniciando prueba de conexión...');
-  
-  const db = initFirebase();
-  if (!db) {
-    console.error('❌ [FirebaseClient] Firebase no inicializado');
-    return {
-      success: false,
-      error: 'Firebase no inicializado. Verifica la configuración.',
-      source: 'none',
-      details: 'El cliente Firebase no se pudo inicializar. Revisa la consola para más detalles.'
-    };
-  }
+window.getOrders = getOrders;
+window.createOrder = createOrder;
+window.updateOrderStatus = updateOrderStatus;
+window.subscribeToOrders = subscribeToOrders;
+window.testConnection = testConnection;
 
-  try {
-    console.log('📡 [FirebaseClient] Intentando conectar a Firebase Realtime Database...');
-    
-    // Intentar leer un pedido para verificar conexión
-    const snapshot = await db.ref('orders').limitToLast(1).once('value');
-    const ordersCount = snapshot.numChildren();
-    
-    console.log('✅ [FirebaseClient] Conexión exitosa a Firebase');
-    console.log('📊 [FirebaseClient] Pedidos encontrados:', ordersCount);
-    
-    return {
-      success: true,
-      message: 'Conexión exitosa a Firebase',
-      source: 'firebase',
-      ordersCount: ordersCount,
-      details: `Base de datos accesible. ${ordersCount} pedidos encontrados.`
-    };
-  } catch (error) {
-    console.error('❌ [FirebaseClient] Error de conexión a Firebase:', error);
-    console.error('💡 [FirebaseClient] Código de error:', error.code);
-    console.error('💡 [FirebaseClient] Mensaje:', error.message);
-    
-    let errorMessage = error.message;
-    let details = '';
-    
-    if (error.code === 'PERMISSION_DENIED') {
-      errorMessage = 'Permiso denegado';
-      details = 'Las reglas de seguridad de Firebase no permiten acceso. Ve a Firebase Console → Realtime Database → Reglas y configura permisos de lectura/escritura.';
-    } else if (error.code === 'NETWORK_ERROR') {
-      errorMessage = 'Error de red';
-      details = 'No se pudo conectar a Firebase. Verifica tu conexión a internet.';
-    } else if (error.code === 'UNAVAILABLE') {
-      errorMessage = 'Servicio no disponible';
-      details = 'Firebase Realtime Database no está disponible. Intenta de nuevo en unos minutos.';
-    }
-    
-    return {
-      success: false,
-      error: errorMessage,
-      source: 'firebase',
-      details: details
-    };
-  }
-}
+window.FirebaseClient = {
+  init: initFirebase,
+  getOrders,
+  createOrder,
+  updateOrderStatus,
+  getStats,
+  subscribeToOrders,
+  testConnection
+};
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// EXPORTAR FUNCIONES
-// ═══════════════════════════════════════════════════════════════════════════════
-
-// Hacer funciones disponibles globalmente
-if (typeof window !== 'undefined') {
-  // Exponer directamente en window también
-  window.getOrders = getOrders;
-  window.createOrder = createOrder;
-  window.updateOrderStatus = updateOrderStatus;
-  window.subscribeToOrders = subscribeToOrders;
-  window.unsubscribeFromOrders = unsubscribeFromOrders;
-  window.testConnection = testConnection;
-  
-  // Exponer a través del objeto FirebaseClient
-  window.FirebaseClient = {
-    init: initFirebase,
-    getOrders,
-    createOrder,
-    updateOrderStatus,
-    getStats,
-    subscribeToOrders,
-    unsubscribeFromOrders,
-    testConnection
-  };
-  
-  console.log('✅ [FirebaseClient] Cliente Firebase cargado y disponible globalmente');
-  console.log('📦 Funciones disponibles directamente:', typeof getOrders, typeof subscribeToOrders);
-}
+console.log('✅ [Firebase] Cliente listo');
+console.log('📋 Funciones:', {
+  getOrders: typeof getOrders,
+  createOrder: typeof createOrder,
+  subscribeToOrders: typeof subscribeToOrders
+});

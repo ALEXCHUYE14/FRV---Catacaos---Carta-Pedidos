@@ -935,9 +935,9 @@ SOFTWARE.
 
 ### Desarrollador
 
-- **Nombre:** [Tu Nombre]
-- **GitHub:** [@tu-usuario](https://github.com/tu-usuario)
-- **LinkedIn:** [Tu Perfil](https://linkedin.com/in/tu-perfil)
+- **Nombre:** Miguel Alexander Flores Chuye
+- **GitHub:** [@tu-usuario](https://github.com/ALEXCHUYE14)
+- **LinkedIn:** [Tu Perfil](https://www.linkedin.com/in/miguel-alexander-flores-chuye-69753836b/)
 
 ---
 

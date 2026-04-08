@@ -5,18 +5,173 @@ let soundEnabled = true;
 let firebaseUnsubscribe = null;
 let revenueVisible = true;
 let expandedOrders = new Set();
+let searchQuery = '';
+let inventory = [];
+let cashTransactions = [];
+let tablesStatus = {};
 
 // ── INICIALIZACIÓN ──────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Verificar autenticación
+  console.log('📝 DOM Content Loaded');
+  
   if (localStorage.getItem('frv_admin_auth') !== 'true') {
+    console.log('🔒 No autenticado, redirigiendo...');
     window.location.href = 'login.html';
     return;
   }
   
+  console.log('🚀 Panel iniciándose...');
   initClock();
-  initFirebaseConnection();
+  
+  // Verificar que los elementos de conexión existan
+  const statusEl = document.getElementById('connectionStatus');
+  const textEl = document.getElementById('connectionText');
+  console.log('📊 Elementos de conexión encontrados:', !!statusEl, !!textEl);
+  
+  // Intentar conexión inmediata
+  console.log('📡 Ejecutando tryConnection...');
+  setTimeout(() => {
+    tryConnection();
+  }, 500);
 });
+
+async function tryConnection() {
+  console.log('🔌 tryConnection() iniciada...');
+  
+  // Actualizar UI directamente
+  const statusEl = document.getElementById('connectionStatus');
+  const textEl = document.getElementById('connectionText');
+  if (statusEl && textEl) {
+    statusEl.className = 'connection-status connecting';
+    textEl.textContent = 'Conectando...';
+    console.log('📊 UI actualizado a: Conectando...');
+  }
+  
+  // Timeout de 15 segundos para toda la conexión
+  const connectionTimeout = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error('Timeout de conexión (15s)')), 15000)
+  );
+  
+  try {
+    // Verificar que firebase esté cargado
+    console.log('🔍 Verificando firebase SDK...');
+    if (typeof firebase === 'undefined') {
+      throw new Error('Firebase SDK no cargado');
+    }
+    console.log('✅ Firebase SDK encontrado');
+    
+    // Verificar FirebaseClient
+    console.log('🔍 Verificando FirebaseClient...');
+    if (typeof FirebaseClient === 'undefined') {
+      throw new Error('FirebaseClient no definido');
+    }
+    console.log('✅ FirebaseClient encontrado');
+    
+    // Inicializar
+    console.log('🚀 Iniciando Firebase...');
+    const initPromise = FirebaseClient.init();
+    const db = await Promise.race([initPromise, connectionTimeout]);
+    
+    if (!db) {
+      throw new Error('No se pudo inicializar Firebase');
+    }
+    console.log('✅ Firebase inicializado, db:', !!db);
+    
+    console.log('📥 Cargando pedidos...');
+    
+    // Cargar pedidos con timeout
+    const ordersPromise = FirebaseClient.getOrders();
+    orders = await Promise.race([ordersPromise, connectionTimeout]);
+    
+    console.log('📦 Pedidos obtenidos:', orders?.length || 0);
+    renderOrders();
+    updateStatsFromOrders();
+    
+    // Cargar inventario
+    console.log('📦 Cargando inventario...');
+    try {
+      const invPromise = loadInventoryFromFirebase();
+      inventory = await Promise.race([invPromise, connectionTimeout]);
+    } catch (invError) {
+      console.warn('⚠️ Inventario no cargado:', invError.message);
+    }
+    
+    // Conexión exitosa - actualizar UI directamente
+    console.log('📊 Actualizando UI a: En vivo');
+    if (statusEl && textEl) {
+      statusEl.className = 'connection-status connected';
+      textEl.textContent = 'En vivo';
+      console.log('✅ UI actualizado a: En vivo');
+    }
+    console.log('✅ ¡Conectado! Pedidos:', orders?.length || 0);
+    
+    // Suscribirse a actualizaciones en tiempo real
+    console.log('📡 Iniciando suscripción en tiempo real...');
+    subscribeToOrdersUpdates();
+    
+  } catch (error) {
+    console.error('❌ Error de conexión:', error.message);
+    console.error('❌ Stack:', error.stack);
+    
+    // Actualizar UI a error
+    if (statusEl && textEl) {
+      statusEl.className = 'connection-status disconnected';
+      textEl.textContent = 'Error: ' + error.message.substring(0, 30);
+      console.log('📊 UI actualizado a error:', error.message);
+    }
+    showOfflineMode();
+  }
+}
+
+function showOfflineMode() {
+  // Cargar desde localStorage
+  const saved = localStorage.getItem('frv_orders');
+  if (saved) orders = JSON.parse(saved);
+  
+  const inv = localStorage.getItem('frv_inventory');
+  if (inv) inventory = JSON.parse(inv);
+  
+  renderOrders();
+  updateStatsFromOrders();
+  console.log('📱 Modo offline cargado');
+}
+
+async function loadInventoryFromFirebase() {
+  try {
+    const db = FirebaseClient.init();
+    if (!db) return [];
+    
+    const snap = await db.ref('inventory').once('value');
+    const data = snap.val() || {};
+    return Object.entries(data).map(([id, item]) => ({ id, ...item }));
+  } catch (e) {
+    return [];
+  }
+}
+
+let inventoryUnsubscribe = null;
+
+async function subscribeToInventoryChanges() {
+  // Esta función se llama después de que la conexión esté establecida
+  // No hace falta por ahora - el inventario se carga al inicio
+}
+
+function updateAllOrdersPrices() {
+  orders.forEach(order => {
+    if (order.items && Array.isArray(order.items)) {
+      order.items.forEach(item => {
+        const invItem = inventory.find(i => i.name === item.name);
+        if (invItem) {
+          item.price = invItem.price;
+          item.emoji = invItem.emoji;
+        }
+      });
+    }
+  });
+  
+  renderOrders();
+  updateStatsFromOrders();
+}
 
 // ── LOGOUT ──────────────────────────────────────
 function logout() {
@@ -27,38 +182,73 @@ function logout() {
 }
 
 // ── CONEXIÓN FIREBASE (TIEMPO REAL) ─────────────
-function initFirebaseConnection() {
-  updateConnectionStatus('connecting', 'Conectando...');
-  addFeedItem('Sistema', '🔌 Iniciando conexión con Firebase...');
-  
-  // Verificar que FirebaseClient esté disponible
-  if (typeof FirebaseClient === 'undefined') {
-    console.error('❌ FirebaseClient no está cargado');
-    updateConnectionStatus('disconnected', 'Error');
-    addFeedItem('Sistema', '❌ FirebaseClient no está cargado. Verifica que firebase-client.js esté incluido.');
-    showNotification('❌ Error', 'Firebase no está cargado', 'error');
-    return;
+let firebaseConnected = false;
+
+function loadFromLocalStorage() {
+  const saved = localStorage.getItem('frv_orders');
+  if (saved) {
+    orders = JSON.parse(saved);
+    renderOrders();
+    updateStatsFromOrders();
   }
   
-  // Inicializar Firebase
-  const db = FirebaseClient.init();
-  if (!db) {
-    console.error('❌ No se pudo inicializar Firebase');
-    updateConnectionStatus('disconnected', 'Error');
-    addFeedItem('Sistema', '❌ No se pudo inicializar Firebase. Verifica la configuración.');
-    showNotification('❌ Error', 'No se pudo inicializar Firebase', 'error');
-    return;
+  const inv = localStorage.getItem('frv_inventory');
+  if (inv) inventory = JSON.parse(inv);
+  
+  addFeedItem('Sistema', '📱 Modo offline');
+}
+
+function loadFromLocalStorage() {
+  // Cargar pedidos desde localStorage como respaldo
+  const savedOrders = localStorage.getItem('frv_orders');
+  if (savedOrders) {
+    try {
+      orders = JSON.parse(savedOrders);
+      renderOrders();
+      updateStatsFromOrders();
+      console.log('📥 Pedidos cargados desde localStorage:', orders.length);
+      addFeedItem('Sistema', '📱 Modo local: ' + orders.length + ' pedidos');
+    } catch (e) {
+      console.error('Error parseando pedidos locales:', e);
+      orders = [];
+    }
+  } else {
+    addFeedItem('Sistema', '📱 Modo local: Sin pedidos guardados');
   }
   
-  console.log('✅ Firebase inicializado, suscribiéndose a cambios...');
-  updateConnectionStatus('connected', 'En vivo');
-  addFeedItem('Sistema', '🟢 Conexión en tiempo real establecida con Firebase');
+  // También cargar inventario local
+  const savedInventory = localStorage.getItem('frv_inventory');
+  if (savedInventory) {
+    try {
+      inventory = JSON.parse(savedInventory);
+      console.log('📦 Inventario cargado desde local:', inventory.length);
+    } catch (e) {
+      inventory = [];
+    }
+  }
   
-  // Cargar pedidos iniciales
-  loadOrders();
+  renderOrders();
+  updateStatsFromOrders();
   
-  // Suscribirse a cambios en tiempo real
-  subscribeToOrdersUpdates();
+  // Intentar reconexión cada 30 segundos
+  setInterval(tryReconnect, 30000);
+}
+
+async function tryReconnect() {
+  if (firebaseConnected) return;
+  
+  console.log('🔄 Intentando reconexión a Firebase...');
+  try {
+    const db = FirebaseClient.init();
+    if (db) {
+      firebaseConnected = true;
+      updateConnectionStatus('connected', 'Reconectado');
+      addFeedItem('Sistema', '🟢 Firebase reconectado');
+      loadOrders();
+    }
+  } catch (e) {
+    console.log('❌ Reconexión fallida:', e);
+  }
 }
 
 // ── SUSCRIBIRSE A CAMBIOS EN TIEMPO REAL ────────
@@ -198,6 +388,13 @@ async function loadOrders() {
     console.log(`✅ ${orders.length} pedidos cargados`);
     console.log('📋 Primer pedido:', orders[0] ? JSON.stringify(orders[0]) : 'NINGUNO');
     
+    // Guardar en localStorage como respaldo offline
+    try {
+      localStorage.setItem('frv_orders', JSON.stringify(orders));
+    } catch (e) {
+      console.warn('No se pudo guardar en localStorage:', e);
+    }
+    
     // Actualizar estadísticas
     updateStatsFromOrders();
     
@@ -318,7 +515,6 @@ function createOrderCard(order) {
       <div class="order-items">
         ${itemsToShow.map(item => `
           <div class="order-item">
-            <span class="item-emoji">${item.emoji}</span>
             <span class="item-name">${item.name}</span>
             <span class="item-qty">x${item.qty}</span>
             <span class="item-price">S/ ${(item.price * item.qty).toFixed(2)}</span>
@@ -828,34 +1024,42 @@ function generateReports() {
   document.getElementById('generalTotal').textContent = `S/ ${generalTotal.toFixed(2)}`;
 }
 
-// ── GENERAR PDF PROFESIONAL ─────────────────────
-function generatePDF() {
-  // Mostrar todos los pedidos (no solo completados) para el reporte
-  const allOrders = orders.filter(o => o.status !== 'cancelled');
-  const totalRevenue = allOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const currentDate = new Date().toLocaleDateString('es-PE', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-  const currentTime = new Date().toLocaleTimeString('es-PE', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
+// ── GENERAR PDF REAL CON JSPDF ─────────────────────
+async function generatePDF() {
+  // Verificar jsPDF
+  if (typeof window.jspdf === 'undefined') {
+    showNotification('❌ Error', ' libreria PDF no cargó. Recarga la página.', 'error');
+    return;
+  }
   
-  // Validar que haya pedidos
+  const { jsPDF } = window.jspdf;
+  if (!jsPDF) {
+    showNotification('❌ Error', 'No se pudo generar PDF', 'error');
+    return;
+  }
+  
+  const allOrders = orders.filter(o => o.status !== 'cancelled');
+  
   if (allOrders.length === 0) {
     showNotification('❌ Sin pedidos', 'No hay pedidos para generar reporte', 'error');
     addFeedItem('Reporte', '❌ No hay pedidos para generar reporte');
     return;
   }
   
-  // Generar reportes
+  const doc = new jsPDF();
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const currentDate = today.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+  const currentTime = today.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+  
+  const totalRevenue = allOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalOrders = allOrders.length;
+  const uniqueMesas = [...new Set(allOrders.map(o => o.mesa))].length;
+  const uniqueAnfitrionas = [...new Set(allOrders.map(o => o.anfitriona).filter(Boolean))].length;
+  
   const mesas = {};
   allOrders.forEach(order => {
-    if (!mesas[order.mesa]) {
-      mesas[order.mesa] = { count: 0, total: 0 };
-    }
+    if (!mesas[order.mesa]) mesas[order.mesa] = { count: 0, total: 0 };
     mesas[order.mesa].count++;
     mesas[order.mesa].total += order.total || 0;
   });
@@ -863,9 +1067,7 @@ function generatePDF() {
   const anfitrionas = {};
   allOrders.forEach(order => {
     if (order.anfitriona) {
-      if (!anfitrionas[order.anfitriona]) {
-        anfitrionas[order.anfitriona] = { count: 0, total: 0 };
-      }
+      if (!anfitrionas[order.anfitriona]) anfitrionas[order.anfitriona] = { count: 0, total: 0 };
       anfitrionas[order.anfitriona].count++;
       anfitrionas[order.anfitriona].total += order.total || 0;
     }
@@ -873,276 +1075,166 @@ function generatePDF() {
   
   const products = {};
   allOrders.forEach(order => {
-    if (order.items && Array.isArray(order.items)) {
+    if (order.items) {
       order.items.forEach(item => {
-        if (!products[item.name]) {
-          products[item.name] = { qty: 0, total: 0 };
-        }
+        if (!products[item.name]) products[item.name] = { qty: 0, total: 0 };
         products[item.name].qty += item.qty || 0;
         products[item.name].total += (item.price || 0) * (item.qty || 0);
       });
     }
   });
   
-  // Obtener métodos de pago
   const payments = {};
   allOrders.forEach(order => {
-    if (order.paymentMethod) {
-      if (!payments[order.paymentMethod]) {
-        payments[order.paymentMethod] = { count: 0, total: 0 };
-      }
-      payments[order.paymentMethod].count++;
-      payments[order.paymentMethod].total += order.total || 0;
-    }
+    const method = order.paymentMethod || 'Efectivo';
+    if (!payments[method]) payments[method] = { count: 0, total: 0 };
+    payments[method].count++;
+    payments[method].total += order.total || 0;
   });
   
-  // Crear contenido HTML para PDF
-  const pdfContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>Reporte FRV Catacaos - ${currentDate}</title>
-      <style>
-        body {
-          font-family: 'Arial', sans-serif;
-          margin: 0;
-          padding: 20px;
-          color: #333;
-        }
-        .header {
-          text-align: center;
-          border-bottom: 3px solid #F5C800;
-          padding-bottom: 20px;
-          margin-bottom: 30px;
-        }
-        .logo {
-          font-size: 48px;
-          font-weight: 900;
-          color: #0a0a0a;
-          letter-spacing: 4px;
-          margin-bottom: 5px;
-        }
-        .logo span {
-          color: #F5C800;
-        }
-        .subtitle {
-          font-size: 14px;
-          color: #666;
-          letter-spacing: 2px;
-        }
-        .date-time {
-          font-size: 12px;
-          color: #888;
-          margin-top: 10px;
-        }
-        .summary {
-          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-          color: white;
-          padding: 20px;
-          border-radius: 10px;
-          margin-bottom: 30px;
-          display: flex;
-          justify-content: space-around;
-        }
-        .summary-item {
-          text-align: center;
-        }
-        .summary-value {
-          font-size: 24px;
-          font-weight: 700;
-          color: #00ff88;
-        }
-        .summary-label {
-          font-size: 12px;
-          color: #888;
-          margin-top: 5px;
-        }
-        .section {
-          margin-bottom: 30px;
-        }
-        .section-title {
-          font-size: 16px;
-          font-weight: 700;
-          color: #0a0a0a;
-          border-bottom: 2px solid #F5C800;
-          padding-bottom: 5px;
-          margin-bottom: 15px;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 20px;
-        }
-        th {
-          background: #f5f5f5;
-          padding: 10px;
-          text-align: left;
-          font-size: 12px;
-          font-weight: 600;
-          color: #666;
-          border-bottom: 2px solid #ddd;
-        }
-        td {
-          padding: 10px;
-          border-bottom: 1px solid #eee;
-          font-size: 13px;
-        }
-        tr:hover {
-          background: #f9f9f9;
-        }
-        .total-row {
-          font-weight: 700;
-          background: #f0f0f0 !important;
-        }
-        .footer {
-          text-align: center;
-          margin-top: 40px;
-          padding-top: 20px;
-          border-top: 2px solid #F5C800;
-          font-size: 11px;
-          color: #888;
-        }
-        @media print {
-          body { padding: 10px; }
-          .summary { flex-wrap: wrap; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="logo">F<span>R</span>V</div>
-        <div class="subtitle">Catacaos — Reporte de Ventas</div>
-        <div class="date-time">${currentDate} - ${currentTime}</div>
-      </div>
-      
-      <div class="summary">
-        <div class="summary-item">
-          <div class="summary-value">${allOrders.length}</div>
-          <div class="summary-label">Pedidos Totales</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-value">S/ ${totalRevenue.toFixed(2)}</div>
-          <div class="summary-label">Total Recaudado</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-value">${Object.keys(mesas).length}</div>
-          <div class="summary-label">Mesas Atendidas</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-value">${Object.keys(anfitrionas).length}</div>
-          <div class="summary-label">Anfitrionas Activas</div>
-        </div>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">🪑 Ventas por Mesa</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Mesa</th>
-              <th>Pedidos</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Object.entries(mesas)
-              .sort((a, b) => b[1].total - a[1].total)
-              .map(([mesa, data]) => `
-                <tr>
-                  <td>Mesa ${mesa}</td>
-                  <td>${data.count}</td>
-                  <td>S/ ${data.total.toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            <tr class="total-row">
-              <td colspan="2">TOTAL</td>
-              <td>S/ ${Object.values(mesas).reduce((sum, m) => sum + m.total, 0).toFixed(2)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">👩‍💼 Ventas por Anfitriona</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Anfitriona</th>
-              <th>Pedidos</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Object.entries(anfitrionas)
-              .sort((a, b) => b[1].total - a[1].total)
-              .map(([anfitriona, data]) => `
-                <tr>
-                  <td>${anfitriona}</td>
-                  <td>${data.count}</td>
-                  <td>S/ ${data.total.toFixed(2)}</td>
-                </tr>
-              `).join('')}
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">📦 Productos Vendidos</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>Cantidad</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Object.entries(products)
-              .sort((a, b) => b[1].total - a[1].total)
-              .slice(0, 15)
-              .map(([product, data]) => `
-                <tr>
-                  <td>${product}</td>
-                  <td>${data.qty} uds</td>
-                  <td>S/ ${data.total.toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            <tr class="total-row">
-              <td colspan="2">TOTAL</td>
-              <td>S/ ${Object.values(products).reduce((sum, p) => sum + p.total, 0).toFixed(2)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="footer">
-        <p>© ${new Date().getFullYear()} FRV Catacaos - Todos los derechos reservados</p>
-        <p>Reporte generado automáticamente por el sistema de administración</p>
-      </div>
-    </body>
-    </html>
-  `;
+  let y = 20;
   
-  // Crear ventana para PDF
-  const printWindow = window.open('', '_blank');
+  doc.setFillColor(26, 26, 46);
+  doc.rect(0, 0, 210, 45, 'F');
+  doc.setTextColor(245, 200, 0);
+  doc.setFontSize(28);
+  doc.setFont('helvetica', 'bold');
+  doc.text('F RV', 105, 22, { align: 'center' });
+  doc.setFontSize(12);
+  doc.setTextColor(100, 100, 100);
+  doc.text('CATACAOS', 105, 32, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setTextColor(120, 120, 120);
+  doc.text('REPORTE DE VENTAS', 105, 40, { align: 'center' });
   
-  if (!printWindow) {
-    showNotification('❌ Error', 'El popup fue bloqueado. Permite popups para descargar el PDF.', 'error');
-    addFeedItem('Reporte', '❌ Error: Popup bloqueado');
-    return;
+  y = 55;
+  doc.setTextColor(60, 60, 60);
+  doc.setFontSize(9);
+  doc.text(`Fecha: ${currentDate} - ${currentTime}`, 105, y, { align: 'center' });
+  
+  y = 65;
+  doc.setFillColor(240, 240, 240);
+  doc.rect(15, y - 5, 180, 25, 'F');
+  
+  doc.setFontSize(11);
+  doc.setTextColor(0, 0, 0);
+  doc.text(`${totalOrders}`, 45, y + 5, { align: 'center' });
+  doc.text(`S/ ${totalRevenue.toFixed(2)}`, 105, y + 5, { align: 'center' });
+  doc.text(`${uniqueMesas}`, 155, y + 5, { align: 'center' });
+  doc.text(`${uniqueAnfitrionas}`, 195, y + 5, { align: 'center' });
+  
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('PEDIDOS', 45, y + 15, { align: 'center' });
+  doc.text('TOTAL', 105, y + 15, { align: 'center' });
+  doc.text('MESAS', 155, y + 15, { align: 'center' });
+  doc.text('ANFIT.', 195, y + 15, { align: 'center' });
+  
+  y = 100;
+  
+  doc.setFontSize(12);
+  doc.setTextColor(245, 200, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.text('VENTAS POR MESA', 15, y);
+  doc.setDrawColor(245, 200, 0);
+  doc.setLineWidth(0.5);
+  doc.line(15, y + 2, 195, y + 2);
+  
+  y += 10;
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  doc.setFont('helvetica', 'normal');
+  
+  const sortedMesas = Object.entries(mesas).sort((a, b) => b[1].total - a[1].total);
+  sortedMesas.forEach(([mesa, data]) => {
+    doc.text(`Mesa ${mesa}`, 20, y);
+    doc.text(`${data.count}`, 80, y, { align: 'center' });
+    doc.text(`S/ ${data.total.toFixed(2)}`, 190, y, { align: 'right' });
+    y += 7;
+  });
+  
+  const totalMesas = Object.values(mesas).reduce((s, m) => s + m.total, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.text('TOTAL', 20, y);
+  doc.text(`S/ ${totalMesas.toFixed(2)}`, 190, y, { align: 'right' });
+  
+  y += 15;
+  doc.setFontSize(12);
+  doc.setTextColor(245, 200, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.text('VENTAS POR ANFITRIONA', 15, y);
+  doc.line(15, y + 2, 195, y + 2);
+  
+  y += 10;
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  doc.setFont('helvetica', 'normal');
+  
+  const sortedAnfitrionas = Object.entries(anfitrionas).sort((a, b) => b[1].total - a[1].total);
+  sortedAnfitrionas.forEach(([anfitriona, data]) => {
+    doc.text(anfitriona.substring(0, 20), 20, y);
+    doc.text(`${data.count}`, 80, y, { align: 'center' });
+    doc.text(`S/ ${data.total.toFixed(2)}`, 190, y, { align: 'right' });
+    y += 7;
+  });
+  
+  y += 15;
+  doc.setFontSize(12);
+  doc.setTextColor(245, 200, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.text('PRODUCTOS VENDIDOS', 15, y);
+  doc.line(15, y + 2, 195, y + 2);
+  
+  y += 10;
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  doc.setFont('helvetica', 'normal');
+  
+  const sortedProducts = Object.entries(products).sort((a, b) => b[1].total - a[1].total).slice(0, 10);
+  sortedProducts.forEach(([product, data]) => {
+    doc.text(product.substring(0, 25), 20, y);
+    doc.text(`${data.qty}`, 80, y, { align: 'center' });
+    doc.text(`S/ ${data.total.toFixed(2)}`, 190, y, { align: 'right' });
+    y += 7;
+  });
+  
+  const totalProducts = Object.values(products).reduce((s, p) => s + p.total, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.text('TOTAL', 20, y);
+  doc.text(`S/ ${totalProducts.toFixed(2)}`, 190, y, { align: 'right' });
+  
+  if (y > 240) {
+    doc.addPage();
+    y = 20;
   }
   
-  printWindow.document.write(pdfContent);
-  printWindow.document.close();
+  y += 15;
+  doc.setFontSize(12);
+  doc.setTextColor(245, 200, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.text('METODOS DE PAGO', 15, y);
+  doc.line(15, y + 2, 195, y + 2);
   
-  // Esperar a que cargue y luego imprimir
-  setTimeout(() => {
-    printWindow.print();
-  }, 500);
+  y += 10;
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  doc.setFont('helvetica', 'normal');
   
-  addFeedItem('Reporte', '📄 Reporte PDF generado');
-  showNotification('📄 PDF', 'Reporte generado exitosamente', 'success');
+  Object.entries(payments).forEach(([method, data]) => {
+    doc.text(method, 20, y);
+    doc.text(`${data.count}`, 80, y, { align: 'center' });
+    doc.text(`S/ ${data.total.toFixed(2)}`, 190, y, { align: 'right' });
+    y += 7;
+  });
+  
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  doc.text(`Reporte generado el ${currentDate} a las ${currentTime} | FRV Catacaos`, 105, 290, { align: 'center' });
+  
+  doc.save(`FRV_Reporte_${todayStr}.pdf`);
+  
+  showNotification('✅ PDF descargado', `FRV_Reporte_${todayStr}.pdf`, 'success');
+  addFeedItem('Reporte', `📄 PDF descargado: FRV_Reporte_${todayStr}.pdf`);
 }
 
 // ── ALERTA DE SEGURIDAD ────────────────────────
@@ -1183,11 +1275,737 @@ function getTimeAgo(dateString) {
 }
 
 function updateConnectionStatus(status, text) {
+  console.log('📊 UpdateConnectionStatus called:', status, text);
   const statusEl = document.getElementById('connectionStatus');
   const textEl = document.getElementById('connectionText');
   
   if (statusEl && textEl) {
+    console.log('📊 Updating DOM elements...');
     statusEl.className = `connection-status ${status}`;
     textEl.textContent = text;
+    console.log('📊 DOM updated - class:', statusEl.className, 'text:', textEl.textContent);
+  } else {
+    console.warn('📊 DOM elements NOT found:', !!statusEl, !!textEl);
   }
+}
+
+// ── BÚSQUEDA DE PEDIDOS ───────────────────────────
+function searchOrders(query) {
+  searchQuery = query.toLowerCase();
+  const grid = document.getElementById('grid');
+  
+  if (!searchQuery) {
+    renderOrders();
+    return;
+  }
+  
+  let filteredOrders = orders.filter(o => {
+    const mesaMatch = String(o.mesa).includes(searchQuery);
+    const anfitrionaMatch = o.anfitriona?.toLowerCase().includes(searchQuery);
+    const itemsMatch = o.items?.some(item => item.name.toLowerCase().includes(searchQuery));
+    const idMatch = o.id?.toLowerCase().includes(searchQuery);
+    return mesaMatch || anfitrionaMatch || itemsMatch || idMatch;
+  });
+  
+  if (filteredOrders.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--muted);">
+        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+        <div style="font-size: 16px; font-weight: 600;">No se encontraron pedidos</div>
+        <div style="font-size: 13px; margin-top: 8px;">Prueba con otros términos de búsqueda</div>
+      </div>
+    `;
+    return;
+  }
+  
+  grid.innerHTML = filteredOrders.map(order => createOrderCard(order)).join('');
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  searchQuery = '';
+  renderOrders();
+}
+
+// ── PANEL DE BAR ─────────────────────────────
+function showKitchenView() {
+  document.getElementById('kitchenModal').classList.add('show');
+  renderKitchenOrders();
+}
+
+function closeKitchenView() {
+  document.getElementById('kitchenModal').classList.remove('show');
+}
+
+function renderKitchenOrders() {
+  const grid = document.getElementById('kitchenGrid');
+  const kitchenOrders = orders.filter(o => o.status === 'pending' || o.status === 'preparing' || o.status === 'ready');
+  
+  if (kitchenOrders.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #888;">
+        <div style="font-size: 32px;">🍳</div>
+        <div>No hay pedidos para cocina</div>
+      </div>
+    `;
+    return;
+  }
+  
+  grid.innerHTML = kitchenOrders.map(order => {
+    const isPreparing = order.status === 'preparing';
+    const isReady = order.status === 'ready';
+    
+    return `
+      <div class="kitchen-card ${order.status}">
+        <div class="kitchen-mesa">Mesa ${order.mesa}</div>
+        <div class="kitchen-items">
+          ${order.items.map(item => `
+            <div class="kitchen-item">
+              <span class="kitchen-qty">${item.qty}x</span>${item.name}
+            </div>
+          `).join('')}
+        </div>
+        ${order.note ? `<div style="font-size:11px;color:#ffc800;margin-bottom:8px;">📝 ${order.note}</div>` : ''}
+        <div class="kitchen-actions">
+          ${!isReady ? `<button class="kitchen-btn bell" onclick="kitchenBell('${order.id}')">🔔 Llamar</button>` : ''}
+          ${isPreparing ? `<button class="kitchen-btn done" onclick="updateOrderStatus('${order.id}', 'ready')">✅ Listo</button>` : ''}
+          ${!isPreparing && !isReady ? `<button class="kitchen-btn done" onclick="updateOrderStatus('${order.id}', 'preparing')">⚡ Prep.</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function kitchenBell(orderId) {
+  showNotification('🔔 Llamando', `Llamando a mesa del pedido`, 'success');
+}
+
+// ── INVENTARIO CON FIREBASE ─────────────────────────────
+function showInventory() {
+  document.getElementById('inventoryModal').classList.add('show');
+  loadInventory();
+}
+
+function closeInventory() {
+  document.getElementById('inventoryModal').classList.remove('show');
+}
+
+async function loadInventory() {
+  try {
+    const db = FirebaseClient.init();
+    if (!db) {
+      loadLocalInventory();
+      return;
+    }
+    
+    const snapshot = await db.ref('inventory').once('value');
+    const data = snapshot.val();
+    
+    if (data) {
+      inventory = Object.entries(data).map(([id, item]) => ({
+        id: id,
+        ...item
+      }));
+    } else {
+      inventory = getDefaultInventory();
+      await saveInventoryToFirebase();
+    }
+  } catch (error) {
+    console.error('Error loading inventory:', error);
+    loadLocalInventory();
+  }
+  
+  renderInventoryTable();
+}
+
+function getDefaultInventory() {
+  return [
+    { id: '1', name: 'Pisco Sour', category: 'Tragos', price: 18, stock: 50, minStock: 10, emoji: '🍋' },
+    { id: '2', name: 'Cristal', category: 'Cervezas', price: 8, stock: 100, minStock: 20, emoji: '🍺' },
+    { id: '3', name: 'Copa de Vino', category: 'Vinos', price: 12, stock: 30, minStock: 5, emoji: '🍷' },
+    { id: '4', name: 'Gaseosa', category: 'Bebidas', price: 6, stock: 48, minStock: 15, emoji: '🥤' },
+    { id: '5', name: 'Agua', category: 'Bebidas', price: 4, stock: 60, minStock: 20, emoji: '💧' },
+    { id: '6', name: 'Piña Colada', category: 'Tragos', price: 20, stock: 8, minStock: 10, emoji: '🍍' },
+    { id: '7', name: 'Cevichera', category: 'Platos', price: 25, stock: 25, minStock: 5, emoji: '🐟' },
+    { id: '8', name: 'Salchipapa', category: 'Platos', price: 15, stock: 15, minStock: 8, emoji: '🍟' },
+    { id: '9', name: 'Daiquiri', category: 'Tragos', price: 18, stock: 20, minStock: 5, emoji: '🍓' },
+    { id: '10', name: 'Mojito', category: 'Tragos', price: 18, stock: 20, minStock: 5, emoji: '🌿' },
+    { id: '11', name: 'Chicha', category: 'Bebidas', price: 5, stock: 40, minStock: 10, emoji: '🫐' },
+    { id: '12', name: 'Inca Kola', category: 'Bebidas', price: 6, stock: 48, minStock: 15, emoji: '🥤' },
+  ];
+}
+
+function loadLocalInventory() {
+  const saved = localStorage.getItem('frv_inventory');
+  inventory = saved ? JSON.parse(saved) : getDefaultInventory();
+}
+
+async function saveInventoryToFirebase() {
+  try {
+    const db = FirebaseClient.init();
+    if (db && inventory.length > 0) {
+      const obj = {};
+      inventory.forEach(item => {
+        obj[item.id] = item;
+      });
+      await db.ref('inventory').set(obj);
+      localStorage.setItem('frv_inventory', JSON.stringify(inventory));
+    }
+  } catch (error) {
+    console.error('Error saving to Firebase:', error);
+    localStorage.setItem('frv_inventory', JSON.stringify(inventory));
+  }
+}
+
+function renderInventoryTable() {
+  const tbody = document.getElementById('inventoryBody');
+  if (!tbody) return;
+  
+  tbody.innerHTML = inventory.map(item => {
+    let statusClass = 'good';
+    let statusText = 'Normal';
+    
+    if (item.stock <= 0) {
+      statusClass = 'out';
+      statusText = 'Agotado';
+    } else if (item.stock <= item.minStock) {
+      statusClass = 'low';
+      statusText = 'Bajo';
+    }
+    
+    const rowClass = item.stock <= 0 ? 'out-of-stock' : (item.stock <= item.minStock ? 'low-stock' : '');
+    
+    return `
+      <tr class="${rowClass}">
+        <td>${item.name}</td>
+        <td>${item.category}</td>
+        <td>
+          <input type="number" class="inv-input price" value="${item.price}" step="0.5" min="0" 
+            onchange="updatePrice('${item.id}', this.value)" onblur="saveInventoryToFirebase()">
+        </td>
+        <td>
+          <input type="number" class="inv-input stock" value="${item.stock}" min="0"
+            onchange="updateStock('${item.id}', this.value)" onblur="saveInventoryToFirebase()">
+        </td>
+        <td>${item.minStock}</td>
+        <td><span class="stock-badge ${statusClass}">${statusText}</span></td>
+        <td>
+          <button style="background:rgba(255,68,68,0.2);color:#ff4444;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px;" onclick="deleteInventory('${item.id}')">🗑️</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function updatePrice(id, newPrice) {
+  const item = inventory.find(i => i.id === id);
+  if (item) {
+    item.price = parseFloat(newPrice) || 0;
+    await saveInventoryToFirebase();
+    showNotification('💰 Precio actualizado', `${item.name}: S/ ${item.price}`, 'success');
+    updateProductPricesInOrders(item);
+  }
+}
+
+async function updateStock(id, newStock) {
+  const item = inventory.find(i => i.id === id);
+  if (item) {
+    item.stock = parseInt(newStock) || 0;
+    await saveInventoryToFirebase();
+    renderInventoryTable();
+    if (item.stock <= item.minStock) {
+      showNotification('⚠️ Stock bajo', `${item.name}: ${item.stock} unidades`, 'error');
+    }
+  }
+}
+
+function updateProductPricesInOrders(updatedItem) {
+  orders.forEach(order => {
+    if (order.items && Array.isArray(order.items)) {
+      order.items.forEach(item => {
+        if (item.name === updatedItem.name) {
+          item.price = updatedItem.price;
+        }
+      });
+    }
+  });
+  renderOrders();
+  addFeedItem('Sistema', `💰 Precio de ${updatedItem.name} actualizado en pedidos`);
+}
+
+async function addInventoryItem() {
+  const name = prompt('Nombre del producto:');
+  if (!name) return;
+  
+  const category = prompt('Categoría (Tragos/Cervezas/Bebidas/Platos/Vinos):') || 'General';
+  const price = parseFloat(prompt('Precio (S/):') || '10');
+  const stock = parseInt(prompt('Stock inicial:') || '50');
+  const minStock = parseInt(prompt('Stock mínimo:') || '10');
+  const emoji = prompt('Emoji (opcional):') || '📦';
+  
+  const newItem = {
+    id: 'prod_' + Date.now(),
+    name,
+    category,
+    price,
+    stock,
+    minStock,
+    emoji
+  };
+  
+  inventory.push(newItem);
+  await saveInventoryToFirebase();
+  renderInventoryTable();
+  showNotification('✅ Agregado', `${name} agregado al inventario`, 'success');
+}
+
+async function deleteInventory(id) {
+  if (!confirm('¿Eliminar este producto?')) return;
+  
+  inventory = inventory.filter(i => i.id !== id);
+  await saveInventoryToFirebase();
+  renderInventoryTable();
+}
+
+function alertLowStock() {
+  const lowItems = inventory.filter(i => i.stock <= i.minStock);
+  
+  if (lowItems.length === 0) {
+    showNotification('✅ OK', 'Todos los productos tienen stock suficiente', 'success');
+    return;
+  }
+  
+  const message = lowItems.map(i => `• ${i.name}: ${i.stock}/${i.minStock}`).join('\n');
+  alert(`⚠️ Productos con stock bajo:\n\n${message}`);
+}
+
+async function syncInventoryFromFirebase() {
+  await loadInventory();
+  showNotification('🔄 Sincronizado', 'Inventario actualizado desde Firebase', 'success');
+}
+
+// ── CAJA DIARIA ─────────────────────────────
+function showCashBox() {
+  document.getElementById('cashModal').classList.add('show');
+  loadCashBox();
+}
+
+function closeCashBox() {
+  document.getElementById('cashModal').classList.remove('show');
+}
+
+let currentCashTab = 'all';
+
+function showCashBox() {
+  document.getElementById('cashModal').classList.add('show');
+  loadCashBox();
+}
+
+function loadCashBox() {
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('cashDate').textContent = dateStr;
+  
+  const saved = localStorage.getItem(`frv_cash_${today.toDateString()}`);
+  cashTransactions = saved ? JSON.parse(saved) : [];
+  
+  const cashData = JSON.parse(localStorage.getItem('frv_current_cash') || '{}');
+  document.getElementById('cashOpenTime').textContent = cashData.openTime || '--:--';
+  document.getElementById('cashUser').textContent = cashData.user || localStorage.getItem('frv_admin_user') || 'Admin';
+  
+  const ordersToday = orders.filter(o => o.status !== 'cancelled' && o.status !== 'completed');
+  const incomeFromOrders = ordersToday.reduce((sum, o) => sum + (o.total || 0), 0);
+  const manualIncome = cashTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+  const income = incomeFromOrders + manualIncome;
+  const expenses = cashTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+  const balance = income - expenses;
+  
+  document.getElementById('cashIncome').textContent = `S/ ${income.toFixed(2)}`;
+  document.getElementById('cashExpenses').textContent = `S/ ${expenses.toFixed(2)}`;
+  document.getElementById('cashBalance').textContent = `S/ ${balance.toFixed(2)}`;
+  document.getElementById('cashTxCount').textContent = cashTransactions.length + ordersToday.length;
+  
+  updateBalanceColor(balance);
+  renderCashTransactions(ordersToday);
+}
+
+function updateBalanceColor(balance) {
+  const el = document.getElementById('cashBalance');
+  if (balance >= 0) {
+    el.style.color = '#00ff88';
+  } else {
+    el.style.color = '#ff4444';
+  }
+}
+
+function initCashDay() {
+  if (!confirm('¿Iniciar nuevo día de caja? Esto reseteará los contadores.')) return;
+  
+  const today = new Date();
+  const cashData = {
+    openTime: today.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+    user: localStorage.getItem('frv_admin_user') || 'Admin',
+    date: today.toDateString()
+  };
+  
+  localStorage.setItem('frv_current_cash', JSON.stringify(cashData));
+  localStorage.setItem(`frv_cash_${today.toDateString()}`, '[]');
+  cashTransactions = [];
+  
+  loadCashBox();
+  showNotification('✅ Día iniciado', 'Caja iniciada correctamente', 'success');
+  addFeedItem('Caja', '📊 Nuevo día de caja iniciado');
+}
+
+function setCashTab(tab, element) {
+  currentCashTab = tab;
+  document.querySelectorAll('.cash-tab').forEach(t => t.classList.remove('active'));
+  element.classList.add('active');
+  loadCashBox();
+}
+
+function renderCashTransactions(ordersToday) {
+  const container = document.getElementById('cashTransactions');
+  let html = '';
+  
+  const allItems = [];
+  
+  if (currentCashTab === 'all' || currentCashTab === 'orders') {
+    ordersToday.forEach(order => {
+      allItems.push({
+        type: 'order',
+        icon: '🧾',
+        label: `Mesa ${order.mesa} - ${order.paymentMethod || 'Efectivo'}`,
+        time: getTimeAgo(order.createdAt),
+        amount: order.total || 0,
+        positive: true
+      });
+    });
+  }
+  
+  if (currentCashTab === 'all' || currentCashTab === 'income') {
+    cashTransactions.filter(t => t.type === 'income').forEach(t => {
+      allItems.push({
+        type: 'income',
+        icon: '📥',
+        label: t.description,
+        time: new Date(t.time).toLocaleTimeString('es-PE'),
+        amount: t.amount,
+        positive: true
+      });
+    });
+  }
+  
+  if (currentCashTab === 'all' || currentCashTab === 'expense') {
+    cashTransactions.filter(t => t.type === 'expense').forEach(t => {
+      allItems.push({
+        type: 'expense',
+        icon: '📤',
+        label: t.description,
+        time: new Date(t.time).toLocaleTimeString('es-PE'),
+        amount: t.amount,
+        positive: false
+      });
+    });
+  }
+  
+  if (allItems.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:#888;padding:40px;">No hay transacciones</div>';
+    return;
+  }
+  
+  allItems.forEach((item, index) => {
+    const amountClass = item.positive ? 'positive' : 'negative';
+    const amountPrefix = item.positive ? '+' : '-';
+    html += `
+      <div class="cash-transaction" style="animation: fadeIn 0.3s ease ${index * 0.05}s both;">
+        <div class="cash-trans-type">${item.icon}</div>
+        <div class="cash-trans-details">
+          <div class="cash-trans-label">${item.label}</div>
+          <div class="cash-trans-time">${item.time}</div>
+        </div>
+        <div class="cash-trans-amount ${amountClass}">${amountPrefix}S/ ${item.amount.toFixed(2)}</div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+async function addCashTransaction() {
+  const type = document.getElementById('cashType').value;
+  const amount = parseFloat(document.getElementById('cashAmount').value);
+  const description = document.getElementById('cashDescription').value;
+  
+  if (!amount || amount <= 0) {
+    showNotification('❌ Error', 'Ingresa un monto válido', 'error');
+    return;
+  }
+  
+  if (!description) {
+    showNotification('❌ Error', 'Ingresa una descripción', 'error');
+    return;
+  }
+  
+  const transaction = {
+    type,
+    amount,
+    description,
+    time: new Date().toISOString(),
+    user: localStorage.getItem('frv_admin_user') || 'Admin'
+  };
+  
+  cashTransactions.push(transaction);
+  
+  const today = new Date().toDateString();
+  localStorage.setItem(`frv_cash_${today}`, JSON.stringify(cashTransactions));
+  
+  document.getElementById('cashAmount').value = '';
+  document.getElementById('cashDescription').value = '';
+  
+  loadCashBox();
+  
+  const typeLabel = type === 'income' ? 'Ingreso' : 'Egreso';
+  showNotification(`✅ ${typeLabel} registrado`, `S/ ${amount.toFixed(2)} - ${description}`, type === 'income' ? 'success' : 'error');
+  addFeedItem('Caja', `${type === 'income' ? '📥' : '📤'} ${typeLabel}: S/ ${amount.toFixed(2)} - ${description}`);
+}
+
+function showAddExpense() {
+  const amount = parseFloat(prompt('Monto del egreso:'));
+  if (!amount || amount <= 0) return;
+  
+  const description = prompt('Descripción:') || 'Gasto';
+  
+  cashTransactions.push({
+    type: 'expense',
+    amount,
+    description,
+    time: new Date().toISOString()
+  });
+  
+  const today = new Date().toDateString();
+  localStorage.setItem(`frv_cash_${today}`, JSON.stringify(cashTransactions));
+  loadCashBox();
+  showNotification('➖ Egreso registrado', `S/ ${amount.toFixed(2)}`, 'error');
+}
+
+// ── ESTADO DE MESAS ─────────────────────────────
+function showTables() {
+  document.getElementById('tablesModal').classList.add('show');
+  renderTables();
+}
+
+function closeTables() {
+  document.getElementById('tablesModal').classList.remove('show');
+}
+
+function renderTables() {
+  const grid = document.getElementById('tablesGrid');
+  const totalTables = 50;
+  
+  // Determinar estado de cada mesa
+  const occupied = [];
+  orders.forEach(o => {
+    if (o.status !== 'cancelled' && o.status !== 'completed') {
+      occupied.push(o.mesa);
+    }
+  });
+  
+  let html = '';
+  for (let i = 1; i <= totalTables; i++) {
+    const isOccupied = occupied.includes(i);
+    const statusClass = isOccupied ? 'occupied' : 'free';
+    const statusText = isOccupied ? 'OCUPADA' : 'LIBRE';
+    
+    html += `
+      <div class="table-card ${statusClass}" onclick="showTableDetails(${i})">
+        <div class="table-number">${i}</div>
+        <div class="table-status">${statusText}</div>
+      </div>
+    `;
+  }
+  
+  grid.innerHTML = html;
+}
+
+function showTableDetails(mesaNum) {
+  const tableOrders = orders.filter(o => o.mesa === mesaNum && o.status !== 'cancelled');
+  
+  if (tableOrders.length === 0) {
+    alert(`Mesa ${mesaNum}: Sin pedidos activos`);
+    return;
+  }
+  
+  const details = tableOrders.map(o => 
+    `• Mesa ${o.mesa}: S/ ${(o.total || 0).toFixed(2)} (${o.status})`
+  ).join('\n');
+  
+  alert(`Mesa ${mesaNum}\n\n${details}`);
+}
+
+// ── NUEVO PEDIDO DESDE PANEL ─────────────────
+let newOrderItemCount = 0;
+
+function showNewOrderModal() {
+  document.getElementById('newOrderModal').classList.add('show');
+  newOrderItemCount = 0;
+  document.getElementById('newOrderMesa').value = '';
+  document.getElementById('newOrderAnfitriona').value = '';
+  document.getElementById('newOrderNote').value = '';
+  document.getElementById('newOrderItems').innerHTML = '';
+  addOrderItemRow();
+}
+
+function closeNewOrderModal() {
+  document.getElementById('newOrderModal').classList.remove('show');
+}
+
+function addOrderItemRow() {
+  newOrderItemCount++;
+  const container = document.getElementById('newOrderItems');
+  const row = document.createElement('div');
+  row.className = 'order-item-row';
+  row.id = `item-row-${newOrderItemCount}`;
+  row.innerHTML = `
+    <select class="form-select" id="item-select-${newOrderItemCount}">
+      <option value="Pisco Sour|18|🍋">Pisco Sour - S/18</option>
+      <option value="Cristal|8|🍺">Cristal - S/8</option>
+      <option value="Copa Vino|12|🍷">Copa Vino - S/12</option>
+      <option value="Gaseosa|6|🥤">Gaseosa - S/6</option>
+      <option value="Agua|4|💧">Agua - S/4</option>
+      <option value="Cevichera|25|🐟">Cevichera - S/25</option>
+      <option value="Salchipapa|15|🍟">Salchipapa - S/15</option>
+      <option value="Chicha|5|🫐">Chicha - S/5</option>
+    </select>
+    <input type="number" class="form-input" id="item-qty-${newOrderItemCount}" value="1" min="1" placeholder="Cant.">
+    <button style="background:rgba(255,68,68,0.2);color:#ff4444;border:none;padding:8px;border-radius:6px;cursor:pointer;" onclick="removeOrderItemRow(${newOrderItemCount})">✕</button>
+  `;
+  container.appendChild(row);
+}
+
+function removeOrderItemRow(id) {
+  const row = document.getElementById(`item-row-${id}`);
+  if (row) row.remove();
+}
+
+async function createNewOrder() {
+  const mesa = parseInt(document.getElementById('newOrderMesa').value);
+  const anfitriona = document.getElementById('newOrderAnfitriona').value;
+  const note = document.getElementById('newOrderNote').value;
+  const payment = document.getElementById('newOrderPayment').value;
+  
+  if (!mesa) {
+    showNotification('❌ Error', 'Ingresa el número de mesa', 'error');
+    return;
+  }
+  
+  // Recopilar items
+  const items = [];
+  let total = 0;
+  
+  for (let i = 1; i <= newOrderItemCount; i++) {
+    const select = document.getElementById(`item-select-${i}`);
+    const qtyInput = document.getElementById(`item-qty-${i}`);
+    
+    if (select && qtyInput) {
+      const [name, price, emoji] = select.value.split('|');
+      const qty = parseInt(qtyInput.value) || 1;
+      
+      items.push({ name, price: parseFloat(price), emoji, qty });
+      total += parseFloat(price) * qty;
+    }
+  }
+  
+  if (items.length === 0) {
+    showNotification('❌ Error', 'Agrega al menos un producto', 'error');
+    return;
+  }
+  
+  const newOrder = {
+    mesa,
+    items,
+    note,
+    paymentMethod: payment,
+    total,
+    anfitriona: anfitriona || 'Mostrador',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+  
+  try {
+    if (typeof FirebaseClient === 'undefined') {
+      showNotification('❌ Error', 'Firebase no disponible', 'error');
+      return;
+    }
+    
+    const saved = await FirebaseClient.createOrder(newOrder);
+    
+    if (saved) {
+      closeNewOrderModal();
+      addFeedItem('Pedido', `🆕 Nuevo pedido - Mesa ${mesa}`);
+      showNotification('✅ Pedido creado', `Mesa ${mesa} - S/ ${total.toFixed(2)}`, 'success');
+    }
+  } catch (error) {
+    showNotification('❌ Error', error.message, 'error');
+  }
+}
+
+// ── HISTORIAL ─────────────────────────────
+function showHistory() {
+  document.getElementById('historyModal').classList.add('show');
+  
+  // Establecer fechas por defecto
+  const today = new Date();
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  
+  document.getElementById('historyDateEnd').value = today.toISOString().split('T')[0];
+  document.getElementById('historyDateStart').value = weekAgo.toISOString().split('T')[0];
+  
+  loadHistory();
+}
+
+function closeHistory() {
+  document.getElementById('historyModal').classList.remove('show');
+}
+
+function loadHistory() {
+  const startDate = new Date(document.getElementById('historyDateStart').value);
+  const endDate = new Date(document.getElementById('historyDateEnd').value);
+  endDate.setDate(endDate.getDate() + 1);
+  
+  // Cargar pedidos del localStorage o usar los actuales
+  const allOrders = orders.filter(o => {
+    const orderDate = new Date(o.createdAt);
+    return orderDate >= startDate && orderDate <= endDate;
+  });
+  
+  const container = document.getElementById('historyList');
+  
+  if (allOrders.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:#888;padding:40px;">No hay pedidos en este período</div>';
+    return;
+  }
+  
+  container.innerHTML = allOrders
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .map(order => {
+      const date = new Date(order.createdAt);
+      const dateStr = date.toLocaleDateString('es-PE');
+      const timeStr = date.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+      const statusClass = order.status === 'completed' ? 'completed' : 'cancelled';
+      
+      return `
+        <div class="history-item">
+          <div class="history-date-item">${dateStr}<br>${timeStr}</div>
+          <div class="history-mesa">Mesa ${order.mesa}</div>
+          <div class="history-details">
+            ${order.items?.length || 0} productos<br>
+            ${order.anfitriona || 'Mostrador'}
+          </div>
+          <div class="history-total">S/ ${(order.total || 0).toFixed(2)}</div>
+          <div class="history-status ${statusClass}">${order.status}</div>
+        </div>
+      `;
+    }).join('');
 }

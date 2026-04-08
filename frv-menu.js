@@ -114,7 +114,7 @@ function renderMenu(cat = 'all') {
         <div class="card ${featuredClass}" onclick="addItem(${p.id})">
           <div class="card-img ${p.cat}">
             <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
-            <div class="card-emoji">${p.emoji}</div>
+
             ${p.badge ? `<div class="card-badge ${p.badge==='NEW'?'new':''}">${p.badge}</div>` : ''}
             <div class="card-qty-indicator ${qtyInCart>0?'show':''}" id="qi-${p.id}">${qtyInCart}</div>
           </div>
@@ -251,7 +251,6 @@ function renderCartItems() {
   }
   container.innerHTML = items.map(i => `
     <div class="cart-item">
-      <div class="ci-emoji">${i.emoji}</div>
       <div class="ci-info">
         <div class="ci-name">${i.name}</div>
         <div class="ci-price">S/ ${(i.price * i.qty).toFixed(2)}</div>
@@ -416,6 +415,14 @@ function placeOrder() {
     return;
   }
 
+  // Validar que haya seleccionado mesa
+  if (!sessionStorage.getItem('user_selected_mesa')) {
+    alert('⚠️ Por favor selecciona tu número de mesa antes de hacer el pedido');
+    document.getElementById('mesaSelector').classList.add('show');
+    initMesaSelector();
+    return;
+  }
+
   if (!anfitrionaPhone) {
     alert('Por favor selecciona una anfitriona para atenderte');
     return;
@@ -441,6 +448,18 @@ function placeOrder() {
     document.getElementById('successModal').classList.remove('show');
     document.getElementById('orderNote').value = '';
   }, 6000);
+}
+
+// ── BOTONES DEL CARRITO ────────────────────────────
+function goBackToMenu() {
+  document.getElementById('cartSheet').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function addMoreProducts() {
+  document.getElementById('cartSheet').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('menuContainer').scrollIntoView({ behavior: 'smooth' });
 }
 
 // INIT

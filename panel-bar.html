@@ -473,6 +473,602 @@
 .confirm-btn:hover {
   transform: translateY(-1px);
 }
+
+/* MODALS GENERIC */
+.generic-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  overflow-y: auto;
+}
+
+.generic-modal.show {
+  display: flex;
+}
+
+.generic-content {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 90%;
+  width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.generic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.generic-header h2 {
+  color: white;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 20px;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.close-btn:hover {
+  color: white;
+}
+
+/* KITCHEN VIEW */
+.kitchen-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.kitchen-card {
+  background: rgba(30, 30, 30, 0.9);
+  border-radius: 12px;
+  padding: 16px;
+  border-left: 4px solid #ffc800;
+}
+
+.kitchen-card.preparing {
+  border-left-color: #ff6b6b;
+  animation: pulse-border 1s infinite;
+}
+
+.kitchen-card.ready {
+  border-left-color: #00ff88;
+}
+
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 107, 107, 0); }
+}
+
+.kitchen-mesa {
+  font-size: 28px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 8px;
+}
+
+.kitchen-items {
+  margin-bottom: 12px;
+}
+
+.kitchen-item {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 4px 0;
+  font-weight: 600;
+}
+
+.kitchen-qty {
+  color: #00ff88;
+  margin-right: 8px;
+}
+
+.kitchen-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.kitchen-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.kitchen-btn.done {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.kitchen-btn.bell {
+  background: rgba(255, 200, 0, 0.2);
+  color: #ffc800;
+  border: 1px solid rgba(255, 200, 0, 0.3);
+}
+
+/* INVENTORY */
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-table th {
+  text-align: left;
+  padding: 12px;
+  color: #888;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.inventory-table td {
+  padding: 12px;
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.inventory-table tr.low-stock td {
+  color: #ff4444;
+}
+
+.inventory-table tr.out-of-stock td {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.stock-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.stock-badge.good {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+}
+
+.stock-badge.low {
+  background: rgba(255, 200, 0, 0.2);
+  color: #ffc800;
+}
+
+.stock-badge.out {
+  background: rgba(255, 68, 68, 0.2);
+  color: #ff4444;
+}
+
+.inventory-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.inventory-header-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.inv-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.inv-input {
+  width: 70px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: white;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 12px;
+  text-align: center;
+}
+
+.inv-input:focus {
+  outline: none;
+  border-color: #00ff88;
+}
+
+.inv-input.price {
+  width: 60px;
+  color: #00ff88;
+  font-weight: 600;
+}
+
+.inv-input.stock {
+  width: 50px;
+}
+
+/* CASH BOX PROFESIONAL */
+.cash-dashboard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.cash-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  border: 2px solid transparent;
+}
+
+.cash-card.income {
+  border-color: rgba(0, 255, 136, 0.3);
+  background: rgba(0, 255, 136, 0.05);
+}
+
+.cash-card.expense {
+  border-color: rgba(255, 68, 68, 0.3);
+  background: rgba(255, 68, 68, 0.05);
+}
+
+.cash-card.balance {
+  border-color: rgba(245, 200, 0, 0.3);
+  background: rgba(245, 200, 0, 0.05);
+}
+
+.cash-card-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.cash-card-label {
+  font-size: 11px;
+  color: #888;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.cash-card-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #00ff88;
+}
+
+.cash-card.expense .cash-card-value {
+  color: #ff4444;
+}
+
+.cash-card.balance .cash-card-value {
+  color: #F5C800;
+}
+
+.cash-form {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.cash-form-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.cash-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.cash-tab {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #888;
+  cursor: pointer;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.cash-tab.active {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+}
+
+.cash-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.cash-footer-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #666;
+}
+
+.cash-transactions {
+  margin-top: 20px;
+}
+
+.cash-transaction {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.cash-trans-type {
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.cash-trans-details {
+  flex: 1;
+}
+
+.cash-trans-label {
+  color: white;
+  font-size: 13px;
+}
+
+.cash-trans-time {
+  color: #888;
+  font-size: 11px;
+}
+
+.cash-trans-amount {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cash-trans-amount.positive {
+  color: #00ff88;
+}
+
+.cash-trans-amount.negative {
+  color: #ff4444;
+}
+
+/* TABLES VIEW */
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.table-card {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.table-card.free {
+  background: rgba(0, 255, 136, 0.1);
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+}
+
+.table-card.occupied {
+  background: rgba(255, 107, 107, 0.1);
+  border: 2px solid rgba(255, 107, 107, 0.3);
+  color: #ff6b6b;
+}
+
+.table-card.reserved {
+  background: rgba(255, 200, 0, 0.1);
+  border: 2px solid rgba(255, 200, 0, 0.3);
+  color: #ffc800;
+}
+
+.table-number {
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.table-status {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.table-card:hover {
+  transform: scale(1.05);
+}
+
+/* NEW ORDER MODAL */
+.new-order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.form-input, .form-select {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 14px;
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: #F5C800;
+}
+
+.form-select option {
+  background: #1a1a2e;
+}
+
+.order-items-input {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.order-item-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.order-item-row select {
+  flex: 2;
+}
+
+.order-item-row input {
+  flex: 1;
+}
+
+.add-item-btn {
+  padding: 8px;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px dashed rgba(0, 255, 136, 0.3);
+  border-radius: 6px;
+  color: #00ff88;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.add-item-btn:hover {
+  background: rgba(0, 255, 136, 0.2);
+}
+
+/* HISTORY */
+.history-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.history-date {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  font-family: 'Exo 2', sans-serif;
+}
+
+.history-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.history-date-item {
+  font-size: 11px;
+  color: #888;
+  min-width: 60px;
+}
+
+.history-mesa {
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  min-width: 60px;
+}
+
+.history-details {
+  flex: 1;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.history-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: #00ff88;
+  min-width: 80px;
+  text-align: right;
+}
+
+.history-status {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.history-status.completed {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+}
+
+.history-status.cancelled {
+  background: rgba(255, 68, 68, 0.2);
+  color: #ff4444;
+}
+
+/* ORDER CARD para GRID */
+.order-mesa {
+  display: flex;
+  flex-direction: column;
+}
 </style>
 </head>
 <body>
@@ -504,7 +1100,7 @@
       <button class="clear-btn" onclick="showClearModal()">🗑️ Limpiar</button>
       <button class="pdf-btn" onclick="generatePDF()">📄 PDF</button>
       <button class="clear-btn" onclick="logout()">🚪 Salir</button>
-      <button class="clear-btn" onclick="sendSafetyAlert()" style="background:linear-gradient(135deg,#ff4444 0%,#cc0000 100%);">🚨 Alerta</button>
+<button class="clear-btn" onclick="sendSafetyAlert()" style="background:linear-gradient(135deg,#ff4444 0%,#cc0000 100%);">🚨 Alerta</button>
     </div>
   </div>
 
@@ -542,6 +1138,12 @@
       <button class="ctrl-btn" onclick="loadOrders()">🔄 Actualizar</button>
       <button class="ctrl-btn" onclick="showReports()">📊 Ver Reportes</button>
       <button class="ctrl-btn" onclick="testConnection()">🔌 Probar Conexión</button>
+      <button class="ctrl-btn" onclick="showKitchenView()">🍹 Panel de Bar</button>
+      <button class="ctrl-btn" onclick="showInventory()">📦 Inventario</button>
+      <button class="ctrl-btn" onclick="showCashBox()">💵 Caja Diaria</button>
+      <button class="ctrl-btn" onclick="showTables()">🪑 Mesas</button>
+      <button class="ctrl-btn" onclick="showNewOrderModal()">➕ Nuevo Pedido</button>
+      <button class="ctrl-btn" onclick="showHistory()">📆 Historial</button>
     </div>
 
     <!-- ORDERS BOARD -->
@@ -640,6 +1242,178 @@
   </div>
 </div>
 
+<!-- KITCHEN VIEW MODAL -->
+<div class="generic-modal" id="kitchenModal">
+  <div class="generic-content" style="max-width: 1100px;">
+    <div class="generic-header">
+      <h2>🍳 Panel de Bar - Vista en Tiempo Real</h2>
+      <button class="close-btn" onclick="closeKitchenView()">✕</button>
+    </div>
+    <div class="kitchen-grid" id="kitchenGrid"></div>
+  </div>
+</div>
+
+<!-- INVENTORY MODAL -->
+<div class="generic-modal" id="inventoryModal">
+  <div class="generic-content" style="max-width: 1000px;">
+    <div class="generic-header">
+      <h2>📦 Gestión de Inventario y Precios</h2>
+      <button class="close-btn" onclick="closeInventory()">✕</button>
+    </div>
+    
+    <div class="inventory-header-actions">
+      <button class="inv-btn" style="background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a0a0a;" onclick="addInventoryItem()">➕ Agregar Producto</button>
+      <button class="inv-btn" style="background: rgba(255,200,0,0.2); color: #ffc800;" onclick="alertLowStock()">⚠️ Stock Bajo</button>
+      <button class="inv-btn" style="background: rgba(0,132,138,0.2); color: #00848A;" onclick="syncInventoryFromFirebase()">🔄 Sincronizar</button>
+    </div>
+    
+    <table class="inventory-table">
+      <thead>
+        <tr>
+          <th>📦 Producto</th>
+          <th>📁 Categoría</th>
+          <th>💰 Precio</th>
+          <th>📊 Stock</th>
+          <th>⚠️ Mín.</th>
+          <th>📈 Estado</th>
+          <th>⚙️ Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CASH BOX MODAL -->
+<div class="generic-modal" id="cashModal">
+  <div class="generic-content" style="max-width: 900px;">
+    <div class="generic-header">
+      <h2>💵 Caja Diaria - <span id="cashDate"></span></h2>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <button class="inv-btn" style="background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a0a0a;" onclick="initCashDay()">🔄 Iniciar Día</button>
+        <button class="close-btn" onclick="closeCashBox()">✕</button>
+      </div>
+    </div>
+    
+    <div class="cash-dashboard">
+      <div class="cash-card income">
+        <div class="cash-card-icon">📥</div>
+        <div class="cash-card-label">INGRESOS</div>
+        <div class="cash-card-value" id="cashIncome">S/ 0.00</div>
+      </div>
+      <div class="cash-card expense">
+        <div class="cash-card-icon">📤</div>
+        <div class="cash-card-label">EGRESOS</div>
+        <div class="cash-card-value" id="cashExpenses">S/ 0.00</div>
+      </div>
+      <div class="cash-card balance">
+        <div class="cash-card-icon">💰</div>
+        <div class="cash-card-label">BALANCE</div>
+        <div class="cash-card-value" id="cashBalance">S/ 0.00</div>
+      </div>
+    </div>
+    
+    <div class="cash-form">
+      <div class="cash-form-row">
+        <select class="form-select" id="cashType" style="flex:1;">
+          <option value="income">📥 Ingreso</option>
+          <option value="expense">📤 Egreso</option>
+        </select>
+        <input type="number" class="form-input" id="cashAmount" placeholder="Monto S/" style="flex:1;">
+        <input type="text" class="form-input" id="cashDescription" placeholder="Descripción" style="flex:2;">
+        <button class="inv-btn" style="background: linear-gradient(135deg, #F5C800, #FFD93D); color: #0a0a0a;" onclick="addCashTransaction()">➕ Agregar</button>
+      </div>
+    </div>
+    
+    <div class="cash-tabs">
+      <div class="cash-tab active" onclick="setCashTab('all',this)" data-tab="all">Todo</div>
+      <div class="cash-tab" onclick="setCashTab('income',this)" data-tab="income">Ingresos</div>
+      <div class="cash-tab" onclick="setCashTab('expense',this)" data-tab="expense">Egresos</div>
+      <div class="cash-tab" onclick="setCashTab('orders',this)" data-tab="orders">Pedidos</div>
+    </div>
+    
+    <div class="cash-transactions" id="cashTransactions"></div>
+    
+    <div class="cash-footer">
+      <div class="cash-footer-info">
+        <span>💼 Apertura: <span id="cashOpenTime">--:--</span></span>
+        <span>👤 Responsable: <span id="cashUser">--</span></span>
+        <span>📋 Transacciones: <span id="cashTxCount">0</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLES MODAL -->
+<div class="generic-modal" id="tablesModal">
+  <div class="generic-content">
+    <div class="generic-header">
+      <h2>🪑 Estado de Mesas</h2>
+      <button class="close-btn" onclick="closeTables()">✕</button>
+    </div>
+    <div class="tables-grid" id="tablesGrid"></div>
+  </div>
+</div>
+
+<!-- NEW ORDER MODAL -->
+<div class="generic-modal" id="newOrderModal">
+  <div class="generic-content">
+    <div class="generic-header">
+      <h2>➕ Nuevo Pedido</h2>
+      <button class="close-btn" onclick="closeNewOrderModal()">✕</button>
+    </div>
+    <div class="new-order-form">
+      <div class="form-group">
+        <label class="form-label">Número de Mesa</label>
+        <input type="number" class="form-input" id="newOrderMesa" placeholder="Ej: 5" min="1" max="30">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Anfitriona</label>
+        <input type="text" class="form-input" id="newOrderAnfitriona" placeholder="Nombre de la anfitriona">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Productos</label>
+        <div id="newOrderItems"></div>
+        <button class="add-item-btn" onclick="addOrderItemRow()">➕ Agregar Producto</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observación</label>
+        <input type="text" class="form-input" id="newOrderNote" placeholder="Notas especiales...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Método de Pago</label>
+        <select class="form-select" id="newOrderPayment">
+          <option value="💳 TARJETA">💳 TARJETA</option>
+          <option value="💵 EFECTIVO">💵 EFECTIVO</option>
+          <option value="🏧 YAPE">🏧 YAPE</option>
+          <option value="🏦 TRANSFERENCIA">🏦 TRANSFERENCIA</option>
+        </select>
+      </div>
+      <div class="inventory-actions">
+        <button class="inv-btn" style="background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a0a0a;" onclick="createNewOrder()">💾 Guardar Pedido</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="generic-modal" id="historyModal">
+  <div class="generic-content" style="max-width: 900px;">
+    <div class="generic-header">
+      <h2>📆 Historial de Pedidos</h2>
+      <button class="close-btn" onclick="closeHistory()">✕</button>
+    </div>
+    <div class="history-filters">
+      <input type="date" class="history-date" id="historyDateStart">
+      <span style="color:#888">hasta</span>
+      <input type="date" class="history-date" id="historyDateEnd">
+      <button class="inv-btn" style="background: rgba(0,255,136,0.2); color: #00ff88;" onclick="loadHistory()">🔍 Buscar</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="firebase-client.js"></script>

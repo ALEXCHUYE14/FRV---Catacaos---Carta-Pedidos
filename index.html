@@ -499,7 +499,7 @@
         </div>
         <div class="anfitriona-check">✓</div>
       </div>
-      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51912345678">
+      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51924996961">
         <div class="anfitriona-avatar">
           <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" alt="Ana Rodríguez" onerror="this.parentElement.innerHTML='👩'">
         </div>
@@ -509,7 +509,7 @@
         </div>
         <div class="anfitriona-check">✓</div>
       </div>
-      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51998877665">
+      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51924996961">
         <div class="anfitriona-avatar">
           <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" alt="Laura Martínez" onerror="this.parentElement.innerHTML='👩'">
         </div>
@@ -519,23 +519,57 @@
         </div>
         <div class="anfitriona-check">✓</div>
       </div>
+      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51924996961">
+        <div class="anfitriona-avatar">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face" alt="Sofía López" onerror="this.parentElement.innerHTML='👩'">
+        </div>
+        <div class="anfitriona-info">
+          <div class="anfitriona-name">Sofía López</div>
+          <div class="anfitriona-role">Anfitriona</div>
+        </div>
+        <div class="anfitriona-check">✓</div>
+      </div>
+      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51924996961">
+        <div class="anfitriona-avatar">
+          <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face" alt="Carmen Torres" onerror="this.parentElement.innerHTML='👩'">
+        </div>
+        <div class="anfitriona-info">
+          <div class="anfitriona-name">Carmen Torres</div>
+          <div class="anfitriona-role">Anfitriona</div>
+        </div>
+        <div class="anfitriona-check">✓</div>
+      </div>
     </div>
   </div>
 
   <div class="pm-label">Forma de pago</div>
-  <div class="payment-methods">
+  <div class="payment-methods payment-grid">
     <div class="pm selected" onclick="selectPM(this)">
-      <span class="pm-icon">💳</span>TARJETA
+      <img src="img/Tarjetas-2.jpg" alt="Tarjeta" class="pm-img" onerror="this.style.display='none'">
+      <span class="pm-text">TARJETA</span>
     </div>
     <div class="pm" onclick="selectPM(this)">
-      <span class="pm-icon">📱</span>YAPE
+      <img src="img/Yape.png" alt="Yape" class="pm-img" onerror="this.style.display='none'">
+      <span class="pm-text">YAPE</span>
     </div>
     <div class="pm" onclick="selectPM(this)">
-      <span class="pm-icon">💜</span>PLIN
+      <img src="img/images.jpg" alt="Plin" class="pm-img" onerror="this.style.display='none'">
+      <span class="pm-text">PLIN</span>
     </div>
     <div class="pm" onclick="selectPM(this)">
-      <span class="pm-icon">💵</span>EFECTIVO
+      <img src="img/efectivo.png" alt="Efectivo" class="pm-img" onerror="this.style.display='none'">
+      <span class="pm-text">EFECTIVO</span>
     </div>
+  </div>
+
+  <!-- Botones de acción del carrito -->
+  <div class="cart-actions">
+    <button class="cart-action-btn back-btn" onclick="goBackToMenu()">
+      ← Volver al Menú
+    </button>
+    <button class="cart-action-btn add-btn-action" onclick="addMoreProducts()">
+      + Agregar Más
+    </button>
   </div>
 
   <button class="pay-btn" onclick="placeOrder()">
