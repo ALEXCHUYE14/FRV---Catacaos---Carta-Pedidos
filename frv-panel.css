@@ -490,6 +490,30 @@ body {
   box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
+.action-btn.redo {
+  background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+}
+
+.toggle-items-btn {
+  width: 100%;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: 'Exo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.toggle-items-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+}
+
 /* ── FEED PANEL ──────────────────────────────── */
 .feed-panel {
   background: var(--surface);
@@ -738,50 +762,145 @@ body {
   color: var(--green);
 }
 
-/* ── RESPONSIVE ──────────────────────────────── */\n\n/* Estilos para botón Rehacer y Toggle Items */\n.action-btn.redo {\n  background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);\n}\n\n.toggle-items-btn {\n  width: 100%;\n  padding: 8px;\n  background: rgba(255, 255, 255, 0.05);\n  border: 1px solid rgba(255, 255, 255, 0.1);\n  border-radius: 6px;\n  color: var(--muted);\n  font-family: 'Exo 2', sans-serif;\n  font-size: 11px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n  margin-top: 8px;\n}\n\n.toggle-items-btn:hover {\n  background: rgba(255, 255, 255, 0.1);\n  color: var(--white);\n}
-@media (max-width: 1200px) {
-  .main {
-    grid-template-columns: 200px 1fr 260px;
-  }
+/* ── RESPONSIVE ADAPTIVE LAYOUT ──────────────────────────────── */
+@media (min-width: 1500px) {
+  .orders-grid { grid-template-columns: repeat(6, 1fr); }
+  .kitchen-grid { grid-template-columns: repeat(5, 1fr); }
+  .cash-dashboard { grid-template-columns: repeat(4, 1fr); }
 }
-
-@media (max-width: 992px) {
-  .main {
-    grid-template-columns: 1fr;
-  }
-  
-  .sidebar {
-    display: none;
-  }
-  
-  .feed-panel {
-    display: none;
-  }
-  
-  .topbar-left {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+@media (min-width: 1200px) and (max-width: 1499px) {
+  .orders-grid { grid-template-columns: repeat(5, 1fr); }
+  .kitchen-grid { grid-template-columns: repeat(4, 1fr); }
+  .tables-grid { grid-template-columns: repeat(6, 1fr); }
+  .main { grid-template-columns: 220px 1fr 280px; }
 }
-
-@media (max-width: 576px) {
-  .topbar {
-    padding: 10px 12px;
-  }
-  
-  .brand-name {
-    font-size: 18px;
-  }
-  
-  .board {
-    padding: 12px;
-  }
-  
-  .orders-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .filter-tabs {
-    flex-wrap: wrap;
-  }
+@media (min-width: 992px) and (max-width: 1199px) {
+  .orders-grid { grid-template-columns: repeat(4, 1fr); }
+  .kitchen-grid { grid-template-columns: repeat(3, 1fr); }
+  .tables-grid { grid-template-columns: repeat(5, 1fr); }
+  .cash-dashboard { grid-template-columns: repeat(3, 1fr); }
+  .main { grid-template-columns: 200px 1fr 250px; }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .main { grid-template-columns: 1fr 200px; grid-template-rows: auto 1fr; }
+  .sidebar { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; background: rgba(30,30,30,0.95); border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 60px; z-index: 50; overflow-x: auto; }
+  .sidebar-section { display: none; }
+  .stat-box { min-width: 100px; flex: 1; padding: 8px 12px; }
+  .stat-num { font-size: 20px; }
+  .ctrl-btn { padding: 8px 12px; font-size: 11px; white-space: nowrap; }
+  .orders-grid { grid-template-columns: repeat(3, 1fr); }
+  .kitchen-grid { grid-template-columns: repeat(2, 1fr); }
+  .tables-grid { grid-template-columns: repeat(4, 1fr); }
+  .feed-panel { display: none; }
+  .generic-content { max-width: 95%; padding: 16px; }
+}
+@media (min-width: 576px) and (max-width: 767px) {
+  .main { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+  .sidebar { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; order: 2; }
+  .sidebar-section { width: 100%; font-size: 10px; margin-bottom: 4px; }
+  .stat-box { min-width: 80px; flex: 1 1 calc(33% - 6px); padding: 6px 8px; }
+  .stat-num { font-size: 18px; }
+  .stat-label { font-size: 9px; }
+  .ctrl-btn { padding: 6px 10px; font-size: 10px; flex: 1 1 calc(50% - 4px); }
+  .orders-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
+  .order-card { padding: 8px; font-size: 10px; }
+  .mesa-num { font-size: 16px; }
+  .kitchen-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kitchen-mesa { font-size: 20px; }
+  .tables-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .cash-dashboard { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cash-card-value { font-size: 20px; }
+  .feed-panel { display: none; }
+  .topbar { flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+  .topbar-right { flex-wrap: wrap; gap: 6px; }
+  .clear-btn, .pdf-btn { padding: 6px 8px; font-size: 10px; }
+  .clock { font-size: 14px; }
+  .board-title { font-size: 14px; }
+  .ftab { padding: 6px 10px; font-size: 11px; }
+  .generic-content { max-width: 98%; padding: 12px; border-radius: 12px; }
+  .inventory-table { font-size: 11px; }
+  .inventory-table th, .inventory-table td { padding: 8px 4px; }
+  .inv-input { width: 50px; padding: 4px; font-size: 10px; }
+}
+@media (max-width: 575px) {
+  .main { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+  .sidebar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; order: 2; max-height: 150px; overflow-y: auto; }
+  .sidebar-section { display: none; }
+  .stat-box { min-width: 70px; flex: 1 1 calc(33% - 4px); padding: 6px; }
+  .stat-num { font-size: 16px; }
+  .stat-label { font-size: 8px; }
+  #s-revenue { font-size: 16px !important; }
+  .ctrl-btn { padding: 6px 8px; font-size: 9px; flex: 1 1 calc(50% - 4px); }
+  .orders-grid { grid-template-columns: 1fr; gap: 8px; padding: 8px; }
+  .order-card { padding: 10px; font-size: 11px; border-radius: 8px; }
+  .mesa-num { font-size: 24px; }
+  .order-items { max-height: 60px; }
+  .total-value { font-size: 16px; }
+  .kitchen-grid { grid-template-columns: 1fr; gap: 8px; }
+  .kitchen-mesa { font-size: 24px; }
+  .kitchen-item { font-size: 12px; }
+  .tables-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .table-number { font-size: 28px; }
+  .table-status { font-size: 10px; }
+  .cash-dashboard { grid-template-columns: 1fr; gap: 8px; }
+  .cash-card { padding: 12px; }
+  .cash-card-value { font-size: 24px; }
+  .cash-form-row { flex-wrap: wrap; }
+  .cash-form-row select, .cash-form-row input { flex: 1 1 100%; }
+  .feed-panel { display: none; }
+  .topbar { padding: 8px; gap: 6px; }
+  .topbar-left { flex-wrap: wrap; }
+  .brand-name { font-size: 16px; }
+  .brand-sub { font-size: 9px; }
+  .topbar-right { flex-wrap: wrap; gap: 4px; }
+  .clear-btn, .pdf-btn { padding: 4px 6px; font-size: 9px; }
+  .clock { font-size: 12px; }
+  .connection-status { font-size: 10px; padding: 4px 8px; }
+  .board-title { font-size: 12px; }
+  .filter-tabs { flex-wrap: wrap; gap: 4px; }
+  .ftab { padding: 4px 8px; font-size: 10px; }
+  .generic-content { max-width: 100%; width: 100%; height: 100%; max-height: 100%; border-radius: 0; padding: 10px; }
+  .generic-header { padding-bottom: 10px; margin-bottom: 10px; }
+  .generic-header h2 { font-size: 16px; }
+  .inventory-table { font-size: 10px; display: block; overflow-x: auto; }
+  .inv-input { width: 60px; padding: 6px; font-size: 11px; }
+  .inv-btn { padding: 8px 10px; font-size: 10px; }
+  .new-order-form { gap: 10px; }
+  .form-input, .form-select { padding: 10px; font-size: 13px; }
+  .form-label { font-size: 11px; }
+  .confirm-content { padding: 16px; }
+  .confirm-title { font-size: 16px; }
+  .confirm-message { font-size: 12px; }
+  .confirm-buttons { flex-direction: column; }
+  .confirm-btn { width: 100%; }
+  .history-filters { flex-wrap: wrap; }
+  .history-date { flex: 1 1 45%; }
+  .history-item { flex-wrap: wrap; gap: 8px; }
+  .cash-tabs { flex-wrap: wrap; }
+  .cash-tab { flex: 1 1 auto; text-align: center; }
+}
+@media (max-width: 375px) {
+  .brand-name { font-size: 14px; }
+  .brand-sub { font-size: 8px; }
+  .stat-box { min-width: 60px; padding: 4px; }
+  .stat-num { font-size: 14px; }
+  .orders-grid { gap: 6px; padding: 6px; }
+  .order-card { padding: 8px; }
+  .mesa-num { font-size: 20px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .sidebar { max-height: 80px; overflow-y: auto; }
+  .orders-grid, .kitchen-grid, .feed-panel { max-height: calc(100vh - 180px); overflow-y: auto; }
+}
+@media print {
+  .topbar, .sidebar, .feed-panel, .board-header, .order-actions { display: none !important; }
+  .main { display: block; }
+  .board { padding: 0; }
+  .orders-grid { display: block; }
+  .order-card { break-inside: avoid; margin-bottom: 10px; border: 1px solid #ccc; }
+}
+@media (hover: none) and (pointer: coarse) {
+  .action-btn, .ctrl-btn, .clear-btn, .pdf-btn, .inv-btn, .ftab { min-height: 44px; min-width: 44px; }
+  .order-card { cursor: pointer; }
+  .kitchen-btn { min-height: 44px; }
 }

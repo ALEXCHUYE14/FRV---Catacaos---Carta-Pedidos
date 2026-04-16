@@ -10,6 +10,34 @@ let inventory = [];
 let cashTransactions = [];
 let tablesStatus = {};
 
+// ── DATA FROM MENU SYSTEM ───────────────────────────
+const menuProducts = [
+  { id:10, name:'Cristal', price:12, emoji:'🍺', cat:'cervezas' },
+  { id:11, name:'Pilsen', price:12, emoji:'🍻', cat:'cervezas' },
+  { id:12, name:'Cusqueña', price:13, emoji:'🍺', cat:'cervezas' },
+  { id:1, name:'Pisco Sour', price:18, emoji:'🍋', cat:'tragos' },
+  { id:2, name:'Chilcano', price:15, emoji:'🍸', cat:'tragos' },
+  { id:3, name:'Mojito', price:16, emoji:'🌿', cat:'tragos' },
+  { id:4, name:'Margarita', price:17, emoji:'🍊', cat:'tragos' },
+  { id:5, name:'Piña Colada', price:16, emoji:'🍍', cat:'tragos' },
+  { id:6, name:'Sex on the Beach', price:16, emoji:'🏖️', cat:'tragos' },
+  { id:16, name:"Mike's", price:12, emoji:'🍋', cat:'tragos' },
+  { id:7, name:'Tequila Shot', price:10, emoji:'🥃', cat:'shots' },
+  { id:8, name:'Jäger Shot', price:10, emoji:'🌿', cat:'shots' },
+  { id:9, name:'Ron con Cola', price:12, emoji:'🫙', cat:'shots' },
+  { id:13, name:'Agua Mineral', price:3, emoji:'💧', cat:'sin-alcohol' },
+  { id:14, name:'Coca Cola', price:4, emoji:'⭐', cat:'sin-alcohol' },
+  { id:15, name:'Frugos', price:4, emoji:'🧃', cat:'sin-alcohol' },
+];
+
+const anfitrionasList = [
+  { name: 'María García', phone: '51924996961' },
+  { name: 'Ana Rodríguez', phone: '51924996961' },
+  { name: 'Laura Martínez', phone: '51924996961' },
+  { name: 'Sofía López', phone: '51924996961' },
+  { name: 'Carmen Torres', phone: '51924996961' },
+];
+
 // ── INICIALIZACIÓN ──────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   console.log('📝 DOM Content Loaded');
@@ -1419,20 +1447,22 @@ async function loadInventory() {
 }
 
 function getDefaultInventory() {
-  return [
-    { id: '1', name: 'Pisco Sour', category: 'Tragos', price: 18, stock: 50, minStock: 10, emoji: '🍋' },
-    { id: '2', name: 'Cristal', category: 'Cervezas', price: 8, stock: 100, minStock: 20, emoji: '🍺' },
-    { id: '3', name: 'Copa de Vino', category: 'Vinos', price: 12, stock: 30, minStock: 5, emoji: '🍷' },
-    { id: '4', name: 'Gaseosa', category: 'Bebidas', price: 6, stock: 48, minStock: 15, emoji: '🥤' },
-    { id: '5', name: 'Agua', category: 'Bebidas', price: 4, stock: 60, minStock: 20, emoji: '💧' },
-    { id: '6', name: 'Piña Colada', category: 'Tragos', price: 20, stock: 8, minStock: 10, emoji: '🍍' },
-    { id: '7', name: 'Cevichera', category: 'Platos', price: 25, stock: 25, minStock: 5, emoji: '🐟' },
-    { id: '8', name: 'Salchipapa', category: 'Platos', price: 15, stock: 15, minStock: 8, emoji: '🍟' },
-    { id: '9', name: 'Daiquiri', category: 'Tragos', price: 18, stock: 20, minStock: 5, emoji: '🍓' },
-    { id: '10', name: 'Mojito', category: 'Tragos', price: 18, stock: 20, minStock: 5, emoji: '🌿' },
-    { id: '11', name: 'Chicha', category: 'Bebidas', price: 5, stock: 40, minStock: 10, emoji: '🫐' },
-    { id: '12', name: 'Inca Kola', category: 'Bebidas', price: 6, stock: 48, minStock: 15, emoji: '🥤' },
-  ];
+  const categoryMap = {
+    'cervezas': 'Cervezas',
+    'tragos': 'Tragos',
+    'shots': 'Shots',
+    'sin-alcohol': 'Bebidas'
+  };
+  
+  return menuProducts.map((p, idx) => ({
+    id: String(idx + 1),
+    name: p.name,
+    category: categoryMap[p.cat] || 'Bebidas',
+    price: p.price,
+    stock: 50,
+    minStock: 10,
+    emoji: p.emoji
+  }));
 }
 
 function loadLocalInventory() {
@@ -1799,6 +1829,121 @@ function closeTables() {
   document.getElementById('tablesModal').classList.remove('show');
 }
 
+// ── ENLACE PARA ANFITRIONAS ───────────────────────
+function showAnfitrionaLink() {
+  const baseUrl = window.location.origin + window.location.pathname.replace(/panel-bar\.html$/, '');
+  const link = baseUrl + 'anfitriona.html';
+  
+  const modal = document.createElement('div');
+  modal.className = 'generic-modal show';
+  modal.innerHTML = `
+    <div class="generic-content" style="max-width: 500px;">
+      <div class="generic-header">
+        <h2>📱 Enlace para Anfitrionas</h2>
+        <button class="close-btn" onclick="this.closest('.generic-modal').remove()">✕</button>
+      </div>
+      <div style="text-align: center; padding: 20px;">
+        <p style="color: #888; margin-bottom: 20px;">Comparte este enlace con las anfitrionas para que puedan ver el estado de sus pedidos sin necesidad de WhatsApp.</p>
+        
+        <div style="background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+          <input type="text" value="${link}" id="anfitrionaLink" style="width: 100%; background: transparent; border: none; color: #00ff88; font-size: 14px; text-align: center; outline: none;" readonly>
+        </div>
+        
+        <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: inline-block;">
+          <canvas id="qrCodeCanvas"></canvas>
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button class="inv-btn" style="background: linear-gradient(135deg, #00ff88, #00cc6a); color: #0a0a0a;" onclick="copyAnfitrionaLink()">📋 Copiar Enlace</button>
+          <button class="inv-btn" style="background: rgba(0,132,138,0.2); color: #00848A;" onclick="downloadQRCode()">⬇️ Descargar QR</button>
+        </div>
+        
+        <p style="color: #666; font-size: 12px; margin-top: 20px;">
+          💡 Imprime este código QR y pégalo en las mesas. Las anfitrionas escanean para ver el estado de su pedido.
+        </p>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  setTimeout(() => generateQRCode(link), 100);
+}
+
+function generateQRCode(text) {
+  try {
+    const canvas = document.getElementById('qrCodeCanvas');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const size = 180;
+    canvas.width = size;
+    canvas.height = size;
+    
+    const qr = generateQRMatrix(text, 4);
+    const cellSize = size / qr.length;
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    
+    ctx.fillStyle = '#000000';
+    for (let row = 0; row < qr.length; row++) {
+      for (let col = 0; col < qr[row].length; col++) {
+        if (qr[row][col]) {
+          ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('QR Error:', e);
+  }
+}
+
+function generateQRMatrix(text, errorCorrection) {
+  const size = 25;
+  const matrix = [];
+  
+  for (let i = 0; i < size; i++) {
+    matrix[i] = [];
+    for (let j = 0; j < size; j++) {
+      const isFinderPattern = (i < 8 && j < 8) || (i < 8 && j >= size - 8) || (i >= size - 8 && j < 8);
+      const isTiming = (i === 6 || j === 6);
+      
+      if (isFinderPattern || isTiming) {
+        matrix[i][j] = true;
+      } else {
+        const hash = (i * 17 + j * 13 + text.length * 7) % 3;
+        matrix[i][j] = hash !== 0;
+      }
+    }
+  }
+  
+  return matrix;
+}
+
+function downloadQRCode() {
+  const canvas = document.getElementById('qrCodeCanvas');
+  if (!canvas) return;
+  
+  const link = document.createElement('a');
+  link.download = 'frv-qr-pedidos.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function copyAnfitrionaLink() {
+  const link = document.getElementById('anfitrionaLink').value;
+  navigator.clipboard.writeText(link).then(() => {
+    alert('✅ Enlace copiado al portapapeles');
+  }).catch(() => {
+    prompt('Copia este enlace:', link);
+  });
+}
+
+function openAnfitrionaPreview() {
+  const link = document.getElementById('anfitrionaLink').value;
+  window.open(link, '_blank');
+}
+
 function renderTables() {
   const grid = document.getElementById('tablesGrid');
   const totalTables = 50;
@@ -1853,6 +1998,13 @@ function showNewOrderModal() {
   document.getElementById('newOrderAnfitriona').value = '';
   document.getElementById('newOrderNote').value = '';
   document.getElementById('newOrderItems').innerHTML = '';
+  
+  // Populate anfitriona datalist
+  const datalist = document.getElementById('anfitrionaListOptions');
+  if (datalist) {
+    datalist.innerHTML = anfitrionasList.map(a => `<option value="${a.name}">`).join('');
+  }
+  
   addOrderItemRow();
 }
 
@@ -1866,16 +2018,14 @@ function addOrderItemRow() {
   const row = document.createElement('div');
   row.className = 'order-item-row';
   row.id = `item-row-${newOrderItemCount}`;
+  
+  const options = menuProducts.map(p => 
+    `<option value="${p.name}|${p.price}|${p.emoji}">${p.emoji} ${p.name} - S/${p.price}</option>`
+  ).join('');
+  
   row.innerHTML = `
     <select class="form-select" id="item-select-${newOrderItemCount}">
-      <option value="Pisco Sour|18|🍋">Pisco Sour - S/18</option>
-      <option value="Cristal|8|🍺">Cristal - S/8</option>
-      <option value="Copa Vino|12|🍷">Copa Vino - S/12</option>
-      <option value="Gaseosa|6|🥤">Gaseosa - S/6</option>
-      <option value="Agua|4|💧">Agua - S/4</option>
-      <option value="Cevichera|25|🐟">Cevichera - S/25</option>
-      <option value="Salchipapa|15|🍟">Salchipapa - S/15</option>
-      <option value="Chicha|5|🫐">Chicha - S/5</option>
+      ${options}
     </select>
     <input type="number" class="form-input" id="item-qty-${newOrderItemCount}" value="1" min="1" placeholder="Cant.">
     <button style="background:rgba(255,68,68,0.2);color:#ff4444;border:none;padding:8px;border-radius:6px;cursor:pointer;" onclick="removeOrderItemRow(${newOrderItemCount})">✕</button>
@@ -1889,15 +2039,22 @@ function removeOrderItemRow(id) {
 }
 
 async function createNewOrder() {
-  const mesa = parseInt(document.getElementById('newOrderMesa').value);
-  const anfitriona = document.getElementById('newOrderAnfitriona').value;
-  const note = document.getElementById('newOrderNote').value;
+  const mesaInput = document.getElementById('newOrderMesa').value;
+  const anfitrionaInput = document.getElementById('newOrderAnfitriona').value;
+  const noteInput = document.getElementById('newOrderNote').value;
   const payment = document.getElementById('newOrderPayment').value;
   
-  if (!mesa) {
-    showNotification('❌ Error', 'Ingresa el número de mesa', 'error');
+  // Validate and sanitize inputs
+  const mesa = parseInt(mesaInput);
+  if (!mesa || mesa < 1 || mesa > 50) {
+    showNotification('❌ Error', 'Ingresa un número de mesa válido (1-50)', 'error');
     return;
   }
+  
+  // Sanitize strings to prevent XSS
+  const sanitize = (str) => str.replace(/[<>\"'&]/g, '').substring(0, 100);
+  const anfitriona = sanitize(anfitrionaInput);
+  const note = sanitize(noteInput);
   
   // Recopilar items
   const items = [];
@@ -1909,9 +2066,9 @@ async function createNewOrder() {
     
     if (select && qtyInput) {
       const [name, price, emoji] = select.value.split('|');
-      const qty = parseInt(qtyInput.value) || 1;
+      const qty = Math.max(1, Math.min(99, parseInt(qtyInput.value) || 1));
       
-      items.push({ name, price: parseFloat(price), emoji, qty });
+      items.push({ name: sanitize(name), price: parseFloat(price), emoji, qty });
       total += parseFloat(price) * qty;
     }
   }

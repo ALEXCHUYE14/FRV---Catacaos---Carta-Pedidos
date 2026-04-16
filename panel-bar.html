@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com https://cdnjs.cloudflare.com https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com; frame-ancestors 'none';">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 <title>FRV Catacaos — Panel de Bar</title>
 <meta property="og:url" content="https://frv-api.netlify.app/panel-bar.html">
 <meta name="description" content="Panel de administración FRV Catacaos - Control de pedidos y ventas en tiempo real">
@@ -1142,6 +1146,7 @@
       <button class="ctrl-btn" onclick="showInventory()">📦 Inventario</button>
       <button class="ctrl-btn" onclick="showCashBox()">💵 Caja Diaria</button>
       <button class="ctrl-btn" onclick="showTables()">🪑 Mesas</button>
+      <button class="ctrl-btn" onclick="showAnfitrionaLink()">📱 Enlace Anfitrionas</button>
       <button class="ctrl-btn" onclick="showNewOrderModal()">➕ Nuevo Pedido</button>
       <button class="ctrl-btn" onclick="showHistory()">📆 Historial</button>
     </div>
@@ -1369,7 +1374,8 @@
       </div>
       <div class="form-group">
         <label class="form-label">Anfitriona</label>
-        <input type="text" class="form-input" id="newOrderAnfitriona" placeholder="Nombre de la anfitriona">
+        <input type="text" class="form-input" id="newOrderAnfitriona" placeholder="Escribe el nombre de la anfitriona" list="anfitrionaList">
+        <datalist id="anfitrionaListOptions"></datalist>
       </div>
       <div class="form-group">
         <label class="form-label">Productos</label>

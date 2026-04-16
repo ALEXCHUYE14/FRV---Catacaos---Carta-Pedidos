@@ -64,24 +64,25 @@ document.getElementById('mesaTag').addEventListener('click', () => {
 // ── MENU DATA ────────────────────────────────────
 const products = [
   // CERVEZAS (PRIMERO - destacadas)
-  { id:10, name:'Cristal', desc:'Botella 620ml bien fría', price:8, emoji:'🍺', cat:'cervezas', badge:'PROMO', img:'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop', featured: true },
-  { id:11, name:'Pilsen', desc:'Botella 620ml', price:8, emoji:'🍻', cat:'cervezas', img:'https://images.unsplash.com/photo-1536935338788-846bb9981813?w=400&h=300&fit=crop', featured: true },
-  { id:12, name:'Cusqueña', desc:'Botella 620ml, premium', price:10, emoji:'🍺', cat:'cervezas', img:'https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=400&h=300&fit=crop' },
+  { id:10, name:'Cristal', desc:'Botella 620ml bien fría', price:12, emoji:'🍺', cat:'cervezas', badge:'PROMO', img:'img/cristal.jpg', featured: true },
+  { id:11, name:'Pilsen', desc:'Botella 620ml', price:12, emoji:'🍻', cat:'cervezas', img:'img/Pilsen Cerveza.png', featured: true },
+  { id:12, name:'Cusqueña', desc:'Botella 620ml, premium', price:13, emoji:'🍺', cat:'cervezas', img:'img/cusqueña.png' },
   // TRAGOS
-  { id:1, name:'Pisco Sour', desc:'Pisco quebranta, limón, clara, jarabe', price:18, emoji:'🍋', cat:'tragos', badge:'TOP', img:'https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=400&h=300&fit=crop' },
-  { id:2, name:'Chilcano', desc:'Pisco, ginger ale, limón', price:15, emoji:'🍸', cat:'tragos', img:'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=300&fit=crop' },
-  { id:3, name:'Mojito', desc:'Ron, menta, lima, soda', price:16, emoji:'🌿', cat:'tragos', img:'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=400&h=300&fit=crop' },
-  { id:4, name:'Margarita', desc:'Tequila, triple sec, limón', price:17, emoji:'🍊', cat:'tragos', img:'https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=400&h=300&fit=crop' },
-  { id:5, name:'Piña Colada', desc:'Ron, crema coco, piña', price:16, emoji:'🍍', cat:'tragos', img:'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop' },
-  { id:6, name:'Sex on the Beach', desc:'Vodka, durazno, naranja', price:16, emoji:'🏖️', cat:'tragos', badge:'NEW', img:'https://images.unsplash.com/photo-1536935338788-846bb9981813?w=400&h=300&fit=crop' },
+  { id:1, name:'Pisco Sour', desc:'Pisco quebranta, limón, clara, jarabe', price:18, emoji:'🍋', cat:'tragos', badge:'TOP', img:'img/pisco-sour.png' },
+  { id:2, name:'Chilcano', desc:'Pisco, ginger ale, limón', price:15, emoji:'🍸', cat:'tragos', img:'img/chilcano.png' },
+  { id:3, name:'Mojito', desc:'Ron, menta, lima, soda', price:16, emoji:'🌿', cat:'tragos', img:'img/mojito.png' },
+  { id:4, name:'Margarita', desc:'Tequila, triple sec, limón', price:17, emoji:'🍊', cat:'tragos', img:'img/margarita.png' },
+  { id:5, name:'Piña Colada', desc:'Ron, crema coco, piña', price:16, emoji:'🍍', cat:'tragos', img:'img/pina-colada.png' },
+  { id:6, name:'Sex on the Beach', desc:'Vodka, durazno, naranja', price:16, emoji:'🏖️', cat:'tragos', badge:'NEW', img:'img/sex-on-the-beach.png' },
+  { id:16, name:"Mike's", desc:"Mike's Hard Lemonade 355ml", price:12, emoji:'🍋', cat:'tragos', img:'img/mikes.png' },
   // SHOTS
-  { id:7, name:'Tequila Shot', desc:'José Cuervo + sal + limón', price:10, emoji:'🥃', cat:'shots', img:'https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=400&h=300&fit=crop' },
-  { id:8, name:'Jäger Shot', desc:'Jägermeister bien frío', price:10, emoji:'🌿', cat:'shots', img:'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=300&fit=crop' },
-  { id:9, name:'Ron con Cola', desc:'Ron Cartavio + Coca Cola', price:12, emoji:'🫙', cat:'shots', img:'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=400&h=300&fit=crop' },
+  { id:7, name:'Tequila Shot', desc:'José Cuervo + sal + limón', price:10, emoji:'🥃', cat:'shots', img:'img/tequila.png' },
+  { id:8, name:'Jäger Shot', desc:'Jägermeister bien frío', price:10, emoji:'🌿', cat:'shots', img:'img/jager.png' },
+  { id:9, name:'Ron con Cola', desc:'Ron Cartavio + Coca Cola', price:12, emoji:'🫙', cat:'shots', img:'img/ron-cola.png' },
   // SIN ALCOHOL
-  { id:13, name:'Agua Mineral', desc:'500ml sin gas / con gas', price:3, emoji:'💧', cat:'sin-alcohol', img:'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=300&fit=crop' },
-  { id:14, name:'Inca Kola', desc:'Botella 500ml', price:4, emoji:'⭐', cat:'sin-alcohol', img:'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=400&h=300&fit=crop' },
-  { id:15, name:'Frugos', desc:'Durazno / Mango / Naranja', price:4, emoji:'🧃', cat:'sin-alcohol', img:'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop' },
+  { id:13, name:'Agua Mineral', desc:'500ml sin gas / con gas', price:3, emoji:'💧', cat:'sin-alcohol', img:'img/agua.jpg' },
+  { id:14, name:'Coca Cola', desc:'Botella 500ml', price:4, emoji:'⭐', cat:'sin-alcohol', img:'img/coca-cola.jpg' },
+  { id:15, name:'Frugos', desc:'Durazno / Mango / Naranja', price:4, emoji:'🧃', cat:'sin-alcohol', img:'img/frugos.jpg' },
 ];
 
 let cart = {};
