@@ -22,7 +22,7 @@ let initialized = false;
 // INICIALIZACIÓN
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function initFirebase() {
+async function initFirebase() {
   console.log('🔧 [Firebase] initFirebase() llamado...');
   
   if (initialized && firebaseDatabase) {
@@ -44,7 +44,6 @@ function initFirebase() {
   // Verificar que firebase.database exista
   if (typeof firebase.database !== 'function') {
     console.error('❌ [Firebase] firebase.database no disponible');
-    console.log('🔧 [Firebase] firebase keys:', Object.keys(firebase));
     throw new Error('firebase.database no disponible');
   }
   
@@ -55,7 +54,6 @@ function initFirebase() {
       console.log('📦 [Firebase] Usando app existente:', app ? app.name : 'sin nombre');
     } catch (e) {
       console.log('📦 [Firebase] Inicializando nueva app...');
-      console.log('🔧 [Firebase] Config:', JSON.stringify(firebaseConfig));
       app = firebase.initializeApp(firebaseConfig);
       console.log('✅ [Firebase] App inicializada:', app.name);
     }
@@ -64,18 +62,12 @@ function initFirebase() {
     firebaseDatabase = firebase.database();
     console.log('✅ [Firebase] Database obtained:', !!firebaseDatabase);
     
-    // Verificar conexión
-    console.log('🔧 [Firebase] Verificando conexión...');
-    
     initialized = true;
     
     console.log('✅ [Firebase] Inicializado correctamente');
-    console.log('🔗 [Firebase] Database:', firebaseConfig.databaseURL);
-    
     return firebaseDatabase;
   } catch (error) {
     console.error('❌ [Firebase] Error de inicialización:', error.message);
-    console.error('❌ [Firebase] Error stack:', error.stack);
     throw new Error('Error al inicializar Firebase: ' + error.message);
   }
 }
@@ -89,7 +81,7 @@ async function getOrders() {
   
   let db;
   try {
-    db = initFirebase();
+    db = await initFirebase();
   } catch (error) {
     console.error('❌ [Firebase] Error al inicializar:', error.message);
     throw error;
@@ -119,7 +111,7 @@ async function getOrders() {
 async function createOrder(orderData) {
   console.log('📝 [Firebase] Creando pedido...');
   
-  const db = initFirebase();
+  const db = await initFirebase();
   if (!db) return null;
   
   try {
@@ -143,7 +135,7 @@ async function createOrder(orderData) {
 async function updateOrderStatus(orderId, status) {
   console.log('📝 [Firebase] Actualizando pedido:', orderId, status);
   
-  const db = initFirebase();
+  const db = await initFirebase();
   if (!db) return null;
   
   try {
@@ -162,7 +154,7 @@ async function updateOrderStatus(orderId, status) {
 }
 
 async function getStats() {
-  const db = initFirebase();
+  const db = await initFirebase();
   if (!db) return { pending: 0, preparing: 0, completed: 0 };
   
   try {
@@ -181,26 +173,48 @@ async function getStats() {
 }
 
 function subscribeToOrders(callback) {
-  console.log('📡 [Firebase] Suscribiendo a pedidos...');
+  console.log('📡 [Firebase] Suscribiendo a pedidos en tiempo real...');
   
-  const db = initFirebase();
-  if (!db) return () => {};
+  if (typeof firebase === 'undefined') {
+    console.error('❌ [Firebase] SDK no está cargado');
+    return () => {};
+  }
+  
+  let db;
+  try {
+    db = firebase.database();
+  } catch (e) {
+    console.error('❌ [Firebase] Error al obtener database:', e);
+    return () => {};
+  }
   
   try {
-    const ref = db.ref('orders');
-    const listener = ref.on('value', (snapshot) => {
+    const ordersRef = db.ref('orders');
+    
+    const listener = ordersRef.on('value', (snapshot) => {
       const data = snapshot.val() || {};
       
       const ordersList = Object.entries(data).map(([id, order]) => ({
         id: id,
         ...order
-      }));
+      })).sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0);
+        const dateB = new Date(b.createdAt || 0);
+        return dateB - dateA;
+      });
       
       console.log('📡 [Firebase] Cambios detectados:', ordersList.length);
-      callback({ orders: ordersList });
+      callback({ orders: ordersList, source: 'firebase-realtime' });
+    }, (error) => {
+      console.error('❌ [Firebase] Error en listener:', error);
     });
     
-    return () => ref.off('value', listener);
+    console.log('✅ [Firebase] Suscripción activa');
+    
+    return () => {
+      console.log('📡 [Firebase] Cancelando suscripción...');
+      ordersRef.off('value', listener);
+    };
   } catch (error) {
     console.error('❌ [Firebase] Error en suscripción:', error.message);
     return () => {};
@@ -214,7 +228,7 @@ function testConnection() {
     try {
       let db;
       try {
-        db = initFirebase();
+        db = await initFirebase();
       } catch (initError) {
         resolve({ success: false, error: initError.message, details: 'Firebase SDK o configuración incorrecta' });
         return;

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRV Login — Panel de Control</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body {
+      background: 
+        linear-gradient(135deg, rgba(8,8,8,0.97) 0%, rgba(30,30,30,0.95) 100%),
+        url('../../public/img/productos/logo.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: 40px 60px;
+      min-height: 100vh;
+    }
+    .login-container {
+      width: 420px;
+      max-width: 100%;
+      animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    .login-card {
+      background: rgba(20, 20, 20, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 
+        0 25px 50px rgba(0,0,0,0.5),
+        0 0 100px rgba(245, 200, 0, 0.05),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo-waves {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 5px;
+      height: 48px;
+      margin-bottom: 20px;
+    }
+    .wave-bar {
+      background: linear-gradient(to top, #F5C800, #FFD93D);
+      border-radius: 4px;
+      animation: waveBeat 1.2s ease-in-out infinite;
+      box-shadow: 0 0 15px rgba(245,200,0,0.4);
+    }
+    .wave-bar:nth-child(1) { height: 16px; animation-delay: 0s; }
+    .wave-bar:nth-child(2) { height: 32px; animation-delay: 0.1s; }
+    .wave-bar:nth-child(3) { height: 48px; animation-delay: 0.2s; }
+    .wave-bar:nth-child(4) { height: 36px; animation-delay: 0.3s; }
+    .wave-bar:nth-child(5) { height: 24px; animation-delay: 0.4s; }
+    .wave-bar:nth-child(6) { height: 14px; animation-delay: 0.5s; }
+    .wave-bar:nth-child(7) { height: 10px; animation-delay: 0.6s; }
+    @keyframes waveBeat {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(0.6); }
+    }
+    .brand-title {
+      font-size: 42px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 12px;
+      margin-bottom: 8px;
+    }
+    .brand-title span {
+      color: #F5C800;
+      text-shadow: 0 0 30px rgba(245,200,0,0.5);
+    }
+    .brand-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group label {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .input-wrapper {
+      position: relative;
+    }
+    .form-input {
+      width: 100%;
+      padding: 16px 18px;
+      padding-left: 48px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: rgba(245,200,0,0.5);
+      background: rgba(255,255,255,0.05);
+      box-shadow: 0 0 20px rgba(245,200,0,0.1);
+    }
+    .form-input::placeholder {
+      color: rgba(255,255,255,0.25);
+    }
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.3);
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    .form-input:focus + .input-icon {
+      color: #F5C800;
+    }
+    .password-toggle {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.3s;
+    }
+    .password-toggle:hover {
+      color: rgba(255,255,255,0.6);
+    }
+    .login-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #F5C800 0%, #D4A800 100%);
+      border: none;
+      border-radius: 12px;
+      color: #080808;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    .login-btn:hover::before {
+      left: 100%;
+    }
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(245,200,0,0.35);
+    }
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .login-message {
+      padding: 14px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+      animation: shake 0.5s ease;
+    }
+    .login-message.show {
+      display: block;
+    }
+    .login-message.success {
+      background: rgba(0,255,136,0.1);
+      border: 1px solid rgba(0,255,136,0.2);
+      color: #00ff88;
+    }
+    .login-message.error {
+      background: rgba(255,68,68,0.1);
+      border: 1px solid rgba(255,68,68,0.2);
+      color: #ff4444;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-8px); }
+      80% { transform: translateX(8px); }
+    }
+    .login-footer {
+      text-align: center;
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .login-footer p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      margin: 6px 0;
+    }
+    .login-footer i {
+      margin-right: 6px;
+    }
+    .copyright {
+      font-size: 10px !important;
+      letter-spacing: 1px;
+    }
+    /* Decorative corner accents */
+    .login-card::before,
+    .login-card::after {
+      content: '';
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border: 2px solid rgba(245,200,0,0.2);
+    }
+    .login-card::before {
+      top: -1px;
+      left: -1px;
+      border-right: none;
+      border-bottom: none;
+      border-radius: 24px 0 0 0;
+    }
+    .login-card::after {
+      bottom: -1px;
+      right: -1px;
+      border-left: none;
+      border-top: none;
+      border-radius: 0 0 24px 0;
+    }
+    .login-card {
+      position: relative;
+    }
+    /* Glowing corner */
+    .corner-glow {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle at top left, rgba(245,200,0,0.15), transparent 70%);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="corner-glow"></div>
+      
+      <div class="login-header">
+        <div class="logo-waves">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+        <h1 class="brand-title">F<span>R</span>V</h1>
+        <p class="brand-subtitle">Panel de Control</p>
+      </div>
+      
+      <div id="loginMessage" class="login-message"></div>
+      
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label>Usuario</label>
+          <div class="input-wrapper">
+            <input type="text" id="username" class="form-input" placeholder="Ingrese usuario" autocomplete="off">
+            <i class="input-icon fas fa-user"></i>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Contraseña</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" class="form-input" placeholder="Ingrese contraseña" autocomplete="off">
+            <i class="input-icon fas fa-lock"></i>
+            <button type="button" class="password-toggle" id="togglePassword">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <button type="submit" class="login-btn" id="loginBtn">
+          <span id="btnText">Iniciar Sesión</span>
+        </button>
+      </form>
+      
+      <div class="login-footer">
+        <p><i class="fas fa-shield-alt"></i> Acceso restringido</p>
+        <p class="copyright">© 2026 FRV Catacaos</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let loginSystemInitialized = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Siempre mostrar el formulario de login
+      // El usuario puede tener sesión activa, pero puede querer cerrar y abrir otra
+      console.log('🔐 FRV Login - Cargando formulario...');
+      initLoginSystem();
+    });
+
+    function initLoginSystem() {
+      if (loginSystemInitialized) return;
+      loginSystemInitialized = true;
+      
+      const form = document.getElementById('loginForm');
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const toggleBtn = document.getElementById('togglePassword');
+      
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+          const type = passwordInput.type === 'password' ? 'text' : 'password';
+          passwordInput.type = type;
+          this.querySelector('i').className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+        });
+      }
+      
+      if (usernameInput) {
+        usernameInput.addEventListener('input', hideLoginMessage);
+      }
+      if (passwordInput) {
+        passwordInput.addEventListener('input', hideLoginMessage);
+      }
+      
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          performLogin();
+        });
+      }
+    }
+
+    function performLogin() {
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const loginBtn = document.getElementById('loginBtn');
+      const btnText = document.getElementById('btnText');
+      
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+      
+      if (!username || !password) {
+        showLoginMessage('Por favor complete todos los campos', 'error');
+        return;
+      }
+      
+      loginBtn.disabled = true;
+      btnText.textContent = 'Verificando...';
+      
+      setTimeout(function() {
+        if (username === 'admin' && password === 'frv2026') {
+          showLoginMessage('✓ Acceso permitido', 'success');
+          btnText.textContent = 'Redireccionando...';
+          
+          localStorage.setItem('frv_admin_auth', 'true');
+          localStorage.setItem('frv_admin_user', username);
+          localStorage.setItem('frv_login_time', new Date().toISOString());
+          
+          setTimeout(function() {
+            window.location.href = 'panel-bar.html';
+          }, 600);
+        } else {
+          showLoginMessage('Credenciales incorrectas', 'error');
+          btnText.textContent = 'Iniciar Sesión';
+          loginBtn.disabled = false;
+          passwordInput.value = '';
+          passwordInput.focus();
+        }
+      }, 500);
+    }
+
+    function showLoginMessage(message, type) {
+      const messageEl = document.getElementById('loginMessage');
+      messageEl.textContent = message;
+      messageEl.className = 'login-message show ' + type;
+    }
+
+    function hideLoginMessage() {
+      const messageEl = document.getElementById('loginMessage');
+      messageEl.className = 'login-message';
+    }
+  </script>
+</body>
+</html>

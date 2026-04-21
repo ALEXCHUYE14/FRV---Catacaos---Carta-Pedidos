@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+  <title>FRV Panel Bar — Sistema de Gestión</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --yellow: #F5C800;
+      --yellow2: #FFD93D;
+      --magenta: #D4006A;
+      --magenta2: #FF3399;
+      --teal: #00848A;
+      --teal2: #00A3B0;
+      --dark: #080808;
+      --dark-surface: #121212;
+      --surface: #1E1E1E;
+      --surface2: #2A2A2A;
+      --surface3: #353535;
+      --border: rgba(255,255,255,0.1);
+      --border-light: rgba(255,255,255,0.05);
+      --muted: #888888;
+      --text: #FFFFFF;
+      --text-secondary: rgba(255,255,255,0.7);
+      --success: #00ff88;
+      --success-dark: #00cc66;
+      --warning: #FF8800;
+      --error: #ff4444;
+      --info: #00bfff;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-xxl: 48px;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+      --shadow-glow-yellow: 0 0 20px rgba(245,200,0,0.3);
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s ease;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: var(--radius-full); }
+    .dashboard {
+      display: flex;
+      min-height: 100vh;
+      background: var(--dark);
+      opacity: 1;
+    }
+    .dashboard.hidden { display: none; }
+    .sidebar {
+      width: 260px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+    }
+    .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .logo-waves { display: flex; align-items: flex-end; gap: 3px; height: 32px; }
+    .wave-bar { width: 6px; background: var(--yellow); border-radius: 3px; }
+    .wave-bar:nth-child(1) { height: 14px; }
+    .wave-bar:nth-child(2) { height: 22px; }
+    .wave-bar:nth-child(3) { height: 32px; }
+    .wave-bar:nth-child(4) { height: 26px; }
+    .wave-bar:nth-child(5) { height: 18px; }
+    .wave-bar:nth-child(6) { height: 12px; }
+    .wave-bar:nth-child(7) { height: 8px; }
+    .logo-text { font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: 4px; }
+    .logo-text span { color: var(--yellow); }
+    .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 3px; }
+    .sidebar-nav { flex: 1; padding: 16px; overflow-y: auto; }
+    .nav-section { margin-bottom: 24px; }
+    .nav-section-title { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-bottom: 12px; display: block; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+      margin-bottom: 4px;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--yellow); color: var(--dark); font-weight: 600; }
+    .nav-item i { width: 20px; text-align: center; }
+    .nav-item span { flex: 1; font-size: 14px; }
+    .nav-badge {
+      background: var(--magenta);
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+    .nav-badge.alert { background: var(--error); }
+    .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .user-info { display: flex; align-items: center; gap: 12px; flex: 1; }
+    .user-avatar { width: 40px; height: 40px; background: var(--surface2); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--muted); }
+    .user-details { display: flex; flex-direction: column; }
+    .user-name { font-size: 14px; font-weight: 600; }
+    .user-role { font-size: 11px; color: var(--muted); }
+    .logout-btn { width: 36px; height: 36px; background: var(--surface2); border: none; border-radius: var(--radius-sm); color: var(--muted); cursor: pointer; }
+    .main-content { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .topbar {
+      height: 72px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .mobile-menu-btn { display: none; width: 40px; height: 40px; background: none; border: none; color: var(--text); cursor: pointer; font-size: 20px; }
+    .page-title { font-size: 20px; font-weight: 600; }
+    .live-indicator { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0,255,136,0.1); border-radius: var(--radius-full); }
+    .live-dot { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; animation: pulse 2s infinite; }
+    .live-text { font-size: 11px; color: #00ff88; letter-spacing: 1px; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .connection-status { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: var(--radius-sm); font-size: 12px; }
+    .connection-status.connected { color: #00ff88; }
+    .connection-status.disconnected { color: var(--error); }
+    .clock { font-family: 'DM Mono', monospace; font-size: 16px; color: var(--text-secondary); }
+    .refresh-btn { width: 40px; height: 40px; background: var(--surface2); border: none; border-radius: var(--radius-sm); color: var(--text); cursor: pointer; }
+    .content-area { flex: 1; padding: 24px; background: var(--dark); overflow-y: auto; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+    .view-title { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+    .view-title i { color: var(--yellow); }
+    .view-subtitle { color: var(--muted); margin-top: 4px; }
+    .view-title-area { display: flex; flex-direction: column; }
+    .view-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .filter-group, .filter-tabs { display: flex; gap: 8px; background: var(--surface); padding: 4px; border-radius: var(--radius-md); }
+    .filter-btn, .filter-tab { padding: 8px 16px; background: transparent; border: none; color: var(--text-secondary); border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; transition: all var(--transition-fast); }
+    .filter-btn:hover, .filter-tab:hover { color: var(--text); }
+    .filter-btn.active, .filter-tab.active { background: var(--surface2); color: var(--text); }
+    .btn-primary { padding: 12px 20px; background: var(--yellow); border: none; border-radius: var(--radius-sm); color: var(--dark); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .btn-secondary { padding: 12px 20px; background: var(--surface2); border: none; border-radius: var(--radius-sm); color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .btn-danger { padding: 12px 20px; background: var(--error); border: none; border-radius: var(--radius-sm); color: #fff; font-weight: 600; cursor: pointer; }
+    .orders-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .order-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; transition: all var(--transition-fast); }
+    .order-card:hover { border-color: var(--yellow); transform: translateY(-2px); }
+    .order-header { display: flex; justify-content: space-between; margin-bottom: 16px; }
+    .order-mesa { display: flex; flex-direction: column; }
+    .mesa-number { font-size: 32px; font-weight: 800; color: var(--yellow); }
+    .mesa-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+    .order-meta { text-align: right; }
+    .order-time { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+    .order-status-badge { font-size: 11px; padding: 4px 10px; border-radius: var(--radius-full); }
+    .status-pending { background: rgba(255,136,0,0.2); color: var(--warning); }
+    .status-preparing { background: rgba(0,191,255,0.2); color: var(--info); }
+    .status-ready { background: rgba(0,255,136,0.2); color: var(--success); }
+    .status-completed { background: rgba(136,136,136,0.2); color: var(--muted); }
+    .order-items { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 12px 0; margin: 12px 0; }
+    .order-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 14px; }
+    .item-emoji { font-size: 16px; }
+    .item-name { flex: 1; }
+    .item-qty { color: var(--muted); }
+    .item-price { font-weight: 600; }
+    .order-total { display: flex; justify-content: space-between; align-items: center; }
+    .total-label { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+    .total-value { font-size: 24px; font-weight: 700; color: var(--yellow); }
+    .order-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .action-btn { flex: 1; padding: 12px; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all var(--transition-fast); }
+    .action-btn.preparing { background: var(--info); color: #000; }
+    .action-btn.ready { background: var(--success); color: #000; }
+    .action-btn.completed { background: var(--yellow); color: #000; }
+    .action-btn.cancel { background: var(--surface2); color: var(--text); }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+    .tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; }
+    .table-card { aspect-ratio: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all var(--transition-fast); }
+    .table-card:hover { border-color: var(--yellow); }
+    .table-card.free { border-color: var(--success); }
+    .table-card.occupied { border-color: var(--warning); }
+    .table-card.busy { border-color: var(--magenta); }
+    .table-number { font-size: 28px; font-weight: 700; }
+    .table-status { font-size: 11px; color: var(--muted); }
+    .staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .staff-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+    .staff-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .staff-avatar { width: 48px; height: 48px; background: var(--surface2); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .staff-name { font-size: 16px; font-weight: 600; }
+    .staff-role-badge { font-size: 11px; padding: 4px 10px; background: var(--surface2); border-radius: var(--radius-full); color: var(--text-secondary); }
+    .inventory-container { background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; }
+    .inventory-filters { display: flex; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+    .search-box { display: flex; align-items: center; gap: 8px; background: var(--surface2); padding: 8px 16px; border-radius: var(--radius-sm); }
+    .search-box input { background: none; border: none; color: var(--text); outline: none; width: 200px; }
+    .inventory-table { width: 100%; border-collapse: collapse; }
+    .inventory-table th { text-align: left; padding: 16px; background: var(--surface2); font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+    .inventory-table td { padding: 16px; border-bottom: 1px solid var(--border); }
+    .badge { font-size: 11px; padding: 4px 10px; border-radius: var(--radius-full); }
+    .badge-teal { background: rgba(0,132,138,0.2); color: var(--teal); }
+    .stock-low { color: var(--error); }
+    .stock-medium { color: var(--warning); }
+    .stock-high { color: var(--success); }
+    .inv-actions { display: flex; gap: 8px; }
+    .inv-btn-sm { width: 32px; height: 32px; background: var(--surface2); border: none; border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer; }
+    .inv-btn-sm.delete { color: var(--error); }
+    .sales-dashboard { display: flex; flex-direction: column; gap: 24px; }
+    .sales-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; align-items: center; gap: 16px; }
+    .summary-icon { width: 48px; height: 48px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .summary-icon.magenta { background: rgba(212,0,106,0.2); color: var(--magenta); }
+    .summary-icon.teal { background: rgba(0,132,138,0.2); color: var(--teal); }
+    .summary-icon.yellow { background: rgba(245,200,0,0.2); color: var(--yellow); }
+    .summary-icon.green { background: rgba(0,255,136,0.2); color: var(--success); }
+    .summary-label { font-size: 12px; color: var(--muted); }
+    .summary-value { font-size: 24px; font-weight: 700; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.show { display: flex; }
+    .modal-content { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); width: 90%; max-width: 600px; max-height: 90vh; overflow: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); }
+    .modal-body { padding: 20px; }
+    .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 20px; border-top: 1px solid var(--border); }
+    .close-btn { width: 32px; height: 32px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; }
+    .notification { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 20px; display: flex; align-items: center; gap: 12px; z-index: 1100; transform: translateY(100px); opacity: 0; transition: all var(--transition-normal); }
+    .notification.show { transform: translateY(0); opacity: 1; }
+    .notification-icon { font-size: 20px; color: var(--success); }
+    .notification-content { display: flex; flex-direction: column; }
+    .notification-title { font-weight: 600; }
+    .notification-message { font-size: 13px; color: var(--text-secondary); }
+    .notification-close { background: none; border: none; color: var(--muted); cursor: pointer; margin-left: 12px; }
+    .mobile-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+      .mobile-menu-btn { display: block; }
+      .mobile-overlay.show { display: block; }
+      .orders-board { grid-template-columns: 1fr; }
+    }
+  </style>
+   <link rel="stylesheet" href="../css/frv-panel.css">
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loadingScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
+    <div style="display:flex;align-items:flex-end;gap:6px;height:60px;margin-bottom:24px;">
+      <div style="width:8px;background:linear-gradient(to top, #F5C800, #FFD93D);border-radius:4px;animation:wave 1s ease-in-out infinite;" class="wave-bar"></div>
+      <div style="width:8px;background:linear-gradient(to top, #F5C800, #FFD93D);border-radius:4px;animation:wave 1s ease-in-out infinite;animation-delay:0.1s;height:40px;"></div>
+      <div style="width:8px;background:linear-gradient(to top, #F5C800, #FFD93D);border-radius:4px;animation:wave 1s ease-in-out infinite;animation-delay:0.2s;height:60px;"></div>
+      <div style="width:8px;background:linear-gradient(to top, #F5C800, #FFD93D);border-radius:4px;animation:wave 1s ease-in-out infinite;animation-delay:0.3s;height:45px;"></div>
+      <div style="width:8px;background:linear-gradient(to top, #F5C800, #FFD93D);border-radius:4px;animation:wave 1s ease-in-out infinite;animation-delay:0.4s;height:30px;"></div>
+      <div style="width:8px;background:linear-gradient(to top, #F5C800, #FFD93D);border-radius:4px;animation:wave 1s ease-in-out infinite;animation-delay:0.5s;height:18px;"></div>
+      <div style="width:8px;background:linear-gradient(to top, #F5C800, #FFD93D);border-radius:4px;animation:wave 1s ease-in-out infinite;animation-delay:0.6s;height:12px;"></div>
+    </div>
+    <div style="font-family:'Exo 2',sans-serif;font-size:24px;font-weight:700;color:#fff;letter-spacing:8px;">F<span style="color:#F5C800;">R</span>V</div>
+    <div id="loadingStatus" style="margin-top:20px;color:#888;font-size:14px;">Cargando...</div>
+  </div>
+
+  <style>
+    @keyframes wave { 0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.5)} }
+  </style>
+  
+  <!-- MAIN DASHBOARD -->
+  <div id="dashboard" style="display:none;">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="logo-waves">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+          </div>
+          <div class="logo-text">F<span>R</span>V</div>
+          <div class="logo-sub">CATACAOS</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <span class="nav-section-title">PRINCIPAL</span>
+          <a href="#" class="nav-item active" data-view="orders">
+            <i class="fas fa-receipt"></i>
+            <span>Pedidos</span>
+            <span id="navPendingCount" class="nav-badge">0</span>
+          </a>
+          <a href="#" class="nav-item" data-view="tables">
+            <i class="fas fa-th-large"></i>
+            <span>Mapa de Mesas</span>
+          </a>
+          <a href="#" class="nav-item" data-view="inventory">
+            <i class="fas fa-boxes"></i>
+            <span>Inventario</span>
+            <span id="navLowStock" class="nav-badge alert">0</span>
+          </a>
+          <a href="#" class="nav-item" data-view="staff">
+            <i class="fas fa-users"></i>
+            <span>Personal</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-title">REPORTES</span>
+          <a href="#" class="nav-item" data-view="sales">
+            <i class="fas fa-chart-line"></i>
+            <span>Ventas</span>
+          </a>
+          <a href="#" class="nav-item" data-view="history">
+            <i class="fas fa-history"></i>
+            <span>Historial</span>
+          </a>
+          <a href="#" class="nav-item" data-view="export">
+            <i class="fas fa-file-export"></i>
+            <span>Exportar</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-title">CONFIGURACIÓN</span>
+          <a href="#" class="nav-item" data-view="settings">
+            <i class="fas fa-cog"></i>
+            <span>Ajustes</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div class="user-details">
+            <span class="user-name" id="currentUser">Admin</span>
+            <span class="user-role">Administrador</span>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Cerrar sesión">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h1 class="page-title" id="pageTitle">Pedidos en Vivo</h1>
+          <div class="live-indicator">
+            <span class="live-dot"></span>
+            <span class="live-text">EN TIEMPO REAL</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="connection-status" id="connectionStatus">
+            <i class="fas fa-wifi"></i>
+            <span id="connectionText">Conectando...</span>
+          </div>
+          <div class="clock" id="clock">--:--:--</div>
+          <button class="refresh-btn" onclick="refreshData()" title="Actualizar">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Views -->
+      <div class="content-area">
+        <!-- ORDERS VIEW -->
+        <div id="ordersView" class="view active">
+          <div class="view-header">
+            <div class="view-title-area">
+              <h2 class="view-title">
+                <i class="fas fa-receipt"></i> Pedidos Recibidos
+              </h2>
+              <span class="view-subtitle" id="ordersCount">0 pedidos</span>
+            </div>
+            <div class="view-actions">
+              <div class="filter-group">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="pending">Pendientes</button>
+                <button class="filter-btn" data-filter="preparing">Preparando</button>
+                <button class="filter-btn" data-filter="ready">Listos</button>
+                <button class="filter-btn" data-filter="completed">Entregados</button>
+              </div>
+              <div class="view-options">
+                <button class="action-icon-btn" onclick="toggleSound()" title="Sonido">
+                  <i class="fas fa-volume-up" id="soundBtn"></i>
+                </button>
+                <button class="clear-completed-btn" onclick="clearCompleted()">
+                  <i class="fas fa-broom"></i> Limpiar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="orders-board" id="ordersBoard">
+            <!-- Orders will be rendered here -->
+          </div>
+        </div>
+
+        <!-- TABLES VIEW -->
+        <div id="tablesView" class="view">
+          <div class="view-header">
+            <div class="view-title-area">
+              <h2 class="view-title">
+                <i class="fas fa-th-large"></i> Mapa de Mesas
+              </h2>
+              <span class="view-subtitle">Vista rápida del estado de todas las mesas</span>
+            </div>
+            <div class="view-actions">
+              <button class="btn-primary" onclick="openTableModal()">
+                <i class="fas fa-plus"></i> Nueva Mesa
+              </button>
+              <button class="btn-secondary" onclick="resetAllTables()">
+                <i class="fas fa-undo"></i> Reiniciar Todas
+              </button>
+            </div>
+          </div>
+
+          <div class="tables-grid" id="tablesGrid">
+            <!-- Tables rendered here -->
+          </div>
+        </div>
+
+        <!-- INVENTORY VIEW -->
+        <div id="inventoryView" class="view">
+          <div class="view-header">
+            <div class="view-title-area">
+              <h2 class="view-title">
+                <i class="fas fa-boxes"></i> Inventario y Stock
+              </h2>
+              <span class="view-subtitle">Control de existencias</span>
+            </div>
+            <div class="view-actions">
+              <button class="btn-primary" onclick="openInventoryModal()">
+                <i class="fas fa-plus"></i> Nuevo Producto
+              </button>
+              <button class="btn-secondary" onclick="exportInventory()">
+                <i class="fas fa-file-csv"></i> Exportar CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="inventory-container">
+            <div class="inventory-filters">
+              <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">Todos</button>
+                <button class="filter-tab" data-filter="cervezas">Cervezas</button>
+                <button class="filter-tab" data-filter="tragos">Tragos</button>
+                <button class="filter-tab" data-filter="shots">Shots</button>
+                <button class="filter-tab" data-filter="sin-alcohol">Sin Alcohol</button>
+              </div>
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="inventorySearch" placeholder="Buscar producto...">
+              </div>
+            </div>
+
+            <div class="inventory-table-wrapper">
+              <table class="inventory-table" id="inventoryTable">
+                <thead>
+                  <tr>
+                    <th><i class="fas fa-box"></i> Producto</th>
+                    <th><i class="fas fa-tag"></i> Categoría</th>
+                    <th><i class="fas fa-cubes"></i> Stock</th>
+                    <th><i class="fas fa-warehouse"></i> Mínimo</th>
+                    <th><i class="fas fa-dollar-sign"></i> Precio</th>
+                    <th><i class="fas fa-cog"></i> Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="inventoryBody">
+                  <!-- Inventory rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAFF VIEW -->
+        <div id="staffView" class="view">
+          <div class="view-header">
+            <div class="view-title-area">
+              <h2 class="view-title">
+                <i class="fas fa-users"></i> Personal y Anfitrionas
+              </h2>
+              <span class="view-subtitle">Gestión de empleados y asignaciones</span>
+            </div>
+            <div class="view-actions">
+              <button class="btn-primary" onclick="openStaffModal()">
+                <i class="fas fa-user-plus"></i> Agregar Personal
+              </button>
+            </div>
+          </div>
+
+          <div class="staff-grid" id="staffGrid">
+            <!-- Staff cards -->
+          </div>
+        </div>
+
+        <!-- SALES VIEW -->
+        <div id="salesView" class="view">
+          <div class="view-header">
+            <div class="view-title-area">
+              <h2 class="view-title">
+                <i class="fas fa-chart-line"></i> Reporte de Ventas
+              </h2>
+              <span class="view-subtitle" id="salesPeriod">Hoy</span>
+            </div>
+            <div class="view-actions">
+              <div class="date-range-picker">
+                <input type="date" id="startDate" class="date-input">
+                <span class="date-separator">—</span>
+                <input type="date" id="endDate" class="date-input">
+                <button class="btn-primary" onclick="applyDateFilter()">
+                  <i class="fas fa-filter"></i> Filtrar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sales-dashboard">
+            <div class="sales-summary">
+              <div class="summary-card">
+                <div class="summary-icon magenta">
+                  <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="summary-info">
+                  <span class="summary-label">Ventas Totales</span>
+                  <span class="summary-value" id="totalSales">S/ 0.00</span>
+                </div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-icon teal">
+                  <i class="fas fa-receipt"></i>
+                </div>
+                <div class="summary-info">
+                  <span class="summary-label">Órdenes</span>
+                  <span class="summary-value" id="totalOrders">0</span>
+                </div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-icon yellow">
+                  <i class="fas fa-user-friends"></i>
+                </div>
+                <div class="summary-info">
+                  <span class="summary-label">Clientes</span>
+                  <span class="summary-value" id="totalCustomers">0</span>
+                </div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-icon green">
+                  <i class="fas fa-ticket-alt"></i>
+                </div>
+                <div class="summary-info">
+                  <span class="summary-label">Ticket Promedio</span>
+                  <span class="summary-value" id="avgTicket">S/ 0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="sales-grid">
+              <div class="sales-chart">
+                <div class="chart-header">
+                  <h3><i class="fas fa-chart-bar"></i> Ventas por Hora</h3>
+                </div>
+                <canvas id="salesChart"></canvas>
+              </div>
+              <div class="top-products">
+                <div class="chart-header">
+                  <h3><i class="fas fa-trophy"></i> Productos Más Vendidos</h3>
+                </div>
+                <div id="topProductsList" class="products-list">
+                  <!-- Top products -->
+                </div>
+              </div>
+            </div>
+
+            <div class="sales-detailed">
+              <div class="chart-header">
+                <h3><i class="fas fa-list"></i> Detalle de Ventas</h3>
+                <button class="btn-secondary" onclick="exportSalesToExcel()">
+                  <i class="fas fa-file-excel"></i> Exportar
+                </button>
+              </div>
+              <div class="sales-table-wrapper">
+                <table class="sales-table">
+                  <thead>
+                    <tr>
+                      <th>Hora</th>
+                      <th>Mesa</th>
+                      <th>Productos</th>
+                      <th>Anfitriona</th>
+                      <th>Total</th>
+                      <th>Pago</th>
+                    </tr>
+                  </thead>
+                  <tbody id="salesTableBody">
+                    <!-- Sales rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORY VIEW -->
+        <div id="historyView" class="view">
+          <div class="view-header">
+            <div class="view-title-area">
+              <h2 class="view-title">
+                <i class="fas fa-history"></i> Historial de Pedidos
+              </h2>
+              <span class="view-subtitle">Todos los pedidos registrados</span>
+            </div>
+            <div class="view-actions">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="historySearch" placeholder="Buscar por mesa, producto...">
+              </div>
+              <button class="btn-secondary" onclick="exportHistory()">
+                <i class="fas fa-download"></i> Exportar CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="history-table-wrapper">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th><i class="fas fa-hashtag"></i> #</th>
+                  <th><i class="fas fa-clock"></i> Hora</th>
+                  <th><i class="fas fa-table"></i> Mesa</th>
+                  <th><i class="fas fa-utensils"></i> Productos</th>
+                  <th><i class="fas fa-user-tie"></i> Anfitriona</th>
+                  <th><i class="fas fa-money-bill-wave"></i> Total</th>
+                  <th><i class="fas fa-credit-card"></i> Pago</th>
+                  <th><i class="fas fa-info-circle"></i> Estado</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <!-- History rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- EXPORT VIEW -->
+        <div id="exportView" class="view">
+          <div class="view-header">
+            <div class="view-title-area">
+              <h2 class="view-title">
+                <i class="fas fa-file-export"></i> Exportar Datos
+              </h2>
+              <span class="view-subtitle">Descarga reportes en diferentes formatos</span>
+            </div>
+          </div>
+
+          <div class="export-grid">
+            <div class="export-card">
+              <div class="export-icon magenta">
+                <i class="fas fa-file-csv"></i>
+              </div>
+              <h3>CSV — Excel</h3>
+              <p>Exporta pedidos, ventas e inventario a formato CSV compatible con Excel</p>
+              <div class="export-actions">
+                <button class="btn-primary" onclick="exportCSV('orders')">
+                  <i class="fas fa-download"></i> Pedidos
+                </button>
+                <button class="btn-secondary" onclick="exportCSV('sales')">
+                  <i class="fas fa-chart-bar"></i> Ventas
+                </button>
+                <button class="btn-secondary" onclick="exportCSV('inventory')">
+                  <i class="fas fa-boxes"></i> Inventario
+                </button>
+              </div>
+            </div>
+
+            <div class="export-card">
+              <div class="export-icon teal">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <h3>PDF — Reportes</h3>
+              <p>Genera reportes detallados en PDF para impresión o envío</p>
+              <div class="export-actions">
+                <button class="btn-primary" onclick="generatePDF('daily')">
+                  <i class="fas fa-calendar-day"></i> Reporte Diario
+                </button>
+                <button class="btn-secondary" onclick="generatePDF('weekly')">
+                  <i class="fas fa-calendar-week"></i> Reporte Semanal
+                </button>
+                <button class="btn-secondary" onclick="generatePDF('monthly')">
+                  <i class="fas fa-calendar-alt"></i> Reporte Mensual
+                </button>
+              </div>
+            </div>
+
+            <div class="export-card">
+              <div class="export-icon yellow">
+                <i class="fas fa-print"></i>
+              </div>
+              <h3>Impresión</h3>
+              <p>Imprime documentos importantes directamente</p>
+              <div class="export-actions">
+                <button class="btn-primary" onclick="printView('orders')">
+                  <i class="fas fa-print"></i> Imprimir Pedidos
+                </button>
+                <button class="btn-secondary" onclick="printView('inventory')">
+                  <i class="fas fa-print"></i> Imprimir Inventario
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS VIEW -->
+        <div id="settingsView" class="view">
+          <div class="view-header">
+            <div class="view-title-area">
+              <h2 class="view-title">
+                <i class="fas fa-cog"></i> Configuración
+              </h2>
+              <span class="view-subtitle">Ajustes del sistema</span>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <div class="settings-section">
+              <h3><i class="fas fa-store"></i> Información del Local</h3>
+              <div class="form-group">
+                <label>Nombre del Local</label>
+                <input type="text" id="localName" value="FRV Catacaos">
+              </div>
+              <div class="form-group">
+                <label>Dirección</label>
+                <input type="text" id="localAddress" value="Fundo Rio Verde, Catacaos">
+              </div>
+              <div class="form-group">
+                <label>Teléfono de Contacto</label>
+                <input type="tel" id="localPhone" value="+51 924 996 961">
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3><i class="fas fa-sliders-h"></i> Preferencias</h3>
+              <div class="toggle-group">
+                <label class="toggle-label">
+                  <span>Sonido de notificaciones</span>
+                  <input type="checkbox" id="soundEnabled" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+                <label class="toggle-label">
+                  <span>Auto-refresco cada 30s</span>
+                  <input type="checkbox" id="autoRefresh" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+                <label class="toggle-label">
+                  <span>Modo oscuro</span>
+                  <input type="checkbox" id="darkMode" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3><i class="fas fa-database"></i> Datos</h3>
+              <div class="button-group">
+                <button class="btn-secondary" onclick="backupDatabase()">
+                  <i class="fas fa-download"></i> Respaldar Datos
+                </button>
+                <button class="btn-secondary" onclick="restoreDatabase()">
+                  <i class="fas fa-upload"></i> Restaurar
+                </button>
+                <button class="btn-danger" onclick="clearAllData()">
+                  <i class="fas fa-trash-alt"></i> Limpiar Todo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="mobile-overlay" onclick="closeMobileSidebar()"></div>
+  </div>
+
+  <!-- Order Detail Modal -->
+  <div id="orderModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-receipt"></i> Detalle del Pedido</h3>
+        <button class="close-btn" onclick="closeOrderModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="orderModalBody">
+        <!-- Order details -->
+      </div>
+      <div class="modal-footer">
+        <div class="order-timeline" id="orderTimeline">
+          <!-- Timeline -->
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="printOrder()">
+            <i class="fas fa-print"></i> Imprimir
+          </button>
+          <button class="btn-danger" onclick="cancelOrderFromModal()">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Edit Modal -->
+  <div id="inventoryModal" class="modal">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3><i class="fas fa-box"></i> <span id="inventoryModalTitle">Nuevo Producto</span></h3>
+        <button class="close-btn" onclick="closeInventoryModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="inventoryForm">
+          <input type="hidden" id="invId">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="invName" required>
+          </div>
+          <div class="form-group">
+            <label>Categoría</label>
+            <select id="invCategory" required>
+              <option value="cervezas">Cervezas</option>
+              <option value="tragos">Tragos</option>
+              <option value="shots">Shots</option>
+              <option value="sin-alcohol">Sin Alcohol</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Stock</label>
+              <input type="number" id="invStock" min="0" required>
+            </div>
+            <div class="form-group">
+              <label>Mínimo</label>
+              <input type="number" id="invMinStock" min="1" value="10">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Precio (S/)</label>
+            <input type="number" id="invPrice" step="0.01" min="0" required>
+          </div>
+        </form>
+      </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeInventoryModal()">Cancelar</button>
+          <button class="btn-primary" onclick="saveInventoryItem()">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+    </div>
+  </div>
+
+  <!-- Staff Modal -->
+  <div id="staffModal" class="modal">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3><i class="fas fa-user-plus"></i> <span id="staffModalTitle">Agregar Personal</span></h3>
+        <button class="close-btn" onclick="closeStaffModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="staffForm">
+          <input type="hidden" id="staffId">
+          <div class="form-group">
+            <label>Nombre Completo</label>
+            <input type="text" id="staffName" required>
+          </div>
+          <div class="form-group">
+            <label>Rol</label>
+            <select id="staffRole" required>
+              <option value="bartender">Bartender</option>
+              <option value="mesero">Mesero</option>
+              <option value="anfitriona">Anfitriona</option>
+              <option value="supervisor">Supervisor</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Teléfono WhatsApp</label>
+            <input type="tel" id="staffPhone" placeholder="+51 924 996 961">
+          </div>
+          <div class="form-group">
+            <label>Mesas Asignadas</label>
+            <input type="text" id="staffTables" placeholder="Ej: 1-5, 7, 9-12">
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="staffStatus">
+              <option value="active">Activo</option>
+              <option value="inactive">Inactivo</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeStaffModal()">Cancelar</button>
+        <button class="btn-primary" onclick="saveStaff()">
+          <i class="fas fa-save"></i> Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="notification" class="notification">
+    <div class="notification-icon">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <div class="notification-content">
+      <span class="notification-title">Éxito</span>
+      <span class="notification-message">Operación completada</span>
+    </div>
+    <button class="notification-close" onclick="closeNotification()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+<!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+   <script src="../js/services/firebase-client.js"></script>
+   <script src="../js/modules/panel/frv-panel.js"></script>
+  <script>
+    console.log('Panel de Bar FRV cargado correctamente');
+  </script>
+</body>
+</html>

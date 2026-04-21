@@ -13,6 +13,60 @@
 <meta name="author" content="FRV Producciones">
 <meta name="robots" content="index, follow">
 
+<!-- Preloader styles -->
+<style>
+  .preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #080808;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    transition: opacity 0.5s ease;
+  }
+  .preloader.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .preloader-waves {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 60px;
+    margin-bottom: 24px;
+  }
+  .preloader-bar {
+    width: 8px;
+    background: linear-gradient(to top, #F5C800, #FFD93D);
+    border-radius: 4px;
+    animation: preloaderWave 1s ease-in-out infinite;
+  }
+  .preloader-bar:nth-child(1) { height: 20px; animation-delay: 0s; }
+  .preloader-bar:nth-child(2) { height: 40px; animation-delay: 0.1s; }
+  .preloader-bar:nth-child(3) { height: 60px; animation-delay: 0.2s; }
+  .preloader-bar:nth-child(4) { height: 45px; animation-delay: 0.3s; }
+  .preloader-bar:nth-child(5) { height: 30px; animation-delay: 0.4s; }
+  .preloader-bar:nth-child(6) { height: 18px; animation-delay: 0.5s; }
+  .preloader-bar:nth-child(7) { height: 12px; animation-delay: 0.6s; }
+  @keyframes preloaderWave {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.5); }
+  }
+  .preloader-text {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 8px;
+  }
+  .preloader-text span { color: #F5C800; }
+</style>
+
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://fundorioverde.netlify.app/">
@@ -31,7 +85,7 @@
 <link rel="canonical" href="https://frv-api.netlify.app/">
 
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="frv-menu.css">
+<link rel="stylesheet" href="src/css/frv-menu.css">
 <style>
 /* Carrusel de promociones */
 .promo-carousel {
@@ -210,8 +264,37 @@
   font-size: 28px;
 }
 
+/* Botón de acceso al panel */
+.panel-access-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  text-decoration: none;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+  font-size: 16px;
+}
+
+.panel-access-btn:hover {
+  background: rgba(245,200,0,0.2);
+  border-color: #F5C800;
+  color: #F5C800;
+}
+
 /* Vista móvil - 2 columnas */
 @media (max-width: 768px) {
+  .panel-access-btn {
+    top: 70px;
+    right: 12px;
+  }
+  
   .hamburger-menu {
     display: block;
   }
@@ -298,9 +381,23 @@
 </head>
 <body>
 
+<!-- PRELOADER -->
+<div class="preloader" id="preloader">
+  <div class="preloader-waves">
+    <div class="preloader-bar"></div>
+    <div class="preloader-bar"></div>
+    <div class="preloader-bar"></div>
+    <div class="preloader-bar"></div>
+    <div class="preloader-bar"></div>
+    <div class="preloader-bar"></div>
+    <div class="preloader-bar"></div>
+  </div>
+  <div class="preloader-text">F<span>R</span>V</div>
+</div>
+
 <script>
   if (!sessionStorage.getItem('welcomeVisited')) {
-    window.location.href = 'welcome.html';
+    window.location.href = 'src/views/welcome.html';
   }
 </script>
 
@@ -323,14 +420,6 @@
   <div class="mike"></div>
 </div>
 
-<!-- MENÚ HAMBURGUESA MÓVIL -->
-<button class="hamburger-menu" id="hamburgerMenu" onclick="toggleMobileMenu()">
-  <div class="hamburger-icon">
-    <div class="hamburger-line"></div>
-    <div class="hamburger-line"></div>
-    <div class="hamburger-line"></div>
-  </div>
-</button>
 
 <div class="mobile-categories" id="mobileCategories">
   <button class="mobile-cat-btn" onclick="filterCat('all',this);closeMobileMenu()">🏠 TODO</button>
@@ -341,6 +430,11 @@
 </div>
 
 <header>
+  <!-- BOTÓN PANEL BAR (Solo para administradores) -->
+  <a href="src/views/login.html" class="panel-access-btn" id="panelAccessBtn" title="Acceso al Panel de Bar">
+    <i class="fas fa-cog"></i>
+  </a>
+
   <!-- MENÚ HAMBURGUESA MÓVIL -->
   <button class="hamburger-menu" id="hamburgerMenu" onclick="toggleMobileMenu()">
     <div class="hamburger-icon">
@@ -372,21 +466,21 @@
 <div class="promo-carousel">
   <div class="carousel-container" id="carouselContainer">
     <div class="carousel-slide">
-      <img src="https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=800&h=400&fit=crop" alt="Promoción 1">
+      <img src="https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=800&h=400&fit=crop" alt="Promoción 1" loading="eager" decoding="async">
       <div class="carousel-overlay">
         <div class="carousel-title">🎉 PROMO PISCO SOUR</div>
         <div class="carousel-subtitle">2x1 en Pisco Sours - Solo hoy!</div>
       </div>
     </div>
     <div class="carousel-slide">
-      <img src="img/Pilsen Promo.png" alt="Promoción 2">
+      <img src="public/img/productos/Pilsen Promo.png" alt="Promoción 2" loading="eager" decoding="async">
       <div class="carousel-overlay">
         <div class="carousel-title">🍺 CERVEZA PILSEN</div>
         <div class="carousel-subtitle">Pack 2 cervezas por S/ 24</div>
       </div>
     </div>
     <div class="carousel-slide">
-      <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&h=400&fit=crop" alt="Promoción 3">
+      <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&h=400&fit=crop" alt="Promoción 3" loading="eager" decoding="async">
       <div class="carousel-overlay">
         <div class="carousel-title">🍹 MOJITO ESPECIAL</div>
         <div class="carousel-subtitle">Mojito + Shot gratis</div>
@@ -549,15 +643,15 @@
   <div class="pm-label">Forma de pago</div>
   <div class="payment-methods payment-grid">
     <div class="pm selected" onclick="selectPM(this)">
-      <img src="img/Tarjetas-2.jpg" alt="Tarjeta" class="pm-img" onerror="this.style.display='none'">
+      <img src="public/img/productos/Tarjetas-2.jpg" alt="Tarjeta" class="pm-img" onerror="this.style.display='none'">
       <span class="pm-text">TARJETA</span>
     </div>
     <div class="pm" onclick="selectPM(this)">
-      <img src="img/Yape.png" alt="Yape" class="pm-img" onerror="this.style.display='none'">
+      <img src="public/img/productos/Yape.png" alt="Yape" class="pm-img" onerror="this.style.display='none'">
       <span class="pm-text">YAPE</span>
     </div>
     <div class="pm" onclick="selectPM(this)">
-      <img src="img/efectivo.png" alt="Efectivo" class="pm-img" onerror="this.style.display='none'">
+      <img src="public/img/productos/efectivo.png" alt="Efectivo" class="pm-img" onerror="this.style.display='none'">
       <span class="pm-text">EFECTIVO</span>
     </div>
   </div>
@@ -597,10 +691,31 @@
   <span class="safety-alert-icon">🚨</span>
 </button>
 
+<script>
+// Debug global para el menú
+window.onerror = function(msg, url, line, col, error) {
+  console.error('❌ Error en Menú:', msg);
+  return false;
+};
+console.log('🍹 Menú FRV cargando...');
+</script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="firebase-client.js"></script>
-<script src="frv-menu.js"></script>
+<script src="src/js/services/firebase-client.js"></script>
+<script>
+console.log('✅ Scripts del menú cargados');
+console.log('  firebase:', typeof firebase);
+console.log('  FirebaseClient:', typeof FirebaseClient);
+</script>
+<script src="src/js/modules/menu/frv-menu.js"></script>
+<script>
+console.log('✅ Menú JS cargado');
+setTimeout(function() {
+  console.log('📋 Funciones del menú:');
+  console.log('  sendToAdminPanel:', typeof sendToAdminPanel);
+  console.log('  placeOrder:', typeof placeOrder);
+}, 500);
+</script>
 <script>
 // Carrusel de promociones
 let currentSlide = 0;
@@ -658,6 +773,19 @@ function sendSafetyAlert() {
     window.open(whatsappUrl, '_blank');
   }
 }
+
+// Ocultar preloader cuando todo esté listo
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    var preloader = document.getElementById('preloader');
+    if (preloader) {
+      preloader.classList.add('hidden');
+      setTimeout(function() {
+        preloader.style.display = 'none';
+      }, 500);
+    }
+  }, 800);
+});
 </script>
 
 </body>
