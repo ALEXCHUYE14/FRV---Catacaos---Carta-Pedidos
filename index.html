@@ -2,791 +2,2092 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com https://cdnjs.cloudflare.com https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com; frame-ancestors 'none';">
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="X-Frame-Options" content="DENY">
-<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-<title>FRV Catacaos — Carta de Bebidas | Menú Digital</title>
-<meta name="description" content="FRV Catacaos - Carta de bebidas digital. Pide desde tu mesa: Pisco Sour, Chilcano, Mojito, Cervezas Cristal, Pilsen y más. Envío directo a tu anfitriona por WhatsApp.">
-<meta name="keywords" content="FRV Catacaos, carta de bebidas, pisco sour, chilcano, mojito, cerveza cristal, pilsen, cusqueña, bar, tragos, shots, menú digital">
-<meta name="author" content="FRV Producciones">
-<meta name="robots" content="index, follow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FRV Producciones Catacaos — Carta Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
-<!-- Preloader styles -->
+<!-- Firebase SDK (Compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
 <style>
-  .preloader {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #080808;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    transition: opacity 0.5s ease;
-  }
-  .preloader.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .preloader-waves {
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-    height: 60px;
-    margin-bottom: 24px;
-  }
-  .preloader-bar {
-    width: 8px;
-    background: linear-gradient(to top, #F5C800, #FFD93D);
-    border-radius: 4px;
-    animation: preloaderWave 1s ease-in-out infinite;
-  }
-  .preloader-bar:nth-child(1) { height: 20px; animation-delay: 0s; }
-  .preloader-bar:nth-child(2) { height: 40px; animation-delay: 0.1s; }
-  .preloader-bar:nth-child(3) { height: 60px; animation-delay: 0.2s; }
-  .preloader-bar:nth-child(4) { height: 45px; animation-delay: 0.3s; }
-  .preloader-bar:nth-child(5) { height: 30px; animation-delay: 0.4s; }
-  .preloader-bar:nth-child(6) { height: 18px; animation-delay: 0.5s; }
-  .preloader-bar:nth-child(7) { height: 12px; animation-delay: 0.6s; }
-  @keyframes preloaderWave {
-    0%, 100% { transform: scaleY(1); }
-    50% { transform: scaleY(0.5); }
-  }
-  .preloader-text {
-    font-family: 'Exo 2', sans-serif;
-    font-size: 24px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 8px;
-  }
-  .preloader-text span { color: #F5C800; }
-</style>
-
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://fundorioverde.netlify.app/">
-<meta property="og:title" content="FRV Catacaos — Carta de Bebidas">
-<meta property="og:description" content="Pide desde tu mesa: Pisco Sour, Chilcano, Cervezas y más. Envío directo a tu anfitriona por WhatsApp.">
-<meta property="og:image" content="https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=1200&h=630&fit=crop">
-
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:url" content="https://frvcatacaos.com/menu">
-<meta property="twitter:title" content="FRV Catacaos — Carta de Bebidas">
-<meta property="twitter:description" content="Pide desde tu mesa: Pisco Sour, Chilcano, Cervezas y más. Envío directo a tu anfitriona por WhatsApp.">
-<meta property="twitter:image" content="https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=1200&h=630&fit=crop">
-
-<!-- Canonical URL -->
-<link rel="canonical" href="https://frv-api.netlify.app/">
-
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/css/frv-menu.css">
-<style>
-/* Carrusel de promociones */
-.promo-carousel {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  margin-bottom: 20px;
+/* ══════════════════════════════════════
+   CSS VARIABLES — FRV BRAND PALETTE
+══════════════════════════════════════ */
+:root {
+  --gold: #FFD600;
+  --gold2: #E6B800;
+  --gold-dark: #7A6200;
+  --magenta: #E91E8C;
+  --magenta2: #C4186E;
+  --teal: #1B6B6B;
+  --teal2: #2A9D8F;
+  --teal3: #0F4A4A;
+  --bg: #060604;
+  --bg2: #0C0B08;
+  --bg3: #141210;
+  --bg4: #1C1A16;
+  --text: #F5F0E0;
+  --text2: #A09070;
+  --text3: #5A5038;
+  --border: rgba(255,214,0,0.12);
+  --border2: rgba(255,214,0,0.25);
+  --glass: rgba(255,214,0,0.04);
+  --glass2: rgba(255,214,0,0.08);
+  --red: #FF3B3B;
+  --green: #00E676;
 }
 
-.carousel-container {
-  display: flex;
-  transition: transform 0.5s ease;
+/* ══════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.carousel-slide {
-  min-width: 100%;
-  position: relative;
+/* Particle BG */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 5%, rgba(255,214,0,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 60% at 85% 95%, rgba(233,30,140,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(27,107,107,0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+  animation: bgBreath 10s ease-in-out infinite;
 }
 
-.carousel-slide img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 12px;
+@keyframes bgBreath {
+  0%,100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
-.carousel-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+/* Fireworks decoration */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    radial-gradient(circle 1px at 10% 20%, var(--gold) 0%, transparent 100%),
+    radial-gradient(circle 1px at 90% 15%, var(--magenta) 0%, transparent 100%),
+    radial-gradient(circle 1px at 80% 80%, var(--teal2) 0%, transparent 100%),
+    radial-gradient(circle 1px at 20% 75%, var(--gold) 0%, transparent 100%);
+  pointer-events: none; z-index: 0;
+  opacity: 0.4;
+}
+
+/* ══════════════════════════════════════
+   SCREEN SYSTEM
+══════════════════════════════════════ */
+.screen { display: none; min-height: 100vh; position: relative; z-index: 1; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ══════════════════════════════════════
+   SCREEN 1: WELCOME / SPLASH
+══════════════════════════════════════ */
+#screen-welcome {
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.welcome-logo {
+  margin-bottom: 28px;
+  animation: logoReveal 1s ease-out both;
+}
+
+@keyframes logoReveal {
+  from { opacity: 0; transform: scale(0.8) translateY(-20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.welcome-logo svg { width: 110px; height: 110px; }
+
+.welcome-tagline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px; letter-spacing: 6px;
+  color: var(--text3); text-transform: uppercase;
+  margin-bottom: 8px;
+  animation: fadeUp 1s 0.2s ease-out both;
+}
+
+.welcome-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(38px, 10vw, 60px);
+  letter-spacing: 4px; line-height: 1;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--gold) 0%, #fff 50%, var(--magenta) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: fadeUp 1s 0.3s ease-out both;
+}
+
+.welcome-sub {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(18px, 5vw, 26px);
+  letter-spacing: 6px; color: var(--teal2);
+  margin-bottom: 28px;
+  animation: fadeUp 1s 0.4s ease-out both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-desc {
+  font-size: 13px; color: var(--text2); line-height: 1.7;
+  max-width: 320px; margin: 0 auto 32px;
+  animation: fadeUp 1s 0.5s ease-out both;
+}
+
+.btn-start {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 16px 36px; border-radius: 50px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  border: none; color: #000;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 3px;
+  cursor: pointer; transition: all 0.25s;
+  box-shadow: 0 8px 30px rgba(255,214,0,0.3),
+              0 0 60px rgba(255,214,0,0.1);
+  animation: fadeUp 1s 0.6s ease-out both, btnPulse 3s 2s ease-in-out infinite;
+}
+
+@keyframes btnPulse {
+  0%,100% { box-shadow: 0 8px 30px rgba(255,214,0,0.3), 0 0 60px rgba(255,214,0,0.1); }
+  50% { box-shadow: 0 8px 40px rgba(255,214,0,0.5), 0 0 80px rgba(255,214,0,0.2); }
+}
+
+.btn-start:hover { transform: translateY(-3px) scale(1.03); }
+.btn-start:active { transform: scale(0.98); }
+
+.welcome-footer {
+  margin-top: 40px;
+  font-size: 10px; letter-spacing: 3px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  animation: fadeUp 1s 0.8s ease-out both;
+}
+
+/* Floating sparkles */
+.sparkle {
+  position: fixed;
+  width: 4px; height: 4px; border-radius: 50%;
+  animation: sparkleFloat linear infinite;
+  pointer-events: none; z-index: 0;
+}
+
+@keyframes sparkleFloat {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(-20px) scale(1); opacity: 0; }
+}
+
+/* ══════════════════════════════════════
+   SCREEN 2: MESA SELECTION
+══════════════════════════════════════ */
+#screen-mesa {
+  flex-direction: column;
+}
+
+.screen-header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(6,6,4,0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+
+.back-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--glass); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px;
+  transition: all 0.2s; flex-shrink: 0;
+}
+
+.back-btn:hover { border-color: var(--gold); background: var(--glass2); }
+
+.screen-header-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; letter-spacing: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--magenta));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  flex: 1;
+}
+
+.screen-header-sub {
+  font-size: 10px; letter-spacing: 2px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+  display: block;
+}
+
+.mesa-content { flex: 1; padding: 20px; overflow-y: auto; }
+
+.mesa-instruction {
+  text-align: center; margin-bottom: 24px;
+}
+
+.mesa-instruction h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; letter-spacing: 2px;
+  color: var(--gold); margin-bottom: 6px;
+}
+
+.mesa-instruction p {
+  font-size: 13px; color: var(--text2); line-height: 1.6;
+}
+
+.zone-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; letter-spacing: 4px;
+  color: var(--teal2); margin-bottom: 10px; margin-top: 20px;
+  padding-left: 10px;
+  border-left: 3px solid var(--teal2);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.mesas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.mesa-card {
+  aspect-ratio: 1;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+
+.mesa-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--gold), var(--magenta));
+  opacity: 0; transition: opacity 0.2s;
+}
+
+.mesa-card:hover::before,
+.mesa-card.selected::before { opacity: 0.1; }
+.mesa-card:hover,
+.mesa-card.selected { border-color: var(--gold); transform: scale(1.05); }
+.mesa-card.selected { border-color: var(--gold); box-shadow: 0 0 20px rgba(255,214,0,0.3); }
+
+.mesa-icon { font-size: 22px; position: relative; z-index: 1; }
+.mesa-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; letter-spacing: 1px;
+  color: var(--gold); position: relative; z-index: 1;
+  line-height: 1.2;
+}
+
+.mesa-zone-tag {
+  font-size: 8px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px; position: relative; z-index: 1;
+}
+
+.mesa-confirm-bar {
+  position: sticky; bottom: 0;
+  background: rgba(6,6,4,0.97);
+  border-top: 1px solid var(--border);
+  padding: 16px 20px;
+  display: none;
+  animation: slideUp 0.3s ease-out;
+}
+
+.mesa-confirm-bar.show { display: block; }
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.mesa-selected-info {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px;
+}
+
+.mesa-selected-badge {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; color: #000; flex-shrink: 0;
+}
+
+.mesa-selected-text { font-size: 14px; font-weight: 700; color: var(--text); }
+.mesa-selected-zone { font-size: 11px; color: var(--text3); }
+
+.btn-confirm-mesa {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  border: none; border-radius: 12px;
+  color: #000; font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 3px;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(255,214,0,0.3);
+}
+
+.btn-confirm-mesa:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(255,214,0,0.4); }
+
+/* ══════════════════════════════════════
+   SCREEN 3: ANFITRIONA SELECTION
+══════════════════════════════════════ */
+#screen-anfitriona { overflow: hidden; }
+
+.anf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
   padding: 20px;
-  color: white;
-  border-radius: 0 0 12px 12px;
+  flex: 1;
 }
 
-.carousel-title {
-  font-size: 18px;
-  font-weight: 700;
+.anf-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px 14px;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.anf-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,214,0,0.08), rgba(233,30,140,0.04));
+  opacity: 0; transition: 0.25s;
+}
+
+.anf-card:hover::before,
+.anf-card.selected::before { opacity: 1; }
+.anf-card:hover { border-color: var(--gold); transform: translateY(-4px); box-shadow: 0 12px 30px rgba(255,214,0,0.15); }
+.anf-card.selected { border-color: var(--magenta); box-shadow: 0 12px 30px rgba(233,30,140,0.2); }
+
+.anf-avatar-wrap {
+  position: relative; display: inline-block;
+  margin-bottom: 12px; z-index: 1;
+}
+
+.anf-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; font-weight: 900; color: #fff;
+  margin: 0 auto;
+  border: 3px solid var(--teal2);
+  box-shadow: 0 0 20px rgba(42,157,143,0.3);
+}
+
+.anf-online-dot {
+  position: absolute; bottom: 2px; right: 2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--green);
+  border: 2px solid var(--bg3);
+  box-shadow: 0 0 8px var(--green);
+  animation: onlinePulse 2s ease-in-out infinite;
+}
+
+@keyframes onlinePulse {
+  0%,100% { box-shadow: 0 0 8px var(--green); }
+  50% { box-shadow: 0 0 4px var(--green); }
+}
+
+.anf-name {
+  font-size: 15px; font-weight: 800;
+  color: var(--text); margin-bottom: 3px;
+  position: relative; z-index: 1;
+}
+
+.anf-zone {
+  font-size: 10px; color: var(--teal2);
+  letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  position: relative; z-index: 1; margin-bottom: 10px;
+}
+
+.anf-whatsapp {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 20px;
+  background: rgba(37,211,102,0.1);
+  border: 1px solid rgba(37,211,102,0.25);
+  color: #25D366; font-size: 10px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  position: relative; z-index: 1;
+}
+
+.anf-instruction {
+  text-align: center; padding: 16px 20px 8px;
+  flex-shrink: 0;
+}
+
+.anf-instruction h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px; letter-spacing: 2px; color: var(--gold);
   margin-bottom: 4px;
 }
 
-.carousel-subtitle {
-  font-size: 12px;
-  color: #00ff88;
-  font-weight: 600;
+.anf-instruction p { font-size: 12px; color: var(--text2); }
+
+/* ══════════════════════════════════════
+   SCREEN 4: MENU / CATALOG
+══════════════════════════════════════ */
+#screen-menu { background: var(--bg); }
+
+.menu-header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(6,6,4,0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
 }
 
-.carousel-dots {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 12px;
+.menu-header-top {
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
 }
 
-.carousel-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.3);
-  cursor: pointer;
-  transition: all 0.3s;
+.menu-info-bar {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
 }
 
-.carousel-dot.active {
-  background: #00ff88;
-  transform: scale(1.2);
+.info-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px;
+  background: var(--glass2); border: 1px solid var(--border);
+  font-size: 10px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
 }
 
-/* Menú hamburguesa */
-.hamburger-menu {
+.info-pill.gold { color: var(--gold); }
+.info-pill.magenta { color: var(--magenta); }
+.info-pill.teal { color: var(--teal2); }
+
+.cart-fab {
+  position: relative; flex-shrink: 0;
+  width: 40px; height: 40px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(255,214,0,0.3);
+}
+
+.cart-fab:hover { transform: scale(1.1); }
+.cart-fab:active { transform: scale(0.95); }
+
+.cart-fab-count {
+  position: absolute; top: -5px; right: -5px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--magenta); color: #fff;
+  font-size: 9px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
   display: none;
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  z-index: 1000;
-  background: rgba(0,0,0,0.7);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
 }
 
-.hamburger-icon {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.cart-fab-count.show { display: flex; }
+
+/* Category tabs */
+.cat-scroll {
+  display: flex; gap: 8px;
+  overflow-x: auto; padding: 10px 16px 12px;
+  scrollbar-width: none;
 }
 
-.hamburger-line {
-  width: 20px;
-  height: 2px;
-  background: white;
-  transition: all 0.3s;
+.cat-scroll::-webkit-scrollbar { display: none; }
+
+.cat-tab {
+  flex-shrink: 0;
+  padding: 7px 16px; border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent; color: var(--text2);
+  cursor: pointer; font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.5px; transition: all 0.15s;
+  white-space: nowrap;
 }
 
-.hamburger-menu.active .hamburger-line:nth-child(1) {
-  transform: rotate(45deg) translate(5px, 5px);
+.cat-tab.active {
+  background: var(--gold); color: #000;
+  border-color: var(--gold);
 }
 
-.hamburger-menu.active .hamburger-line:nth-child(2) {
-  opacity: 0;
+.cat-tab:hover:not(.active) { color: var(--gold); border-color: rgba(255,214,0,0.4); }
+
+/* Menu content */
+.menu-content { padding: 16px; padding-bottom: 120px; }
+
+.cat-section { margin-bottom: 32px; }
+
+.cat-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; letter-spacing: 4px;
+  color: var(--gold); margin-bottom: 4px;
+  display: flex; align-items: center; gap: 10px;
 }
 
-.hamburger-menu.active .hamburger-line:nth-child(3) {
-  transform: rotate(-45deg) translate(5px, -5px);
+.cat-section-title::after {
+  content: '';
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--border2), transparent);
 }
 
-.mobile-categories {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.95);
-  z-index: 999;
-  padding: 80px 20px 20px;
-  flex-direction: column;
+.cat-section-sub {
+  font-size: 10px; color: var(--text3);
+  letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 14px;
+}
+
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
-.mobile-categories.show {
-  display: flex;
-}
-
-.mobile-cat-btn {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 12px;
-  padding: 16px;
-  color: white;
-  font-family: 'Exo 2', sans-serif;
-  font-size: 16px;
-  font-weight: 600;
+/* Product card */
+.item-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
   cursor: pointer;
-  text-align: left;
+  transition: all 0.2s;
+  position: relative;
 }
 
-.mobile-cat-btn:hover {
-  background: rgba(0,255,136,0.2);
-  border-color: #00ff88;
+.item-card:hover {
+  border-color: rgba(255,214,0,0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.4);
 }
 
-/* Alerta de seguridad */
-.safety-alert-btn {
-  position: fixed;
-  bottom: 100px;
-  right: 20px;
-  z-index: 100;
-  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
-  border: none;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.item-card:active { transform: scale(0.98); }
+
+.item-img-wrap {
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background: var(--bg4);
+  position: relative;
+}
+
+.item-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s;
+}
+
+.item-card:hover .item-img { transform: scale(1.07); }
+
+.item-emoji-fallback {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px;
+  background: linear-gradient(135deg, var(--bg4), var(--bg3));
+}
+
+.item-badge {
+  position: absolute; top: 8px; right: 8px;
+  padding: 3px 8px; border-radius: 6px;
+  font-size: 9px; font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+
+.item-badge.popular { background: var(--magenta); color: #fff; }
+.item-badge.new { background: var(--teal2); color: #fff; }
+.item-badge.special { background: var(--gold); color: #000; }
+
+.item-info { padding: 12px; }
+
+.item-name {
+  font-size: 13px; font-weight: 700;
+  color: var(--text); margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.item-desc {
+  font-size: 10px; color: var(--text3);
+  line-height: 1.5; margin-bottom: 10px;
+}
+
+.item-footer {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.item-price {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 1px;
+  color: var(--gold);
+}
+
+.item-price span { font-size: 12px; color: var(--text3); font-family: 'Outfit', sans-serif; font-weight: 400; }
+
+.add-btn {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  border: none; color: #000;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900;
+  cursor: pointer; transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.add-btn:hover { transform: scale(1.15); box-shadow: 0 4px 12px rgba(255,214,0,0.4); }
+.add-btn:active { transform: scale(0.92); }
+
+.item-qty-ctrl {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.qty-minus, .qty-plus {
+  width: 28px; height: 28px; border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--glass); color: var(--gold);
+  font-size: 16px; font-weight: 900;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s;
+}
+
+.qty-minus:hover, .qty-plus:hover { background: var(--gold); color: #000; }
+
+.qty-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; color: var(--text);
+  min-width: 20px; text-align: center;
+}
+
+/* ── CART DRAWER ── */
+.cart-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 300;
+  backdrop-filter: blur(6px);
+}
+
+.cart-overlay.open { display: block; }
+
+.cart-drawer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg2);
+  border-top: 1px solid var(--border2);
+  border-radius: 24px 24px 0 0;
+  z-index: 301;
+  max-height: 85vh;
+  display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cart-drawer.open { transform: translateY(0); }
+
+.cart-handle {
+  width: 40px; height: 4px; border-radius: 4px;
+  background: var(--text3); margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+.cart-drawer-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.cart-drawer-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; letter-spacing: 2px; color: var(--gold);
+}
+
+.cart-close-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--glass); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 14px; color: var(--text2);
+  transition: all 0.2s;
+}
+
+.cart-close-btn:hover { border-color: var(--red); color: var(--red); }
+
+.cart-drawer-items {
+  flex: 1; overflow-y: auto; padding: 12px 16px;
+}
+
+.cart-drawer-items::-webkit-scrollbar { width: 3px; }
+.cart-drawer-items::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.cart-item-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px; border-radius: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.cart-item-emoji { font-size: 24px; flex-shrink: 0; }
+
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-name { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cart-item-price-line { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+
+.cart-item-ctrl { display: flex; align-items: center; gap: 6px; }
+
+.ci-minus, .ci-plus {
+  width: 26px; height: 26px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--glass);
+  color: var(--gold); font-size: 14px; font-weight: 800;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: 0.1s;
+}
+
+.ci-minus:hover, .ci-plus:hover { background: var(--gold); color: #000; }
+
+.ci-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; color: var(--text);
+  min-width: 18px; text-align: center;
+}
+
+.ci-del {
+  width: 26px; height: 26px; border-radius: 7px;
+  border: 1px solid rgba(255,59,59,0.2);
+  background: rgba(255,59,59,0.06);
+  color: var(--red); font-size: 12px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: 0.1s;
+}
+
+.ci-del:hover { background: var(--red); color: #fff; }
+
+.cart-empty {
+  text-align: center; padding: 30px 20px;
+  color: var(--text3); font-size: 13px;
+}
+
+.cart-drawer-footer {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.cart-total-row {
+  display: flex; justify-content: space-between;
+  font-size: 12px; padding: 2px 0;
+}
+
+.cart-total-row .lbl { color: var(--text2); }
+.cart-total-row .val { font-family: 'JetBrains Mono', monospace; color: var(--text); }
+
+.cart-total-row.grand { font-size: 18px; border-top: 1px solid var(--border); margin-top: 6px; padding-top: 8px; }
+.cart-total-row.grand .lbl { color: var(--gold); font-weight: 800; }
+.cart-total-row.grand .val { color: var(--gold); font-weight: 800; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; }
+
+/* Pay method */
+.pay-section { margin: 12px 0; }
+.pay-label { font-size: 10px; letter-spacing: 2px; color: var(--text3); text-transform: uppercase; font-family: 'JetBrains Mono', monospace; margin-bottom: 8px; }
+
+.pay-opts { display: flex; gap: 8px; }
+
+.pay-opt {
+  flex: 1; padding: 9px 6px; border-radius: 10px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text2); cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 700;
+  text-align: center; transition: all 0.15s;
+}
+
+.pay-opt.active { background: var(--gold); color: #000; border-color: var(--gold); }
+.pay-opt:hover:not(.active) { color: var(--gold); border-color: rgba(255,214,0,0.4); }
+
+.btn-send-order {
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  border: none; border-radius: 14px;
+  color: #fff; font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 3px;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 6px 20px rgba(37,211,102,0.25);
+  margin-top: 10px;
+}
+
+.btn-send-order:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(37,211,102,0.4); }
+.btn-send-order:active { transform: scale(0.99); }
+.btn-send-order:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* Sticky cart bar */
+.sticky-cart {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 12px 16px;
+  background: rgba(6,6,4,0.97);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  z-index: 200;
+  display: none;
+  animation: slideUp 0.3s ease-out;
+}
+
+.sticky-cart.show { display: flex; align-items: center; gap: 12px; }
+
+.sticky-cart-info { flex: 1; }
+.sticky-cart-count { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.sticky-cart-total { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); letter-spacing: 1px; }
+
+.btn-view-cart {
+  padding: 12px 22px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  border: none; color: #000;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.btn-view-cart:hover { transform: scale(1.05); }
+
+/* ══════════════════════════════════════
+   SCREEN 5: EXTRAS (ANIMADOR & SEGURIDAD)
+══════════════════════════════════════ */
+#screen-extras {}
+
+.extras-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 14px; padding: 20px;
+}
+
+.extra-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px 16px;
+  text-align: center;
   cursor: pointer;
-  box-shadow: 0 5px 20px rgba(255,68,68,0.4);
-  animation: pulse-alert 2s infinite;
+  transition: all 0.25s;
+  position: relative; overflow: hidden;
 }
 
-@keyframes pulse-alert {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+.extra-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  opacity: 0; transition: 0.25s;
 }
 
-.safety-alert-btn:hover {
-  transform: scale(1.1);
+.extra-card.animador::before {
+  background: linear-gradient(135deg, rgba(255,214,0,0.08), rgba(233,30,140,0.06));
 }
 
-.safety-alert-icon {
-  font-size: 28px;
+.extra-card.seguridad::before {
+  background: linear-gradient(135deg, rgba(255,59,59,0.08), rgba(27,107,107,0.04));
 }
 
-/* Botón de acceso al panel */
-.panel-access-btn {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 1000;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: rgba(255,255,255,0.5);
-  cursor: pointer;
-  text-decoration: none;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s;
-  font-size: 16px;
+.extra-card:hover::before { opacity: 1; }
+.extra-card.animador:hover { border-color: var(--gold); box-shadow: 0 12px 30px rgba(255,214,0,0.15); transform: translateY(-4px); }
+.extra-card.seguridad:hover { border-color: var(--red); box-shadow: 0 12px 30px rgba(255,59,59,0.15); transform: translateY(-4px); }
+
+.extra-icon { font-size: 44px; margin-bottom: 10px; position: relative; z-index: 1; display: block; }
+
+.extra-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 2px; margin-bottom: 6px;
+  position: relative; z-index: 1;
 }
 
-.panel-access-btn:hover {
-  background: rgba(245,200,0,0.2);
-  border-color: #F5C800;
-  color: #F5C800;
+.extra-card.animador .extra-title { color: var(--gold); }
+.extra-card.seguridad .extra-title { color: var(--red); }
+
+.extra-desc {
+  font-size: 11px; color: var(--text3); line-height: 1.6;
+  position: relative; z-index: 1;
 }
 
-/* Vista móvil - 2 columnas */
-@media (max-width: 768px) {
-  .panel-access-btn {
-    top: 70px;
-    right: 12px;
-  }
-  
-  .hamburger-menu {
-    display: block;
-  }
-  
-  .header-brand {
-    margin-left: 50px !important;
-  }
-  
-  .cats {
-    display: none !important;
-  }
-  
-  .menu-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
-    padding: 8px !important;
-  }
-  
-  .card-img {
-    height: 120px !important;
-  }
-  
-  .card-body {
-    padding: 8px !important;
-  }
-  
-  .card-name {
-    font-size: 12px !important;
-  }
-  
-  .card-desc {
-    font-size: 10px !important;
-    display: none !important;
-  }
-  
-  .card-price {
-    font-size: 12px !important;
-  }
-  
-  .add-btn {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 16px !important;
-  }
+.extras-nav-bar {
+  padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+
+.extras-nav-btn {
+  padding: 12px; border-radius: 12px;
+  background: var(--glass); border: 1px solid var(--border);
+  color: var(--text2); cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  transition: all 0.15s; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+.extras-nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+.extras-nav-btn.primary { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #000; border: none; }
+.extras-nav-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(255,214,0,0.3); }
+
+/* ══════════════════════════════════════
+   MODAL: SALUDO ANIMADOR / ALERTA SEG
+══════════════════════════════════════ */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 500; backdrop-filter: blur(8px);
+  align-items: flex-end; justify-content: center;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal-sheet {
+  width: 100%; max-width: 480px;
+  background: var(--bg2);
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--border2);
+  padding: 20px 20px 32px;
+  animation: sheetUp 0.3s ease-out;
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-handle {
+  width: 40px; height: 4px; border-radius: 4px;
+  background: var(--text3); margin: 0 auto 20px;
+}
+
+.modal-icon { font-size: 48px; text-align: center; display: block; margin-bottom: 10px; }
+
+.modal-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; letter-spacing: 3px;
+  text-align: center; margin-bottom: 4px;
+}
+
+.modal-title.gold { color: var(--gold); }
+.modal-title.red { color: var(--red); }
+
+.modal-sub { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 20px; line-height: 1.6; }
+
+.modal-input {
+  width: 100%; padding: 14px 16px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 12px; color: var(--text);
+  font-family: 'Outfit', sans-serif; font-size: 14px;
+  outline: none; transition: all 0.2s; resize: none;
+  margin-bottom: 10px;
+}
+
+.modal-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,214,0,0.08); }
+.modal-input::placeholder { color: var(--text3); }
+
+.modal-info-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px;
+  background: var(--bg3); border: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+
+.modal-info-icon { font-size: 20px; flex-shrink: 0; }
+.modal-info-label { font-size: 10px; color: var(--text3); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 1px; }
+.modal-info-val { font-size: 13px; font-weight: 700; color: var(--text); }
+
+.btn-whatsapp {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  border: none; border-radius: 14px;
+  color: #fff; font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 3px;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 6px 20px rgba(37,211,102,0.25); margin-bottom: 8px;
+}
+
+.btn-whatsapp:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(37,211,102,0.4); }
+
+.btn-alert {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, #FF3B3B, #CC2B2B);
+  border: none; border-radius: 14px;
+  color: #fff; font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 3px;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 6px 20px rgba(255,59,59,0.25); margin-bottom: 8px;
+}
+
+.btn-alert:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,59,59,0.4); }
+
+.btn-modal-cancel {
+  width: 100%; padding: 12px;
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: 12px; color: var(--text2);
+  cursor: pointer; font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 600; transition: all 0.15s;
+}
+
+.btn-modal-cancel:hover { color: var(--text); border-color: var(--border2); }
+
+/* ══════════════════════════════════════
+   BOTTOM NAV (menu screen)
+══════════════════════════════════════ */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(6,6,4,0.97);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  display: flex; z-index: 200;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  display: none;
+}
+
+.bottom-nav.show { display: flex; }
+
+.bnav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  padding: 6px 4px;
+  cursor: pointer; border: none; background: none;
+  transition: all 0.15s;
+}
+
+.bnav-icon { font-size: 20px; }
+.bnav-label { font-size: 9px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+.bnav-item.active .bnav-label { color: var(--gold); }
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+.toast-wrap {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  z-index: 999; display: flex; flex-direction: column; gap: 8px;
+  align-items: center; pointer-events: none;
+}
+
+.toast-item {
+  padding: 10px 18px; border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+  white-space: nowrap; pointer-events: none;
+  animation: toastPop 0.3s ease-out;
+}
+
+@keyframes toastPop {
+  from { opacity: 0; transform: scale(0.85) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.toast-item.success { background: rgba(0,230,118,0.15); border: 1px solid var(--green); color: var(--green); }
+.toast-item.gold { background: rgba(255,214,0,0.12); border: 1px solid var(--gold); color: var(--gold); }
+.toast-item.magenta { background: rgba(233,30,140,0.12); border: 1px solid var(--magenta); color: var(--magenta); }
+
+/* ══════════════════════════════════════
+   UTILS
+══════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+@media (max-width: 380px) {
+  .items-grid { grid-template-columns: 1fr; }
+  .anf-grid { grid-template-columns: 1fr; }
+  .extras-grid { grid-template-columns: 1fr; }
 }
 </style>
-
-<!-- Structured Data for SEO -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Restaurant",
-  "name": "FRV Catacaos",
-  "description": "Carta de bebidas digital con envío directo a tu anfitriona por WhatsApp",
-  "url": "https://fundorioverde.netlify.app/",
-  "servesCuisine": "Bebidas y Tragos",
-  "hasMenu": {
-    "@type": "Menu",
-    "name": "Carta de Bebidas",
-    "hasMenuSection": [
-      {
-        "@type": "MenuSection",
-        "name": "Tragos",
-        "hasMenuItem": [
-          {"@type": "MenuItem", "name": "Pisco Sour", "price": "18", "priceCurrency": "PEN"},
-          {"@type": "MenuItem", "name": "Chilcano", "price": "15", "priceCurrency": "PEN"},
-          {"@type": "MenuItem", "name": "Mojito", "price": "16", "priceCurrency": "PEN"}
-        ]
-      },
-      {
-        "@type": "MenuSection",
-        "name": "Cervezas",
-        "hasMenuItem": [
-          {"@type": "MenuItem", "name": "Cristal", "price": "8", "priceCurrency": "PEN"},
-          {"@type": "MenuItem", "name": "Pilsen", "price": "8", "priceCurrency": "PEN"},
-          {"@type": "MenuItem", "name": "Cusqueña", "price": "10", "priceCurrency": "PEN"}
-        ]
-      }
-    ]
-  }
-}
-</script>
-
 </head>
 <body>
 
-<!-- PRELOADER -->
-<div class="preloader" id="preloader">
-  <div class="preloader-waves">
-    <div class="preloader-bar"></div>
-    <div class="preloader-bar"></div>
-    <div class="preloader-bar"></div>
-    <div class="preloader-bar"></div>
-    <div class="preloader-bar"></div>
-    <div class="preloader-bar"></div>
-    <div class="preloader-bar"></div>
-  </div>
-  <div class="preloader-text">F<span>R</span>V</div>
-</div>
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
 
-<script>
-  if (!sessionStorage.getItem('welcomeVisited')) {
-    window.location.href = 'src/views/welcome.html';
-  }
-</script>
-
-<!-- WATER EFFECT BACKGROUND -->
-<div class="water-bg">
-  <div class="water-wave"></div>
-  <div class="water-wave"></div>
-  <div class="water-wave"></div>
-</div>
-
-<!-- MIKES EFFECT -->
-<div class="mikes-container">
-  <div class="mike"></div>
-  <div class="mike"></div>
-  <div class="mike"></div>
-  <div class="mike"></div>
-  <div class="mike"></div>
-  <div class="mike"></div>
-  <div class="mike"></div>
-  <div class="mike"></div>
-</div>
-
-
-<div class="mobile-categories" id="mobileCategories">
-  <button class="mobile-cat-btn" onclick="filterCat('all',this);closeMobileMenu()">🏠 TODO</button>
-  <button class="mobile-cat-btn" onclick="filterCat('cervezas',this);closeMobileMenu()">🍺 CERVEZAS</button>
-  <button class="mobile-cat-btn" onclick="filterCat('tragos',this);closeMobileMenu()">🍹 TRAGOS</button>
-  <button class="mobile-cat-btn" onclick="filterCat('shots',this);closeMobileMenu()">🥃 SHOTS</button>
-  <button class="mobile-cat-btn" onclick="filterCat('sin-alcohol',this);closeMobileMenu()">🧃 SIN ALCOHOL</button>
-</div>
-
-<header>
-  <!-- BOTÓN PANEL BAR (Solo para administradores) -->
-  <a href="src/views/login.html" class="panel-access-btn" id="panelAccessBtn" title="Acceso al Panel de Bar">
-    <i class="fas fa-cog"></i>
-  </a>
-
-  <!-- MENÚ HAMBURGUESA MÓVIL -->
-  <button class="hamburger-menu" id="hamburgerMenu" onclick="toggleMobileMenu()">
-    <div class="hamburger-icon">
-      <div class="hamburger-line"></div>
-      <div class="hamburger-line"></div>
-      <div class="hamburger-line"></div>
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-animador">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <span class="modal-icon">🎤</span>
+    <div class="modal-title gold">Saludo al Animador</div>
+    <div class="modal-sub">Envía tu saludo y el animador lo transmitirá en vivo para ti y tu mesa. ¡Hazlo especial!</div>
+    <div class="modal-info-row">
+      <span class="modal-info-icon">🪑</span>
+      <div>
+        <div class="modal-info-label">Tu Mesa</div>
+        <div class="modal-info-val" id="animador-mesa-info">—</div>
+      </div>
     </div>
+    <input class="modal-input" id="animador-nombre" placeholder="Tu nombre o apodo..." maxlength="40">
+    <textarea class="modal-input" id="animador-mensaje" rows="3" placeholder="Escribe tu saludo aquí... ej: ¡Saludos desde la mesa 7 para toda la pista!" maxlength="200"></textarea>
+    <button class="btn-whatsapp" onclick="sendAnimadorWA()">
+      <span>💬</span> Enviar Saludo por WhatsApp
+    </button>
+    <button class="btn-modal-cancel" onclick="closeModal('modal-animador')">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-seguridad">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <span class="modal-icon">🚨</span>
+    <div class="modal-title red">Alerta de Seguridad</div>
+    <div class="modal-sub">Si necesitas asistencia del equipo de seguridad, descríbenos qué está pasando. Responderemos de inmediato.</div>
+    <div class="modal-info-row">
+      <span class="modal-info-icon">🪑</span>
+      <div>
+        <div class="modal-info-label">Mesa que Reporta</div>
+        <div class="modal-info-val" id="seg-mesa-info">—</div>
+      </div>
+    </div>
+    <select class="modal-input" id="seg-tipo">
+      <option value="">Tipo de alerta...</option>
+      <option value="Pelea o conflicto">⚔️ Pelea o conflicto</option>
+      <option value="Persona en mal estado">🤒 Persona en mal estado</option>
+      <option value="Persona sospechosa">👁️ Persona sospechosa</option>
+      <option value="Acoso o incomodidad">🚫 Acoso o incomodidad</option>
+      <option value="Objeto perdido">🔍 Objeto perdido</option>
+      <option value="Otra emergencia">🆘 Otra emergencia</option>
+    </select>
+    <textarea class="modal-input" id="seg-detalle" rows="2" placeholder="Describe brevemente la situación..." maxlength="200"></textarea>
+    <button class="btn-alert" onclick="sendSeguridadWA()">
+      <span>🚨</span> Alertar a Seguridad
+    </button>
+    <button class="btn-modal-cancel" onclick="closeModal('modal-seguridad')">Cancelar</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     SCREEN 1 — WELCOME
+══════════════════════════ -->
+<div class="screen active" id="screen-welcome">
+  <div class="welcome-logo">
+    <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Firework rays -->
+      <line x1="55" y1="4" x2="55" y2="16" stroke="#1B6B6B" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="55" y1="94" x2="55" y2="106" stroke="#1B6B6B" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="4" y1="55" x2="16" y2="55" stroke="#E91E8C" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="94" y1="55" x2="106" y2="55" stroke="#E91E8C" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="18" y1="18" x2="26" y2="26" stroke="#7A6200" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="84" y1="84" x2="92" y2="92" stroke="#7A6200" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="92" y1="18" x2="84" y2="26" stroke="#1B6B6B" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="18" y1="92" x2="26" y2="84" stroke="#1B6B6B" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- diagonal rays -->
+      <line x1="30" y1="5" x2="35" y2="16" stroke="#E91E8C" stroke-width="2" stroke-linecap="round"/>
+      <line x1="80" y1="5" x2="75" y2="16" stroke="#FFD600" stroke-width="2" stroke-linecap="round"/>
+      <line x1="5" y1="30" x2="16" y2="35" stroke="#FFD600" stroke-width="2" stroke-linecap="round"/>
+      <line x1="5" y1="80" x2="16" y2="75" stroke="#E91E8C" stroke-width="2" stroke-linecap="round"/>
+      <line x1="105" y1="30" x2="94" y2="35" stroke="#2A9D8F" stroke-width="2" stroke-linecap="round"/>
+      <line x1="105" y1="80" x2="94" y2="75" stroke="#2A9D8F" stroke-width="2" stroke-linecap="round"/>
+      <!-- Outer circle -->
+      <circle cx="55" cy="55" r="34" stroke="#FFD600" stroke-width="1.5" opacity="0.4"/>
+      <!-- Sound bars -->
+      <rect x="22" y="44" width="5" height="22" rx="2.5" fill="#FFD600"/>
+      <rect x="30" y="38" width="5" height="34" rx="2.5" fill="#FFD600"/>
+      <rect x="75" y="42" width="5" height="26" rx="2.5" fill="#FFD600"/>
+      <rect x="83" y="36" width="5" height="38" rx="2.5" fill="#FFD600"/>
+      <!-- Inner bg circle -->
+      <circle cx="55" cy="55" r="24" fill="#0C0B08" stroke="#FFD600" stroke-width="1.5"/>
+      <!-- FRV Text -->
+      <text x="55" y="62" font-family="Arial Black" font-size="18" font-weight="900" fill="white" text-anchor="middle" letter-spacing="1">FRV</text>
+      <!-- Pink accent dot -->
+      <circle cx="70" cy="30" r="4" fill="#E91E8C"/>
+      <!-- Yellow flower -->
+      <ellipse cx="48" cy="24" rx="5" ry="8" fill="#FFD600" transform="rotate(-20 48 24)"/>
+      <ellipse cx="58" cy="22" rx="5" ry="8" fill="#FFD600" transform="rotate(20 58 22)"/>
+      <circle cx="53" cy="26" r="3" fill="#E91E8C"/>
+    </svg>
+  </div>
+
+  <div class="welcome-tagline">Discoteca Premium · Catacaos</div>
+  <div class="welcome-title">FRV</div>
+  <div class="welcome-sub">Producciones</div>
+
+  <div class="welcome-desc">
+    Bienvenido a nuestra carta digital.<br>
+    Selecciona tu mesa, elige a tu anfitriona<br>
+    y ordena tus tragos favoritos fácilmente.
+  </div>
+
+  <button class="btn-start" onclick="goScreen('screen-mesa')">
+    <span>🍹</span> VER LA CARTA
   </button>
 
-  <div class="header-brand">
-    <div class="waves">
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-    </div>
-    <div class="brand-logo">
-      <div class="brand-frv">F<span>R</span>V</div>
-      <div class="brand-sub">Catacaos</div>
-    </div>
+  <div style="margin-top: 24px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+    <button onclick="openModal('modal-animador')" style="background:none;border:1px solid var(--border);border-radius:20px;padding:8px 16px;color:var(--gold);font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">🎤 Saludo al Animador</button>
+    <button onclick="openModal('modal-seguridad')" style="background:none;border:1px solid var(--border);border-radius:20px;padding:8px 16px;color:var(--red);font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">🚨 Seguridad</button>
   </div>
-  <div class="mesa-tag" id="mesaTag">⚡ MESA 7</div>
-</header>
 
-<!-- CARRUSEL DE PROMOCIONES -->
-<div class="promo-carousel">
-  <div class="carousel-container" id="carouselContainer">
-    <div class="carousel-slide">
-      <img src="https://images.unsplash.com/photo-1556855810-ac404aa91e85?w=800&h=400&fit=crop" alt="Promoción 1" loading="eager" decoding="async">
-      <div class="carousel-overlay">
-        <div class="carousel-title">🎉 PROMO PISCO SOUR</div>
-        <div class="carousel-subtitle">2x1 en Pisco Sours - Solo hoy!</div>
-      </div>
-    </div>
-    <div class="carousel-slide">
-      <img src="public/img/productos/Pilsen Promo.png" alt="Promoción 2" loading="eager" decoding="async">
-      <div class="carousel-overlay">
-        <div class="carousel-title">🍺 CERVEZA PILSEN</div>
-        <div class="carousel-subtitle">Pack 2 cervezas por S/ 24</div>
-      </div>
-    </div>
-    <div class="carousel-slide">
-      <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&h=400&fit=crop" alt="Promoción 3" loading="eager" decoding="async">
-      <div class="carousel-overlay">
-        <div class="carousel-title">🍹 MOJITO ESPECIAL</div>
-        <div class="carousel-subtitle">Mojito + Shot gratis</div>
-      </div>
-    </div>
-  </div>
-  <div class="carousel-dots" id="carouselDots">
-    <div class="carousel-dot active" onclick="goToSlide(0)"></div>
-    <div class="carousel-dot" onclick="goToSlide(1)"></div>
-    <div class="carousel-dot" onclick="goToSlide(2)"></div>
-  </div>
+  <div class="welcome-footer">FRV Producciones · Sistema de Pedidos v2.0</div>
 </div>
 
-<!-- MESA SELECTOR -->
-<div class="mesa-selector" id="mesaSelector">
-  <div class="mesa-selector-content">
-    <h3>🪑 Selecciona tu Mesa</h3>
-    <div class="mesa-grid" id="mesaGrid"></div>
-    <button class="mesa-confirm-btn" onclick="confirmarMesa()">Confirmar Mesa</button>
-  </div>
-</div>
-
-<div class="hero">
-  <svg class="hero-rays" viewBox="0 0 300 300" fill="none">
-    <g transform="translate(150,150)">
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#F5C800" stroke-width="3" stroke-linecap="round"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#F5C800" stroke-width="3" stroke-linecap="round" transform="rotate(30)"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#D4006A" stroke-width="3" stroke-linecap="round" transform="rotate(60)"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#00848A" stroke-width="3" stroke-linecap="round" transform="rotate(90)"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#F5C800" stroke-width="3" stroke-linecap="round" transform="rotate(120)"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#D4006A" stroke-width="3" stroke-linecap="round" transform="rotate(150)"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#00848A" stroke-width="3" stroke-linecap="round" transform="rotate(180)"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#F5C800" stroke-width="3" stroke-linecap="round" transform="rotate(210)"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#D4006A" stroke-width="3" stroke-linecap="round" transform="rotate(240)"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#00848A" stroke-width="3" stroke-linecap="round" transform="rotate(270)"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#F5C800" stroke-width="3" stroke-linecap="round" transform="rotate(300)"/>
-      <line x1="0" y1="-130" x2="0" y2="-80" stroke="#D4006A" stroke-width="3" stroke-linecap="round" transform="rotate(330)"/>
-    </g>
-  </svg>
-
-  <h1>
-    <div class="line-yellow">CARTA DE</div>
-    <div class="line-white">BEBIDAS</div>
-  </h1>
-  <div class="hero-sub">Pedí y pagá desde tu mesa · <span>FRV Catacaos</span></div>
-</div>
-
-<div class="cats" id="catsBar">
-  <div class="cat-pill active" onclick="filterCat('all',this)">TODO</div>
-  <div class="cat-pill" onclick="filterCat('cervezas',this)">🍺 CERVEZAS</div>
-  <div class="cat-pill" onclick="filterCat('tragos',this)">🍹 TRAGOS</div>
-  <div class="cat-pill" onclick="filterCat('shots',this)">🥃 SHOTS</div>
-  <div class="cat-pill" onclick="filterCat('sin-alcohol',this)">🧃 SIN ALCOHOL</div>
-</div>
-
-<div id="menuContainer"></div>
-
-<!-- SALUDOS AL ANIMADOR - EN CARTA -->
-<div class="animador-carta-section">
-  <div class="animador-carta-label">🎤 ¿Quieres saludar al Animador?</div>
-  <div class="animador-carta-card" onclick="enviarSaludoAnimador()">
-    <div class="animador-carta-avatar">
-      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="Yaruc" onerror="this.parentElement.innerHTML='🎤'">
-    </div>
-    <div class="animador-carta-info">
-      <div class="animador-carta-name">Yaruc</div>
-      <div class="animador-carta-role">Animador Principal</div>
-    </div>
-    <div class="animador-carta-action">
-      <span>Enviar Saludo</span>
-      <span class="whatsapp-icon">💬</span>
+<!-- ══════════════════════════
+     SCREEN 2 — MESA
+══════════════════════════ -->
+<div class="screen" id="screen-mesa">
+  <div class="screen-header">
+    <div class="back-btn" onclick="goScreen('screen-welcome')">←</div>
+    <div>
+      <div class="screen-header-title">Selecciona tu Mesa</div>
+      <span class="screen-header-sub">// elige donde estás sentado</span>
     </div>
   </div>
-</div>
 
-<div class="spacer"></div>
-
-<!-- CART FLOAT -->
-<button class="cart-float" id="cartBtn" onclick="toggleCart()">
-  🛒 VER MI PEDIDO
-  <span class="cart-count" id="cartCount">0</span>
-</button>
-
-<!-- OVERLAY -->
-<div class="overlay" id="overlay" onclick="toggleCart()"></div>
-
-<!-- CART SHEET -->
-<div class="cart-sheet" id="cartSheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-top">
-    <div class="sheet-title">MI <span>PEDIDO</span></div>
+  <div class="mesa-content" id="mesa-content">
+    <div class="mesa-instruction">
+      <h2>¿En qué mesa estás?</h2>
+      <p>Toca el número de tu mesa para continuar.<br>Esto ayuda a tu anfitriona a entregarte el pedido.</p>
+    </div>
+    <!-- Mesas filled by JS -->
   </div>
 
-  <div id="cartItems"></div>
-
-  <div class="cart-total">
-    <div class="cart-total-label">Total</div>
-    <div class="cart-total-val" id="cartTotal">S/ 0.00</div>
-  </div>
-
-  <textarea class="note-input" id="orderNote" rows="2" placeholder="Alguna aclaración para el barman..."></textarea>
-
-  <!-- ANFITRIONA SELECTOR -->
-  <div class="anfitriona-section">
-    <div class="anfitriona-label">👩‍💼 Selecciona tu Anfitriona</div>
-    <div class="anfitriona-list" id="anfitrionaList">
-      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51924996961">
-        <div class="anfitriona-avatar">
-          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" alt="María García" onerror="this.parentElement.innerHTML='👩'">
-        </div>
-        <div class="anfitriona-info">
-          <div class="anfitriona-name">María García</div>
-          <div class="anfitriona-role">Anfitriona Principal</div>
-        </div>
-        <div class="anfitriona-check">✓</div>
-      </div>
-      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51924996961">
-        <div class="anfitriona-avatar">
-          <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" alt="Ana Rodríguez" onerror="this.parentElement.innerHTML='👩'">
-        </div>
-        <div class="anfitriona-info">
-          <div class="anfitriona-name">Ana Rodríguez</div>
-          <div class="anfitriona-role">Anfitriona VIP</div>
-        </div>
-        <div class="anfitriona-check">✓</div>
-      </div>
-      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51924996961">
-        <div class="anfitriona-avatar">
-          <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" alt="Laura Martínez" onerror="this.parentElement.innerHTML='👩'">
-        </div>
-        <div class="anfitriona-info">
-          <div class="anfitriona-name">Laura Martínez</div>
-          <div class="anfitriona-role">Anfitriona Premium</div>
-        </div>
-        <div class="anfitriona-check">✓</div>
-      </div>
-      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51924996961">
-        <div class="anfitriona-avatar">
-          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face" alt="Sofía López" onerror="this.parentElement.innerHTML='👩'">
-        </div>
-        <div class="anfitriona-info">
-          <div class="anfitriona-name">Sofía López</div>
-          <div class="anfitriona-role">Anfitriona</div>
-        </div>
-        <div class="anfitriona-check">✓</div>
-      </div>
-      <div class="anfitriona-card" onclick="selectAnfitriona(this, '51924996961')" data-phone="51924996961">
-        <div class="anfitriona-avatar">
-          <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face" alt="Carmen Torres" onerror="this.parentElement.innerHTML='👩'">
-        </div>
-        <div class="anfitriona-info">
-          <div class="anfitriona-name">Carmen Torres</div>
-          <div class="anfitriona-role">Anfitriona</div>
-        </div>
-        <div class="anfitriona-check">✓</div>
+  <div class="mesa-confirm-bar" id="mesa-confirm-bar">
+    <div class="mesa-selected-info">
+      <div class="mesa-selected-badge" id="mesa-selected-badge">—</div>
+      <div>
+        <div class="mesa-selected-text" id="mesa-selected-text">Ninguna seleccionada</div>
+        <div class="mesa-selected-zone" id="mesa-selected-zone"></div>
       </div>
     </div>
-  </div>
-
-  <div class="pm-label">Forma de pago</div>
-  <div class="payment-methods payment-grid">
-    <div class="pm selected" onclick="selectPM(this)">
-      <img src="public/img/productos/Tarjetas-2.jpg" alt="Tarjeta" class="pm-img" onerror="this.style.display='none'">
-      <span class="pm-text">TARJETA</span>
-    </div>
-    <div class="pm" onclick="selectPM(this)">
-      <img src="public/img/productos/Yape.png" alt="Yape" class="pm-img" onerror="this.style.display='none'">
-      <span class="pm-text">YAPE</span>
-    </div>
-    <div class="pm" onclick="selectPM(this)">
-      <img src="public/img/productos/efectivo.png" alt="Efectivo" class="pm-img" onerror="this.style.display='none'">
-      <span class="pm-text">EFECTIVO</span>
-    </div>
-  </div>
-
-  <!-- Botones de acción del carrito -->
-  <div class="cart-actions">
-    <button class="cart-action-btn back-btn" onclick="goBackToMenu()">
-      ← Volver al Menú
-    </button>
-    <button class="cart-action-btn add-btn-action" onclick="addMoreProducts()">
-      + Agregar Más
+    <button class="btn-confirm-mesa" onclick="confirmMesa()">
+      CONFIRMAR MESA →
     </button>
   </div>
+</div>
 
-  <button class="pay-btn" onclick="placeOrder()">
-    ⚡ Confirmar Pedido
+<!-- ══════════════════════════
+     SCREEN 3 — ANFITRIONA
+══════════════════════════ -->
+<div class="screen" id="screen-anfitriona">
+  <div class="screen-header">
+    <div class="back-btn" onclick="goScreen('screen-mesa')">←</div>
+    <div>
+      <div class="screen-header-title">Tu Anfitriona</div>
+      <span class="screen-header-sub">// elige quien te atenderá</span>
+    </div>
+  </div>
+
+  <div class="anf-instruction">
+    <h2>Elige tu Anfitriona</h2>
+    <p>Ella recibirá tu pedido directamente por WhatsApp</p>
+  </div>
+
+  <div class="anf-grid" id="anf-grid">
+    <!-- Filled by JS -->
+  </div>
+
+  <div style="padding: 0 20px 20px;">
+    <button class="btn-confirm-mesa" id="btn-confirm-anf" onclick="confirmAnfitriona()" disabled style="opacity:0.4">
+      CONTINUAR AL MENÚ →
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     SCREEN 4 — MENU
+══════════════════════════ -->
+<div class="screen" id="screen-menu">
+  <div class="menu-header">
+    <div class="menu-header-top">
+      <div class="back-btn" onclick="goScreen('screen-anfitriona')">←</div>
+      <div class="menu-info-bar">
+        <div class="info-pill gold">🪑 <span id="menu-mesa-pill">—</span></div>
+        <div class="info-pill magenta">👑 <span id="menu-anf-pill">—</span></div>
+      </div>
+      <button class="cart-fab" onclick="openCart()">
+        🛒
+        <div class="cart-fab-count" id="cart-fab-count">0</div>
+      </button>
+    </div>
+    <div class="cat-scroll" id="cat-scroll">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <div class="menu-content" id="menu-content">
+    <!-- Filled by JS -->
+  </div>
+
+  <div class="sticky-cart" id="sticky-cart">
+    <div class="sticky-cart-info">
+      <div class="sticky-cart-count" id="sticky-cart-count">0 productos</div>
+      <div class="sticky-cart-total" id="sticky-cart-total">S/ 0.00</div>
+    </div>
+    <button class="btn-view-cart" onclick="openCart()">VER PEDIDO</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     SCREEN 5 — EXTRAS
+══════════════════════════ -->
+<div class="screen" id="screen-extras">
+  <div class="screen-header">
+    <div class="back-btn" onclick="goScreen('screen-menu')">←</div>
+    <div>
+      <div class="screen-header-title">Servicios Extra</div>
+      <span class="screen-header-sub">// animador · seguridad</span>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:20px 20px 0;">
+    <p style="font-size:13px;color:var(--text2);line-height:1.7">Más allá del menú, en FRV queremos<br>que tu noche sea perfecta.</p>
+  </div>
+
+  <div class="extras-grid">
+    <div class="extra-card animador" onclick="openAnimadorModal()">
+      <span class="extra-icon">🎤</span>
+      <div class="extra-title">Saludo al Animador</div>
+      <div class="extra-desc">Envía un saludo especial para alguien desde tu mesa. El animador lo transmite en vivo.</div>
+    </div>
+    <div class="extra-card seguridad" onclick="openSeguridadModal()">
+      <span class="extra-icon">🛡️</span>
+      <div class="extra-title">Alerta Seguridad</div>
+      <div class="extra-desc">Contacta al equipo de seguridad de forma discreta y rápida si lo necesitas.</div>
+    </div>
+  </div>
+
+  <div class="extras-nav-bar">
+    <button class="extras-nav-btn" onclick="goScreen('screen-menu')">🍹 Volver al Menú</button>
+    <button class="extras-nav-btn primary" onclick="openCart()">🛒 Ver mi Pedido</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     CART DRAWER
+══════════════════════════ -->
+<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-handle"></div>
+  <div class="cart-drawer-header">
+    <div class="cart-drawer-title">Mi Pedido 🧾</div>
+    <div class="cart-close-btn" onclick="closeCart()">✕</div>
+  </div>
+
+  <div class="cart-drawer-items" id="cart-drawer-items">
+    <div class="cart-empty">
+      <div style="font-size:40px;margin-bottom:8px">🍹</div>
+      <div>Tu pedido está vacío</div>
+    </div>
+  </div>
+
+  <div class="cart-drawer-footer">
+    <div class="cart-total-row"><span class="lbl">Subtotal</span><span class="val" id="cd-sub">S/ 0.00</span></div>
+    <div class="cart-total-row grand"><span class="lbl">TOTAL</span><span class="val" id="cd-total">S/ 0.00</span></div>
+
+    <div class="pay-section">
+      <div class="pay-label">// Método de Pago</div>
+      <div class="pay-opts">
+        <button class="pay-opt active" onclick="setPay('yape',this)">📲 Yape</button>
+        <button class="pay-opt" onclick="setPay('tarjeta',this)">💳 Tarjeta</button>
+        <button class="pay-opt" onclick="setPay('efectivo',this)">💵 Efectivo</button>
+      </div>
+    </div>
+
+    <button class="btn-send-order" id="btn-send-order" onclick="sendOrderWA()" disabled>
+      <span>📲</span> ENVIAR PEDIDO POR WHATSAPP
+    </button>
+
+    <button style="width:100%;padding:10px;border-radius:10px;background:none;border:1px solid var(--border);color:var(--text3);cursor:pointer;font-family:'Outfit',sans-serif;font-size:12px;transition:0.15s;margin-top:6px" onclick="goScreen('screen-menu');closeCart()">+ Agregar más productos</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV (visible in menu & extras screens) -->
+<div class="bottom-nav" id="bottom-nav">
+  <button class="bnav-item active" onclick="goScreen('screen-menu')">
+    <span class="bnav-icon">🍹</span>
+    <span class="bnav-label">Carta</span>
   </button>
-</div>
+  <button class="bnav-item" onclick="openCart()">
+    <span class="bnav-icon">🛒</span>
+    <span class="bnav-label">Pedido</span>
+  </button>
+  <button class="bnav-item" onclick="goScreen('screen-extras')">
+    <span class="bnav-icon">⭐</span>
+    <span class="bnav-label">Extras</span>
+  </button>
+  <button class="bnav-item" onclick="openModal('modal-seguridad')">
+    <span class="bnav-icon">🚨</span>
+    <span class="bnav-label">SOS</span>
+   </button>
+ </div>
 
-<!-- SUCCESS MODAL -->
-<div class="success-modal" id="successModal">
-  <div class="success-waves">
-    <div class="sw-bar"></div><div class="sw-bar"></div><div class="sw-bar"></div>
-    <div class="sw-bar"></div><div class="sw-bar"></div><div class="sw-bar"></div>
-    <div class="sw-bar"></div>
-  </div>
-  <h2>¡Pedido Enviado!</h2>
-  <p>Tu pedido fue enviado al bar de FRV.<br>Lo están preparando ahora mismo 🎉</p>
-  <div class="order-chip">
-    <small>Número de pedido</small>
-    <span>#<span id="orderNum">---</span></span>
-  </div>
-</div>
+ <!-- Firebase Client (load before main script) -->
+ <script src="src/js/services/firebase-client.js"></script>
 
-<!-- BOTÓN DE ALERTA DE SEGURIDAD -->
-<button class="safety-alert-btn" onclick="sendSafetyAlert()">
-  <span class="safety-alert-icon">🚨</span>
-</button>
+ <script>
+// ══════════════════════════════════════════════════════════════════
+//   FRV PRODUCCIONES — CARTA DIGITAL DE PEDIDOS
+//   Sistema de pedidos vía WhatsApp con 50 mesas y 4 anfitrionas
+// ══════════════════════════════════════════════════════════════════
 
-<script>
-// Debug global para el menú
-window.onerror = function(msg, url, line, col, error) {
-  console.error('❌ Error en Menú:', msg);
-  return false;
+// ── CONTACTS ──
+const ANIMADOR_WA = '+51950729470';
+const SEGURIDAD_WA = '+51924996961';
+
+// ── ANFITRIONAS ──
+const ANFITRIONAS = [
+  {
+    id: 1,
+    name: 'Valeria R.',
+    initials: 'VR',
+    zone: 'VIP & Pista',
+    phone: '+51900000001',   // ← reemplazar con número real
+    color: 'linear-gradient(135deg, #1B6B6B, #2A9D8F)',
+    emoji: '👑',
+    tables: 'Mesas 1-15'
+  },
+  {
+    id: 2,
+    name: 'Daniela C.',
+    initials: 'DC',
+    zone: 'Barra & Entrada',
+    phone: '+51900000002',   // ← reemplazar con número real
+    color: 'linear-gradient(135deg, #E91E8C, #C4186E)',
+    emoji: '💫',
+    tables: 'Mesas 16-30'
+  },
+  {
+    id: 3,
+    name: 'Melissa T.',
+    initials: 'MT',
+    zone: 'Terraza',
+    phone: '+51900000003',   // ← reemplazar con número real
+    color: 'linear-gradient(135deg, #FFD600, #E6B800)',
+    emoji: '🌟',
+    tables: 'Mesas 31-42'
+  },
+  {
+    id: 4,
+    name: 'Paola M.',
+    initials: 'PM',
+    zone: 'Salón Principal',
+    phone: '+51900000004',   // ← reemplazar con número real
+    color: 'linear-gradient(135deg, #7A6200, #FFD600)',
+    emoji: '✨',
+    tables: 'Mesas 43-50'
+  },
+];
+
+// ── MESAS ──
+const ZONES_MAP = {
+  'VIP': { range: [1, 10], icon: '👑', color: '#FFD600' },
+  'Pista': { range: [11, 20], icon: '🎵', color: '#E91E8C' },
+  'Barra': { range: [21, 28], icon: '🍸', color: '#2A9D8F' },
+  'Terraza': { range: [29, 38], icon: '🌿', color: '#7A9D88' },
+  'Salón': { range: [39, 50], icon: '🪑', color: '#A09070' },
 };
-console.log('🍹 Menú FRV cargando...');
-</script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="src/js/services/firebase-client.js"></script>
-<script>
-console.log('✅ Scripts del menú cargados');
-console.log('  firebase:', typeof firebase);
-console.log('  FirebaseClient:', typeof FirebaseClient);
-</script>
-<script src="src/js/modules/menu/frv-menu.js"></script>
-<script>
-console.log('✅ Menú JS cargado');
-setTimeout(function() {
-  console.log('📋 Funciones del menú:');
-  console.log('  sendToAdminPanel:', typeof sendToAdminPanel);
-  console.log('  placeOrder:', typeof placeOrder);
-}, 500);
-</script>
-<script>
-// Carrusel de promociones
-let currentSlide = 0;
-const totalSlides = 3;
 
-function updateCarousel() {
-  const container = document.getElementById('carouselContainer');
-  container.style.transform = `translateX(-${currentSlide * 100}%)`;
-  
-  // Actualizar dots
-  document.querySelectorAll('.carousel-dot').forEach((dot, index) => {
-    dot.classList.toggle('active', index === currentSlide);
-  });
+function getMesaZone(num) {
+  for (const [zone, data] of Object.entries(ZONES_MAP)) {
+    if (num >= data.range[0] && num <= data.range[1]) return { zone, ...data };
+  }
+  return { zone: 'General', icon: '🪑', color: '#5A5038' };
 }
 
-function nextSlide() {
-  currentSlide = (currentSlide + 1) % totalSlides;
-  updateCarousel();
-}
+// ── PRODUCTS ──
+const IMG_BASE = 'public/img/productos/';
+const FALLBACK_IMG = `${IMG_BASE}Cristal.jpg`;
 
-function goToSlide(index) {
-  currentSlide = index;
-  updateCarousel();
-}
+const PRODUCTS = [
+  // CERVEZAS
+  { id:1, name:'Cristal Botella', cat:'Cervezas', emoji:'🍺', price:8, desc:'Cerveza peruana clásica, fría y refrescante', img:`${IMG_BASE}Cristal.jpg`, badge:'popular' },
+  { id:2, name:'Pilsener 330ml', cat:'Cervezas', emoji:'🍻', price:5, desc:'La clásica dorada, sabor suave', img:`${IMG_BASE}Cristal.jpg`, badge:null },
+  { id:3, name:'Heineken', cat:'Cervezas', emoji:'🍺', price:10, desc:'Importada holandesa, sabor premium', img:`${IMG_BASE}Cristal.jpg`, badge:'special' },
+  { id:4, name:'Cusqueña Dorada', cat:'Cervezas', emoji:'🍻', price:7, desc:'Orgullo peruano, sabor único', img:`${IMG_BASE}Cristal.jpg`, badge:'popular' },
 
-// Auto-avanzar carrusel cada 5 segundos
-setInterval(nextSlide, 5000);
+  // TRAGOS CORTOS
+  { id:5, name:'Shot Tequila', cat:'Tragos Cortos', emoji:'🥃', price:8, desc:'Tequila reposado con limón y sal', img:`${IMG_BASE}Cristal.jpg`, badge:null },
+  { id:6, name:'Shot Vodka', cat:'Tragos Cortos', emoji:'🥃', price:7, desc:'Vodka premium directo', img:`${IMG_BASE}Cristal.jpg`, badge:null },
+  { id:7, name:'Shot Ron', cat:'Tragos Cortos', emoji:'🥃', price:7, desc:'Ron añejo peruano', img:`${IMG_BASE}Cristal.jpg`, badge:null },
+  { id:8, name:'Shot Jäger', cat:'Tragos Cortos', emoji:'🥃', price:9, desc:'Jägermeister helado', img:`${IMG_BASE}Cristal.jpg`, badge:'new' },
 
-// Menú hamburguesa móvil
-function toggleMobileMenu() {
-  const menu = document.getElementById('hamburgerMenu');
-  const categories = document.getElementById('mobileCategories');
-  
-  menu.classList.toggle('active');
-  categories.classList.toggle('show');
-}
+  // CÓCTELES
+  { id:9,  name:'Mojito Clásico', cat:'Cócteles', emoji:'🍹', price:18, desc:'Ron, menta fresca, limón y soda', img:`${IMG_BASE}Cristal.jpg`, badge:'popular' },
+  { id:10, name:'Margarita', cat:'Cócteles', emoji:'🍸', price:18, desc:'Tequila, triple sec y limón fresco', img:`${IMG_BASE}Cristal.jpg`, badge:null },
+  { id:11, name:'Piña Colada', cat:'Cócteles', emoji:'🥥', price:20, desc:'Ron, crema de coco y piña natural', img:`${IMG_BASE}Cristal.jpg`, badge:'popular' },
+  { id:12, name:'Negroni', cat:'Cócteles', emoji:'🍷', price:22, desc:'Gin, Campari y vermut rojo', img:`${IMG_BASE}Cristal.jpg`, badge:'special' },
+  { id:13, name:'Pisco Sour', cat:'Cócteles', emoji:'🍋', price:20, desc:'El coctel peruano por excelencia', img:`${IMG_BASE}Cristal.jpg`, badge:'popular' },
+  { id:14, name:'Aperol Spritz', cat:'Cócteles', emoji:'🍊', price:22, desc:'Aperol, prosecco y soda naranja', img:`${IMG_BASE}Cristal.jpg`, badge:'new' },
 
-function closeMobileMenu() {
-  const menu = document.getElementById('hamburgerMenu');
-  const categories = document.getElementById('mobileCategories');
-  
-  menu.classList.remove('active');
-  categories.classList.remove('show');
-}
+  // BOTELLAS
+  { id:15, name:'Johnnie Red 750ml', cat:'Botellas', emoji:'🥃', price:120, desc:'Whisky escocés blended, suave y versátil', img:`${IMG_BASE}Cristal.jpg`, badge:'popular' },
+  { id:16, name:'Absolut Vodka 750ml', cat:'Botellas', emoji:'🍾', price:100, desc:'Vodka sueco premium, 40% vol.', img:`${IMG_BASE}Cristal.jpg`, badge:null },
+  { id:17, name:'Jack Daniel\'s 750ml', cat:'Botellas', emoji:'🥃', price:130, desc:'Tennessee Whiskey, carácter único', img:`${IMG_BASE}Cristal.jpg`, badge:'special' },
+  { id:18, name:'Moët & Chandon', cat:'Botellas', emoji:'🍾', price:220, desc:'Champagne francés, brut impérial', img:`${IMG_BASE}Cristal.jpg`, badge:'special' },
+  { id:19, name:'Patrón Silver', cat:'Botellas', emoji:'🥃', price:180, desc:'Tequila 100% agave azul artesanal', img:`${IMG_BASE}Cristal.jpg`, badge:null },
 
-// Alerta de seguridad a WhatsApp
-function sendSafetyAlert() {
-  const mesa = MESA || 'No especificada';
-  const message = `🚨 *ALERTA DE SEGURIDAD - FRV Catacaos*\n\n⚠️ Se necesita asistencia inmediata\n\n🪑 *Mesa:* ${mesa}\n⏰ *Hora:* ${new Date().toLocaleTimeString('es-PE')}\n\nPor favor, acudir lo antes posible.`;
-  
-  const encodedMessage = encodeURIComponent(message);
-  const whatsappUrl = `https://wa.me/51924996961?text=${encodedMessage}`;
-  
-  if (confirm('¿Enviar alerta de seguridad al equipo de seguridad?')) {
-    window.open(whatsappUrl, '_blank');
+  // SOFT & MIXERS
+  { id:20, name:'Red Bull', cat:'Soft & Mixers', emoji:'🔴', price:8, desc:'Energizante premium, con o sin mezcla', img:`${IMG_BASE}Cristal.jpg`, badge:null },
+  { id:21, name:'Agua Mineral', cat:'Soft & Mixers', emoji:'💧', price:4, desc:'500ml, con o sin gas', img:`${IMG_BASE}Cristal.jpg`, badge:null },
+  { id:22, name:'Gaseosa 500ml', cat:'Soft & Mixers', emoji:'🥤', price:5, desc:'Inca Kola o Coca-Cola', img:`${IMG_BASE}Cristal.jpg`, badge:null },
+  { id:23, name:'Jugo de Naranja', cat:'Soft & Mixers', emoji:'🍊', price:7, desc:'Naranja natural recién exprimida', img:`${IMG_BASE}Cristal.jpg`, badge:null },
+
+  // PIQUEOS
+  { id:24, name:'Piqueo Mixto', cat:'Piqueos', emoji:'🥗', price:25, desc:'Selección de bocaditos de la casa', img:`${IMG_BASE}Cristal.jpg`, badge:'popular' },
+  { id:25, name:'Ceviche Porción', cat:'Piqueos', emoji:'🐟', price:22, desc:'Fresco ceviche al estilo Catacaos', img:`${IMG_BASE}Cristal.jpg`, badge:'special' },
+];
+
+const CATEGORIES = ['Todos', ...new Set(PRODUCTS.map(p => p.cat))];
+
+// ── STATE ──
+let selectedMesa = null;
+let selectedAnfitriona = null;
+let activeCat = 'Todos';
+let cart = [];
+let payMethod = 'yape';
+
+// ══════════════════════════════════════════════════════════════════
+//   SCREEN NAVIGATION
+// ══════════════════════════════════════════════════════════════════
+
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+
+  const showNav = ['screen-menu', 'screen-extras'].includes(id);
+  const nav = document.getElementById('bottom-nav');
+  nav.classList.toggle('show', showNav);
+
+  if (id === 'screen-mesa') renderMesas();
+  if (id === 'screen-anfitriona') renderAnfitrionas();
+  if (id === 'screen-menu') renderMenu();
+
+  // Update modal mesa info
+  if (selectedMesa) {
+    document.getElementById('animador-mesa-info').textContent = `Mesa ${selectedMesa.num} — ${selectedMesa.zone}`;
+    document.getElementById('seg-mesa-info').textContent = `Mesa ${selectedMesa.num} — ${selectedMesa.zone}`;
   }
 }
 
-// Ocultar preloader cuando todo esté listo
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    var preloader = document.getElementById('preloader');
-    if (preloader) {
-      preloader.classList.add('hidden');
-      setTimeout(function() {
-        preloader.style.display = 'none';
-      }, 500);
-    }
-  }, 800);
-});
-</script>
+// ══════════════════════════════════════════════════════════════════
+//   SPARKLES ON WELCOME
+// ══════════════════════════════════════════════════════════════════
+function createSparkles() {
+  const colors = ['#FFD600', '#E91E8C', '#2A9D8F', '#FFD600'];
+  for (let i = 0; i < 12; i++) {
+    const el = document.createElement('div');
+    el.className = 'sparkle';
+    el.style.left = `${Math.random() * 100}%`;
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDuration = `${4 + Math.random() * 6}s`;
+    el.style.animationDelay = `${Math.random() * 6}s`;
+    el.style.width = el.style.height = `${2 + Math.random() * 4}px`;
+    document.body.appendChild(el);
+  }
+}
 
+createSparkles();
+
+// ══════════════════════════════════════════════════════════════════
+//   MESAS
+// ══════════════════════════════════════════════════════════════════
+function renderMesas() {
+  const container = document.getElementById('mesa-content');
+  let html = `
+    <div class="mesa-instruction">
+      <h2>¿En qué mesa estás?</h2>
+      <p>Toca el número de tu mesa para continuar.<br>Esto ayuda a tu anfitriona a entregarte el pedido.</p>
+    </div>`;
+
+  for (const [zone, data] of Object.entries(ZONES_MAP)) {
+    html += `<div class="zone-label">${data.icon} Zona ${zone}</div>`;
+    html += `<div class="mesas-grid">`;
+    for (let n = data.range[0]; n <= data.range[1]; n++) {
+      const isSelected = selectedMesa && selectedMesa.num === n;
+      html += `
+        <div class="mesa-card ${isSelected ? 'selected' : ''}" onclick="selectMesa(${n})">
+          <div class="mesa-icon">${data.icon}</div>
+          <div class="mesa-num">M${String(n).padStart(2,'0')}</div>
+          <div class="mesa-zone-tag">${zone}</div>
+        </div>`;
+    }
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Restore confirm bar
+  if (selectedMesa) {
+    showMesaConfirm();
+  }
+}
+
+function selectMesa(num) {
+  const zoneInfo = getMesaZone(num);
+  selectedMesa = { num, ...zoneInfo };
+  renderMesas();
+  showMesaConfirm();
+  toast(`Mesa M${String(num).padStart(2,'0')} seleccionada ✓`, 'gold');
+}
+
+function showMesaConfirm() {
+  if (!selectedMesa) return;
+  const bar = document.getElementById('mesa-confirm-bar');
+  const badge = document.getElementById('mesa-selected-badge');
+  const text = document.getElementById('mesa-selected-text');
+  const zone = document.getElementById('mesa-selected-zone');
+  badge.textContent = `M${String(selectedMesa.num).padStart(2,'0')}`;
+  text.textContent = `Mesa ${selectedMesa.num} seleccionada`;
+  zone.textContent = `Zona ${selectedMesa.zone}`;
+  bar.classList.add('show');
+}
+
+function confirmMesa() {
+  if (!selectedMesa) return;
+  goScreen('screen-anfitriona');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//   ANFITRIONAS
+// ══════════════════════════════════════════════════════════════════
+function renderAnfitrionas() {
+  const grid = document.getElementById('anf-grid');
+  grid.innerHTML = ANFITRIONAS.map(a => `
+    <div class="anf-card ${selectedAnfitriona && selectedAnfitriona.id === a.id ? 'selected' : ''}"
+         onclick="selectAnfitriona(${a.id})">
+      <div class="anf-avatar-wrap">
+        <div class="anf-avatar" style="background:${a.color}">${a.initials}</div>
+        <div class="anf-online-dot"></div>
+      </div>
+      <div class="anf-name">${a.name}</div>
+      <div class="anf-zone">${a.emoji} ${a.zone}</div>
+      <div class="anf-whatsapp">📱 WhatsApp</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:6px;font-family:'JetBrains Mono',monospace">${a.tables}</div>
+    </div>`).join('');
+}
+
+function selectAnfitriona(id) {
+  selectedAnfitriona = ANFITRIONAS.find(a => a.id === id);
+  renderAnfitrionas();
+  const btn = document.getElementById('btn-confirm-anf');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  toast(`${selectedAnfitriona.name} seleccionada ✓`, 'success');
+}
+
+function confirmAnfitriona() {
+  if (!selectedAnfitriona) return;
+  // Update menu info pills
+  document.getElementById('menu-mesa-pill').textContent = `M${String(selectedMesa.num).padStart(2,'0')}`;
+  document.getElementById('menu-anf-pill').textContent = selectedAnfitriona.name;
+  goScreen('screen-menu');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//   MENU
+// ══════════════════════════════════════════════════════════════════
+function renderCatTabs() {
+  const el = document.getElementById('cat-scroll');
+  el.innerHTML = CATEGORIES.map(c => `
+    <button class="cat-tab ${c === activeCat ? 'active' : ''}" onclick="setCat('${c}')">${c}</button>`
+  ).join('');
+}
+
+function setCat(cat) {
+  activeCat = cat;
+  renderCatTabs();
+  renderMenuItems();
+
+  // Scroll to section
+  if (cat !== 'Todos') {
+    const sec = document.getElementById(`section-${cat.replace(/[^a-zA-Z0-9]/g, '_')}`);
+    if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function renderMenu() {
+  renderCatTabs();
+  renderMenuItems();
+}
+
+function renderMenuItems() {
+  const content = document.getElementById('menu-content');
+  const catsToShow = activeCat === 'Todos' ? CATEGORIES.filter(c => c !== 'Todos') : [activeCat];
+
+  content.innerHTML = catsToShow.map(cat => {
+    const items = PRODUCTS.filter(p => p.cat === cat);
+    if (!items.length) return '';
+    return `
+      <div class="cat-section" id="section-${cat.replace(/[^a-zA-Z0-9]/g, '_')}">
+        <div class="cat-section-title">${getCatIcon(cat)} ${cat}</div>
+        <div class="cat-section-sub">// ${items.length} opciones disponibles</div>
+        <div class="items-grid">
+          ${items.map(p => renderProductCard(p)).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function getCatIcon(cat) {
+  const icons = { 'Cervezas':'🍺','Tragos Cortos':'🥃','Cócteles':'🍹','Botellas':'🍾','Soft & Mixers':'🥤','Piqueos':'🍽️' };
+  return icons[cat] || '✦';
+}
+
+function renderProductCard(p) {
+  const cartItem = cart.find(i => i.id === p.id);
+  const qty = cartItem ? cartItem.qty : 0;
+
+  const badgeHtml = p.badge ? `<div class="item-badge ${p.badge}">${
+    p.badge === 'popular' ? '★ Popular' : p.badge === 'new' ? '● Nuevo' : '◆ Especial'
+  }</div>` : '';
+
+  const addCtrl = qty === 0
+    ? `<button class="add-btn" onclick="addToCart(${p.id})">+</button>`
+    : `<div class="item-qty-ctrl">
+        <button class="qty-minus" onclick="changeQty(${p.id},-1)">−</button>
+        <span class="qty-num">${qty}</span>
+        <button class="qty-plus" onclick="changeQty(${p.id},1)">+</button>
+       </div>`;
+
+  return `
+    <div class="item-card" id="card-${p.id}">
+      <div class="item-img-wrap">
+        <img class="item-img" src="${p.img}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+             alt="${p.name}">
+        <div class="item-emoji-fallback" style="display:none">${p.emoji}</div>
+        ${badgeHtml}
+      </div>
+      <div class="item-info">
+        <div class="item-name">${p.name}</div>
+        <div class="item-desc">${p.desc}</div>
+        <div class="item-footer">
+          <div class="item-price">S/ ${p.price}<span>.00</span></div>
+          ${addCtrl}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//   CART
+// ══════════════════════════════════════════════════════════════════
+function addToCart(id) {
+  const prod = PRODUCTS.find(p => p.id === id);
+  if (!prod) return;
+  const existing = cart.find(i => i.id === id);
+  if (existing) { existing.qty++; }
+  else { cart.push({ ...prod, qty: 1 }); }
+  refreshCartUI();
+  updateProductCard(id);
+  toast(`${prod.emoji} ${prod.name} añadido`, 'gold');
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  refreshCartUI();
+  updateProductCard(id);
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(i => i.id !== id);
+  refreshCartUI();
+  updateProductCard(id);
+}
+
+function updateProductCard(id) {
+  const card = document.getElementById(`card-${id}`);
+  if (!card) return;
+  const prod = PRODUCTS.find(p => p.id === id);
+  const item = cart.find(i => i.id === id);
+  const footer = card.querySelector('.item-footer');
+  const priceEl = footer.querySelector('.item-price');
+
+  if (item) {
+    footer.innerHTML = `
+      <div class="item-price">S/ ${prod.price}<span>.00</span></div>
+      <div class="item-qty-ctrl">
+        <button class="qty-minus" onclick="changeQty(${id},-1)">−</button>
+        <span class="qty-num">${item.qty}</span>
+        <button class="qty-plus" onclick="changeQty(${id},1)">+</button>
+      </div>`;
+  } else {
+    footer.innerHTML = `
+      <div class="item-price">S/ ${prod.price}<span>.00</span></div>
+      <button class="add-btn" onclick="addToCart(${id})">+</button>`;
+  }
+}
+
+function refreshCartUI() {
+  const totalItems = cart.reduce((a, i) => a + i.qty, 0);
+  const totalPrice = cart.reduce((a, i) => a + i.price * i.qty, 0);
+
+  // FAB badge
+  const fabCount = document.getElementById('cart-fab-count');
+  fabCount.textContent = totalItems;
+  fabCount.classList.toggle('show', totalItems > 0);
+
+  // Sticky bar
+  const stickyBar = document.getElementById('sticky-cart');
+  document.getElementById('sticky-cart-count').textContent = `${totalItems} ${totalItems === 1 ? 'producto' : 'productos'}`;
+  document.getElementById('sticky-cart-total').textContent = `S/ ${totalPrice.toFixed(2)}`;
+  stickyBar.classList.toggle('show', totalItems > 0 && document.getElementById('screen-menu').classList.contains('active'));
+
+  // Drawer totals
+  document.getElementById('cd-sub').textContent = `S/ ${totalPrice.toFixed(2)}`;
+  document.getElementById('cd-total').textContent = `S/ ${totalPrice.toFixed(2)}`;
+
+  // Send button
+  document.getElementById('btn-send-order').disabled = totalItems === 0;
+
+  // Render drawer items
+  renderCartDrawer();
+}
+
+function renderCartDrawer() {
+  const el = document.getElementById('cart-drawer-items');
+  if (!cart.length) {
+    el.innerHTML = `<div class="cart-empty"><div style="font-size:40px;margin-bottom:8px">🍹</div><div>Tu pedido está vacío</div></div>`;
+    return;
+  }
+  el.innerHTML = cart.map(i => `
+    <div class="cart-item-row">
+      <div class="cart-item-emoji">${i.emoji}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${i.name}</div>
+        <div class="cart-item-price-line">S/ ${i.price.toFixed(2)} × ${i.qty} = S/ ${(i.price*i.qty).toFixed(2)}</div>
+      </div>
+      <div class="cart-item-ctrl">
+        <button class="ci-minus" onclick="changeQty(${i.id},-1)">−</button>
+        <span class="ci-num">${i.qty}</span>
+        <button class="ci-plus" onclick="changeQty(${i.id},1)">+</button>
+        <button class="ci-del" onclick="removeFromCart(${i.id})">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function openCart() {
+  document.getElementById('cart-overlay').classList.add('open');
+  document.getElementById('cart-drawer').classList.add('open');
+  renderCartDrawer();
+}
+
+function closeCart() {
+  document.getElementById('cart-overlay').classList.remove('open');
+  document.getElementById('cart-drawer').classList.remove('open');
+}
+
+function setPay(method, el) {
+  payMethod = method;
+  document.querySelectorAll('.pay-opt').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+ // ══════════════════════════════════════════════════════════════════
+ //   WHATSAPP — SEND ORDER
+ // ══════════════════════════════════════════════════════════════════
+
+ // ═══════════════════════════════════════════════════════════════════════════════
+ //   FIREBASE — SYNC ORDER TO REALTIME DATABASE
+ //   Reglas compatibles: orders/$orderId {cliente, total, producto, ...}
+ // ═══════════════════════════════════════════════════════════════════════════════
+ function enviarPedidoAFirebase() {
+   if (typeof window.createOrder !== 'function') {
+     console.warn('[FRV] Firebase no disponible');
+     return;
+   }
+   const total = cart.reduce((a, i) => a + i.price * i.qty, 0);
+   if (total <= 0) return;
+   const productosStr = cart.map(i => `${i.emoji} ${i.name} ×${i.qty}`).join(' | ');
+   const orderData = {
+     cliente: selectedAnfitriona ? selectedAnfitriona.name : 'Cliente FRV',
+     total: total,
+     producto: productosStr,
+     mesaId: selectedMesa.num,
+     mesa: `M${String(selectedMesa.num).padStart(2,'0')}`,
+     zona: selectedMesa.zone,
+     anfitrionaId: selectedAnfitriona ? selectedAnfitriona.id : null,
+     items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, emoji: i.emoji, qty: i.qty })),
+     status: 'pending',
+     paymentMethod: payMethod,
+     createdAt: new Date().toISOString(),
+     timestamp: Date.now()
+   };
+    window.createOrder(orderData).then(() => {
+      console.log('[FRV] Pedido sincronizado a Firebase');
+    }).catch(err => {
+      console.error('[FRV] Error Firebase:', err);
+      toast('⚠️ Error al sincronizar con panel', 'error');
+    });
+ }
+
+ function buildOrderMessage() {
+  const mesaLabel = `M${String(selectedMesa.num).padStart(2,'0')} — Zona ${selectedMesa.zone}`;
+  const now = new Date().toLocaleTimeString('es-PE');
+  const total = cart.reduce((a,i) => a + i.price * i.qty, 0);
+  const payIcons = { yape:'📲 Yape', tarjeta:'💳 Tarjeta', efectivo:'💵 Efectivo' };
+
+  let msg = `🎵 *FRV PRODUCCIONES CATACAOS*\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `🪑 *Mesa:* ${mesaLabel}\n`;
+  msg += `⏰ *Hora:* ${now}\n`;
+  msg += `💰 *Pago:* ${payIcons[payMethod] || payMethod}\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `📋 *PEDIDO:*\n\n`;
+  cart.forEach(i => {
+    msg += `${i.emoji} ${i.name} ×${i.qty} — S/ ${(i.price*i.qty).toFixed(2)}\n`;
+  });
+  msg += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `💵 *TOTAL: S/ ${total.toFixed(2)}*\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `✅ Por favor confirmar el pedido.`;
+  return msg;
+}
+
+ function sendOrderWA() {
+   if (!cart.length || !selectedAnfitriona || !selectedMesa) return;
+
+   // Enviar por WhatsApp
+   const msg = buildOrderMessage();
+   const phone = selectedAnfitriona.phone.replace(/\D/g, '');
+   const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+   window.open(url, '_blank');
+   closeCart();
+   toast('✅ Pedido enviado por WhatsApp', 'success');
+
+    // Sincronizar a Firebase en segundo plano
+    enviarPedidoAFirebase();
+
+    // Limpiar carrito tras envío
+    setTimeout(() => {
+      cart = [];
+      refreshCartUI();
+      renderMenuItems();
+    }, 1500);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//   MODALS — ANIMADOR & SEGURIDAD
+// ══════════════════════════════════════════════════════════════════
+function openModal(id) {
+  // Update mesa info in modals
+  const mesaLabel = selectedMesa
+    ? `Mesa M${String(selectedMesa.num).padStart(2,'0')} — Zona ${selectedMesa.zone}`
+    : 'Sin mesa seleccionada';
+  document.getElementById('animador-mesa-info').textContent = mesaLabel;
+  document.getElementById('seg-mesa-info').textContent = mesaLabel;
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function openAnimadorModal() { openModal('modal-animador'); }
+function openSeguridadModal() { openModal('modal-seguridad'); }
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => {
+    if (e.target === m) m.classList.remove('open');
+  });
+});
+
+function sendAnimadorWA() {
+  const nombre = document.getElementById('animador-nombre').value.trim();
+  const mensaje = document.getElementById('animador-mensaje').value.trim();
+  if (!mensaje) { toast('Escribe tu saludo primero', 'magenta'); return; }
+
+  const mesaLabel = selectedMesa
+    ? `Mesa M${String(selectedMesa.num).padStart(2,'0')} — Zona ${selectedMesa.zone}`
+    : 'Mesa no especificada';
+
+  let msg = `🎤 *SALUDO PARA EL ANIMADOR — FRV CATACAOS*\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `🪑 *Desde:* ${mesaLabel}\n`;
+  if (nombre) msg += `👤 *Nombre:* ${nombre}\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `💬 *Saludo:*\n${mensaje}\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `⏰ ${new Date().toLocaleTimeString('es-PE')}`;
+
+  const phone = ANIMADOR_WA.replace(/\D/g, '');
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+  closeModal('modal-animador');
+  document.getElementById('animador-nombre').value = '';
+  document.getElementById('animador-mensaje').value = '';
+  toast('Saludo enviado al animador 🎤', 'gold');
+}
+
+function sendSeguridadWA() {
+  const tipo = document.getElementById('seg-tipo').value;
+  const detalle = document.getElementById('seg-detalle').value.trim();
+  if (!tipo) { toast('Selecciona el tipo de alerta', 'magenta'); return; }
+
+  const mesaLabel = selectedMesa
+    ? `Mesa M${String(selectedMesa.num).padStart(2,'0')} — Zona ${selectedMesa.zone}`
+    : 'Ubicación no especificada';
+
+  let msg = `🚨 *ALERTA DE SEGURIDAD — FRV CATACAOS*\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `📍 *Ubicación:* ${mesaLabel}\n`;
+  msg += `⚠️ *Tipo:* ${tipo}\n`;
+  msg += `⏰ *Hora:* ${new Date().toLocaleTimeString('es-PE')}\n`;
+  if (detalle) {
+    msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `📝 *Detalle:* ${detalle}\n`;
+  }
+  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `🆘 REQUIERE ATENCIÓN INMEDIATA`;
+
+  const phone = SEGURIDAD_WA.replace(/\D/g, '');
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+  closeModal('modal-seguridad');
+  document.getElementById('seg-tipo').value = '';
+  document.getElementById('seg-detalle').value = '';
+  toast('Alerta enviada a Seguridad 🚨', 'magenta');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//   TOAST
+// ══════════════════════════════════════════════════════════════════
+function toast(msg, type = 'success') {
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.style.opacity = '0', 2500);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//   BOTTOM NAV — manage sticky cart visibility on scroll
+// ══════════════════════════════════════════════════════════════════
+document.getElementById('screen-menu').addEventListener('scroll', () => {
+  const totalItems = cart.reduce((a,i) => a+i.qty, 0);
+  const stickyBar = document.getElementById('sticky-cart');
+  stickyBar.classList.toggle('show', totalItems > 0);
+}, { passive: true });
+
+// ══════════════════════════════════════════════════════════════════
+//   CAT TABS SCROLL TO ACTIVE
+// ══════════════════════════════════════════════════════════════════
+function scrollActiveCatIntoView() {
+  const active = document.querySelector('.cat-tab.active');
+  if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//   INIT
+// ══════════════════════════════════════════════════════════════════
+renderMesas(); // pre-render for fast load
+
+console.log('%c🎵 FRV Producciones Catacaos — Carta Digital v2.0', 'color:#FFD600;font-size:14px;font-weight:bold;background:#060604;padding:6px 12px;border-radius:6px');
+console.log('%c📱 Pedidos via WhatsApp · Animador · Seguridad', 'color:#E91E8C;font-size:11px');
+</script>
 </body>
 </html>

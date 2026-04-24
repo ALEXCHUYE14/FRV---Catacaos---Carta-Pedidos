@@ -209,15 +209,16 @@
       cursor: not-allowed;
       transform: none;
     }
-    .login-message {
-      padding: 14px;
-      border-radius: 10px;
-      text-align: center;
-      font-size: 13px;
-      font-weight: 500;
-      display: none;
-      animation: shake 0.5s ease;
-    }
+     .login-message {
+       padding: 14px;
+       border-radius: 12px;
+       text-align: center;
+       font-size: 13px;
+       font-weight: 500;
+       display: none;
+       animation: shake 0.5s ease;
+       margin-bottom: 8px;
+     }
     .login-message.show {
       display: block;
     }
@@ -238,12 +239,12 @@
       60% { transform: translateX(-8px); }
       80% { transform: translateX(8px); }
     }
-    .login-footer {
-      text-align: center;
-      margin-top: 28px;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
+     .login-footer {
+       text-align: center;
+       margin-top: 30px;
+       padding-top: 22px;
+       border-top: 1px solid rgba(255,255,255,0.08);
+     }
     .login-footer p {
       font-size: 12px;
       color: rgba(255,255,255,0.35);
@@ -282,17 +283,114 @@
     .login-card {
       position: relative;
     }
-    /* Glowing corner */
-    .corner-glow {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100px;
-      height: 100px;
-      background: radial-gradient(circle at top left, rgba(245,200,0,0.15), transparent 70%);
-      pointer-events: none;
+     /* Glowing corner */
+     .corner-glow {
+       position: absolute;
+       top: 0;
+       left: 0;
+       width: 100px;
+       height: 100px;
+       background: radial-gradient(circle at top left, rgba(245,200,0,0.15), transparent 70%);
+       pointer-events: none;
+     }
+
+     /* ═══════════════════════════════════════════════════════════════════════════════
+        RESPONSIVE — Mobile & Tablet
+        ═══════════════════════════════════════════════════════════════════════════════ */
+     @media (max-width: 768px) {
+       body {
+         padding: 16px;
+         align-items: center;
+         justify-content: center;
+       }
+       .login-card {
+         padding: 28px 20px;
+         border-radius: 24px;
+       }
+       .logo-waves {
+         height: 40px;
+         margin-bottom: 16px;
+       }
+       .wave-bar:nth-child(1) { height: 12px; }
+       .wave-bar:nth-child(2) { height: 24px; }
+       .wave-bar:nth-child(3) { height: 38px; }
+       .wave-bar:nth-child(4) { height: 28px; }
+       .wave-bar:nth-child(5) { height: 18px; }
+       .wave-bar:nth-child(6) { height: 10px; }
+       .wave-bar:nth-child(7) { height: 7px; }
+       .brand-title {
+         font-size: 34px;
+         letter-spacing: 9px;
+       }
+       .form-input {
+         font-size: 16px; /* iOS zoom prevention */
+         padding: 14px 14px;
+         padding-left: 44px;
+       }
+       .input-icon {
+         left: 14px;
+         font-size: 15px;
+       }
+       .password-toggle {
+         right: 14px;
+       }
+       .login-btn {
+         padding: 16px;
+         font-size: 15px;
+         letter-spacing: 2px;
+         border-radius: 12px;
+       }
+       .login-footer {
+         margin-top: 24px;
+         padding-top: 18px;
+       }
+       .login-footer p {
+         font-size: 11px;
+       }
+     }
+
+     @media (max-width: 380px) {
+       .login-card {
+         padding: 24px 18px;
+         border-radius: 20px;
+       }
+       .brand-title {
+         font-size: 30px;
+         letter-spacing: 7px;
+       }
+       .form-group label {
+         font-size: 10px;
+       }
+       .login-btn {
+         padding: 14px;
+         font-size: 14px;
+       }
+     }
+
+     /* Tablet landscape */
+     @media (max-width: 900px) and (orientation: landscape) {
+    body {
+      width: 100%;
+      height: 100%;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: 
+        linear-gradient(135deg, rgba(8,8,8,0.97) 0%, rgba(30,30,30,0.95) 100%),
+        url('../../public/img/productos/logo.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 60px;
+      min-height: 100vh;
     }
-  </style>
+       .login-card {
+         max-width: 380px;
+         padding: 24px;
+       }
+     }
+   </style>
 </head>
 <body>
   <div class="login-container">

@@ -1,667 +1,577 @@
-// ── CONFIG ──────────────────────────────────────
-const urlParams = new URLSearchParams(window.location.search);
-let MESA = urlParams.get('mesa') || generateUniqueMesa();
-let anfitrionaSeleccionada = null;
-let anfitrionaPhone = null;
-let currentOrder = null;
+// FRV Catacaos - Menu JavaScript
+// Real-time order system with Firebase synchronization
 
-// Generate unique mesa number for each session (1-50)
-function generateUniqueMesa() {
-  let sessionMesa = sessionStorage.getItem('frv_mesa');
-  if (sessionMesa) {
-    return sessionMesa;
-  }
-  const newMesa = Math.floor(Math.random() * 50) + 1;
-  sessionStorage.setItem('frv_mesa', newMesa);
-  return newMesa.toString();
-}
+let currentCategory = 'all';
+let cart = [];
+let selectedTable = null;
+let selectedPayment = 'yape';
+let orderNote = '';
+let currentMesa = null;
 
-// Asegurar que el elemento mesaTag existe antes de modificar
-const mesaTagElInit = document.getElementById('mesaTag');
-if (mesaTagElInit) mesaTagElInit.textContent = `⚡ MESA ${MESA}`;
-
-// ── MESA SELECTOR ──────────────────────────────
-function initMesaSelector() {
-  const mesaGrid = document.getElementById('mesaGrid');
-  if (!mesaGrid) {
-    console.warn('mesaGrid no encontrado, selector de mesa no inicializado');
-    return;
-  }
-  mesaGrid.innerHTML = '';
-  
-  for (let i = 1; i <= 50; i++) {
-    const btn = document.createElement('button');
-    btn.className = 'mesa-btn';
-    btn.textContent = i;
-    btn.onclick = () => selectMesa(i, btn);
-    if (i == MESA) btn.classList.add('selected');
-    mesaGrid.appendChild(btn);
-  }
-}
-
-function selectMesa(num, btn) {
-  document.querySelectorAll('.mesa-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  MESA = num;
-}
-
-function confirmarMesa() {
-  sessionStorage.setItem('frv_mesa', MESA);
-  sessionStorage.setItem('user_selected_mesa', 'true');
-  document.getElementById('mesaTag').textContent = `⚡ MESA ${MESA}`;
-
-  if (sessionStorage.getItem('user_selected_mesa')) {
-    document.getElementById('mesaTag').style.background = 'linear-gradient(135deg, #00ff88 0%, #00cc66 100%)';
-    document.getElementById('mesaTag').style.color = '#0a0a0a';
-  }
-  document.getElementById('mesaSelector').classList.remove('show');
-}
-
-// Show mesa selector on click (protegido)
-const mesaTagElClick = document.getElementById('mesaTag');
-if (mesaTagElClick) {
-  mesaTagElClick.addEventListener('click', () => {
-    document.getElementById('mesaSelector').classList.add('show');
-    initMesaSelector();
-  });
-}
-
-// ── MENU DATA ────────────────────────────────────
-const products = [
-  { id:10, name:'Cristal', desc:'Botella 620ml bien fría', price:12, emoji:'🍺', cat:'cervezas', badge:'PROMO', img:'public/img/productos/Cristal.jpg', featured: true },
-  { id:11, name:'Pilsen', desc:'Botella 620ml', price:12, emoji:'🍻', cat:'cervezas', img:'public/img/productos/Pilsen cerveza.png', featured: true },
-  { id:12, name:'Cusqueña', desc:'Botella 620ml, premium', price:13, emoji:'🍺', cat:'cervezas', img:'public/img/productos/Cusqueña.png' },
-  { id:1, name:'Pisco Sour', desc:'Pisco quebranta, limón, clara, jarabe', price:18, emoji:'🍋', cat:'tragos', badge:'TOP', img:'public/img/productos/Pisco-Sour.png' },
-  { id:2, name:'Chilcano', desc:'Pisco, ginger ale, limón', price:15, emoji:'🍸', cat:'tragos', img:'public/img/productos/Pisco-Sour.png' },
-  { id:3, name:'Mojito', desc:'Ron, menta, lima, soda', price:16, emoji:'🌿', cat:'tragos', img:'public/img/productos/Pisco-Sour.png' },
-  { id:4, name:'Margarita', desc:'Tequila, triple sec, limón', price:17, emoji:'🍊', cat:'tragos', img:'public/img/productos/Pisco-Sour.png' },
-  { id:5, name:'Piña Colada', desc:'Ron, crema coco, piña', price:16, emoji:'🍍', cat:'tragos', img:'public/img/productos/Pisco-Sour.png' },
-  { id:6, name:'Sex on the Beach', desc:'Vodka, durazno, naranja', price:16, emoji:'🏖️', cat:'tragos', badge:'NEW', img:'public/img/productos/Pisco-Sour.png' },
-  { id:16, name:"Mike's", desc:"Mike's Hard Lemonade 355ml", price:12, emoji:'🍋', cat:'tragos', img:'public/img/productos/Mikes.png' },
-  { id:7, name:'Tequila Shot', desc:'José Cuervo + sal + limón', price:10, emoji:'🥃', cat:'shots', img:'public/img/productos/Pisco-Sour.png' },
-  { id:8, name:'Jäger Shot', desc:'Jägermeister bien frío', price:10, emoji:'🌿', cat:'shots', img:'public/img/productos/Pisco-Sour.png' },
-  { id:9, name:'Ron con Cola', desc:'Ron Cartavio + Coca Cola', price:12, emoji:'🫙', cat:'shots', img:'public/img/productos/Pisco-Sour.png' },
-  { id:13, name:'Agua Mineral', desc:'500ml sin gas / con gas', price:3, emoji:'💧', cat:'sin-alcohol', img:'public/img/productos/agua.jpg' },
-  { id:14, name:'Coca Cola', desc:'Botella 500ml', price:4, emoji:'⭐', cat:'sin-alcohol', img:'public/img/productos/coca-cola.jpg' },
-  { id:15, name:'Frugos', desc:'Durazno / Mango / Naranja', price:4, emoji:'🧃', cat:'sin-alcohol', img:'public/img/productos/Frugos.jpg' },
+// Products matching the bar panel system
+const PRODUCTS = [
+  { id: 1, name: 'Corona Botella', cat: 'cervezas', price: 8, emoji: '🍺', img: 'Cristal.jpg', desc: 'Cerveza rubia premium, 330ml' },
+  { id: 2, name: 'Pilsener 330ml', cat: 'cervezas', price: 5, emoji: '🍻', img: 'Cristal.jpg', desc: 'Cerveza pilsener clásica' },
+  { id: 3, name: 'Heineken', cat: 'cervezas', price: 10, emoji: '🍺', img: 'Cristal.jpg', desc: 'Cerveza premium holandesa' },
+  { id: 4, name: 'Cusqueña Dorada', cat: 'cervezas', price: 7, emoji: '🍻', img: 'Cristal.jpg', desc: 'Cerveza dorada peruana' },
+  { id: 5, name: 'Shot Tequila', cat: 'tragos', price: 8, emoji: '🥃', img: 'Cristal.jpg', desc: 'Tequila 100% agave' },
+  { id: 6, name: 'Shot Vodka', cat: 'tragos', price: 7, emoji: '🥃', img: 'Cristal.jpg', desc: 'Vodka premium' },
+  { id: 7, name: 'Shot Ron', cat: 'tragos', price: 7, emoji: '🥃', img: 'Cristal.jpg', desc: 'Ron añejo' },
+  { id: 8, name: 'Shot Jäger', cat: 'tragos', price: 9, emoji: '🥃', img: 'Cristal.jpg', desc: 'Licor Jägermeister' },
+  { id: 9, name: 'Mojito', cat: 'cócteles', price: 18, emoji: '🍹', img: 'Cristal.jpg', desc: 'Rum, menta, lima, azúcar' },
+  { id: 10, name: 'Margarita', cat: 'cócteles', price: 18, emoji: '🍸', img: 'Cristal.jpg', desc: 'Tequila, triple sec, limón' },
+  { id: 11, name: 'Piña Colada', cat: 'cócteles', price: 20, emoji: '🥥', img: 'Cristal.jpg', desc: 'Rum, coco, piña' },
+  { id: 12, name: 'Negroni', cat: 'cócteles', price: 22, emoji: '🍷', img: 'Cristal.jpg', desc: 'Ginebra, Campari, Vermouth' },
+  { id: 13, name: 'Pisco Sour', cat: 'cócteles', price: 20, emoji: '🍋', img: 'Cristal.jpg', desc: 'Pisco, limón, azúcar, hielo' },
+  { id: 14, name: 'Aperol Spritz', cat: 'cócteles', price: 22, emoji: '🍊', img: 'Cristal.jpg', desc: 'Aperol, prosecco, soda' },
+  { id: 15, name: 'Johnnie Red 750ml', cat: 'botellas', price: 120, emoji: '🥃', img: 'Cristal.jpg', desc: 'Whisky escocés' },
+  { id: 16, name: 'Absolut Vodka', cat: 'botellas', price: 100, emoji: '🍾', img: 'Cristal.jpg', desc: 'Vodka premium 750ml' },
+  { id: 17, name: 'Jack Daniel\'s', cat: 'botellas', price: 130, emoji: '🥃', img: 'Cristal.jpg', desc: 'Whisky americano' },
+  { id: 18, name: 'Moët Chandon', cat: 'botellas', price: 220, emoji: '🍾', img: 'Cristal.jpg', desc: 'Champagne francés' },
+  { id: 19, name: 'Patrón Silver', cat: 'botellas', price: 180, emoji: '🥃', img: 'Cristal.jpg', desc: 'Tequila premium' },
+  { id: 20, name: 'Red Bull', cat: 'mixers', price: 8, emoji: '🔴', img: 'Cristal.jpg', desc: 'Bebida energética' },
+  { id: 21, name: 'Agua Mineral', cat: 'mixers', price: 4, emoji: '💧', img: 'Cristal.jpg', desc: 'Agua mineral natural' },
+  { id: 22, name: 'Gaseosa 500ml', cat: 'mixers', price: 5, emoji: '🥤', img: 'Cristal.jpg', desc: 'Gaseosa personal' },
+  { id: 23, name: 'Jugo de Naranja', cat: 'mixers', price: 7, emoji: '🍊', img: 'Cristal.jpg', desc: 'Jugo natural de naranja' },
+  { id: 24, name: 'Piqueo Mixto', cat: 'piqueos', price: 25, emoji: '🥗', img: 'Cristal.jpg', desc: 'Variedad de piqueos' },
+  { id: 25, name: 'Ceviche Porción', cat: 'piqueos', price: 22, emoji: '🐟', img: 'Cristal.jpg', desc: 'Ceviche tradicional' },
+  { id: 26, name: 'Chilcano', cat: 'cócteles', price: 15, emoji: '🍸', img: 'Cristal.jpg', desc: 'Pisco, ginger ale, limón' },
+  { id: 27, name: 'Cusqueña Trigo', cat: 'cervezas', price: 8, emoji: '🍺', img: 'Cristal.jpg', desc: 'Cerveza de trigo' },
+  { id: 28, name: 'Vino Tinto', cat: 'botellas', price: 45, emoji: '🍷', img: 'Cristal.jpg', desc: 'Vino tinto casa' },
+  { id: 29, name: 'Caña', cat: 'tragos', price: 12, emoji: '🥃', img: 'Cristal.jpg', desc: 'Caña de puro' },
+  { id: 30, name: 'Fernet con Coca', cat: 'cócteles', price: 18, emoji: '🥃', img: 'Cristal.jpg', desc: 'Fernet 1882 con Coca Cola' }
 ];
 
-let cart = {};
-let currentCat = 'all';
+const HOSTESSES = [
+  { id: 1, name: 'Valeria R.', phone: '51924996961', zone: 'VIP', status: 'active' },
+  { id: 2, name: 'Daniela C.', phone: '51924996961', zone: 'Pista', status: 'active' },
+  { id: 3, name: 'Melissa T.', phone: '51924996961', zone: 'Barra', status: 'active' },
+  { id: 4, name: 'Paola M.', phone: '51924996961', zone: 'Terraza', status: 'active' },
+  { id: 5, name: 'Sofía L.', phone: '51924996961', zone: 'VIP', status: 'active' }
+];
 
-// ── RENDER MENU ──────────────────────────────────
-const catNames = { cervezas:'CERVEZAS', tragos:'TRAGOS', shots:'SHOTS', 'sin-alcohol':'SIN ALCOHOL' };
+const MESAS = Array.from({length: 52}, (_, i) => ({
+  id: i + 1,
+  num: `M${String(i + 1).padStart(2, '0')}`,
+  zone: i < 10 ? 'VIP' : i < 25 ? 'Pista' : i < 35 ? 'Barra' : 'Terraza',
+  status: 'libre'
+}));
 
-function renderMenu(cat = 'all') {
-  try {
-    const filtered = cat === 'all' ? products : products.filter(p => p.cat === cat);
-    const cats = [...new Set(filtered.map(p => p.cat))];
-    const container = document.getElementById('menuContainer');
-    container.innerHTML = '';
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', initMenu);
 
-    cats.forEach(c => {
-      const items = filtered.filter(p => p.cat === c);
+function initMenu() {
+  console.log('🍹 FRV Menu System - Initializing...');
+  hidePreloader();
+  renderCategories();
+  renderMesaSelector();
+  renderProducts();
+  setupEventListeners();
+  loadCartFromStorage();
+  
+  // Initialize Firebase if available
+  if (typeof window.FirebaseClient !== 'undefined') {
+    console.log('🔥 Firebase available for real-time sync');
+  }
+}
 
-      const label = document.createElement('div');
-      label.className = 'section-label';
-      label.innerHTML = `<div class="section-label-text">${catNames[c] || c.toUpperCase()}</div><div class="section-label-line"></div>`;
-      container.appendChild(label);
-
-      const grid = document.createElement('div');
-      grid.className = 'menu-grid';
-
-      items.forEach(p => {
-        const qtyInCart = cart[p.id] ? cart[p.id].qty : 0;
-        const featuredClass = p.featured ? 'featured' : '';
-        const emoji = p.emoji || '🍹';
-        grid.innerHTML += `
-          <div class="card ${featuredClass}" onclick="addItem(${p.id})">
-            <div class="card-img ${p.cat}">
-              <img src="${p.img}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.display='none';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.innerHTML='<span style=\"font-size:48px\">${emoji}</span>';">
-              <div class="card-img-fallback" style="display:none;align-items:center;justify-content:center;font-size:48px;">${emoji}</div>
-
-              ${p.badge ? `<div class="card-badge ${p.badge==='NEW'?'new':''}">${p.badge}</div>` : ''}
-              <div class="card-qty-indicator ${qtyInCart>0?'show':''}" id="qi-${p.id}">${qtyInCart}</div>
-            </div>
-            <div class="card-body">
-              <div class="card-name">${p.name}</div>
-              <div class="card-desc">${p.desc}</div>
-              <div class="card-footer">
-                <div class="card-price">S/ ${p.price.toFixed(2)}</div>
-                <button class="add-btn" id="add-${p.id}">+</button>
-              </div>
-            </div>
-          </div>`;
-      });
-      container.appendChild(grid);
-    });
-  } catch (error) {
-    console.error('❌ Error en renderMenu:', error);
-    const container = document.getElementById('menuContainer');
-    if (container) {
-      container.innerHTML = `<div style="color:red;padding:20px;text-align:center;">Error al renderizar menú: ${error.message}</div>`;
+function hidePreloader() {
+  setTimeout(() => {
+    const preloader = document.getElementById('preloader');
+    if (preloader) {
+      preloader.classList.add('hidden');
+      setTimeout(() => { preloader.style.display = 'none'; }, 500);
     }
-  }
+  }, 800);
 }
 
-function filterCat(cat, el) {
-  currentCat = cat;
+function renderCategories() {
+  const catsBar = document.getElementById('catsBar');
+  if (!catsBar) return;
+  
+  const categories = ['all', 'cervezas', 'tragos', 'cócteles', 'botellas', 'mixers', 'piqueos'];
+  const labels = {
+    'all': 'TODO', 'cervezas': '🍺 CERVEZAS', 'tragos': '🥃 TRAGOS',
+    'cócteles': '🍹 CÓCTELES', 'botellas': '🍾 BOTELLAS',
+    'mixers': '🥤 MIXERS', 'piqueos': '🥗 PIQUEOS'
+  };
+  
+  catsBar.innerHTML = categories.map(cat =>
+    `<div class="cat-pill ${cat === currentCategory ? 'active' : ''}"
+          onclick="filterCategory('${cat}', this)">${labels[cat]}</div>`
+  ).join('');
+}
+
+function filterCategory(cat, element) {
+  currentCategory = cat;
   document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  renderMenu(cat);
+  if (element) element.classList.add('active');
+  renderProducts();
 }
 
-// ── ANFITRIONA SELECTION ─────────────────────────
-function selectAnfitriona(card, phone) {
-  document.querySelectorAll('.anfitriona-card').forEach(c => c.classList.remove('selected'));
-  card.classList.add('selected');
-  anfitrionaSeleccionada = card.querySelector('.anfitriona-name').textContent;
-  anfitrionaPhone = phone;
-}
-
-// ── ANIMADOR SALUDOS ─────────────────────────────
-function enviarSaludoAnimador() {
-  const animadorPhone = '51950729470';
-  const mesa = MESA;
+function renderProducts() {
+  const container = document.getElementById('menuContainer');
+  if (!container) return;
   
-  let message = `🎤 *¡SALUDO PARA YARUC!*\n\n`;
-  message += `🪑 *Mesa:* ${mesa}\n`;
-  message += `\n🎉 ¡Hola Yaruc! Queremos enviarte un saludo desde nuestra mesa.\n`;
-  message += `\n¡Gracias por animar la noche! 🎶💃\n`;
-  message += `\n⏰ *Hora:* ${new Date().toLocaleTimeString('es-PE')}`;
-  
-  const encodedMessage = encodeURIComponent(message);
-  const whatsappUrl = `https://wa.me/${animadorPhone}?text=${encodedMessage}`;
-  window.open(whatsappUrl, '_blank');
-}
-
-// ── CART LOGIC ───────────────────────────────────
-function addItem(id) {
-  if (!sessionStorage.getItem('user_selected_mesa')) {
-    document.getElementById('mesaSelector').classList.add('show');
-    initMesaSelector();
-    alert('Por favor, selecciona la mesa en la que te encuentras ubicada antes de hacer tu pedido.');
-    return;
+  let filtered = PRODUCTS;
+  if (currentCategory !== 'all') {
+    filtered = PRODUCTS.filter(p => p.cat === currentCategory);
   }
   
-  const p = products.find(x => x.id === id);
-  if (!cart[id]) cart[id] = { ...p, qty: 0 };
-  cart[id].qty++;
-  updateCart();
-
-  const btn = document.getElementById('add-' + id);
-  if (btn) {
-    btn.classList.add('added');
-    btn.textContent = '✓';
-    setTimeout(() => { btn.classList.remove('added'); btn.textContent = '+'; }, 500);
+  // Search filter
+  const searchInput = document.getElementById('pos-search');
+  if (searchInput && searchInput.value) {
+    const query = searchInput.value.toLowerCase();
+    filtered = filtered.filter(p => p.name.toLowerCase().includes(query));
   }
-
-  const qi = document.getElementById('qi-' + id);
-  if (qi) {
-    qi.textContent = cart[id].qty;
-    qi.classList.add('show');
-  }
+  
+  container.innerHTML = filtered.map(product => `
+    <div class="prod-card" onclick="quickAddToCart(${product.id})">
+      ${product.img ? `<img src="public/img/productos/${product.img}" alt="${product.name}" class="prod-img" onerror="this.style.display='none'">` : ''}
+      <div class="prod-emoji">${product.emoji}</div>
+      <div class="prod-name">${product.name}</div>
+      <div class="prod-desc">${product.desc}</div>
+      <div class="prod-price">S/ ${product.price.toFixed(2)}</div>
+    </div>
+  `).join('');
 }
 
-function updateQty(id, delta) {
-  if (!cart[id]) return;
-  cart[id].qty += delta;
-  if (cart[id].qty <= 0) delete cart[id];
-  updateCart();
-
-  const qi = document.getElementById('qi-' + id);
-  if (qi) {
-    if (cart[id]) { qi.textContent = cart[id].qty; qi.classList.add('show'); }
-    else { qi.textContent = 0; qi.classList.remove('show'); }
+function quickAddToCart(productId) {
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+  
+  const existing = cart.find(item => item.id === productId);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ ...product, qty: 1 });
   }
+  
+  saveCartToStorage();
+  updateCartUI();
+  showToast(`${product.emoji} ${product.name} añadido`, 'success');
 }
 
-function removeItem(id) {
-  delete cart[id];
-  updateCart();
-  const qi = document.getElementById('qi-' + id);
-  if (qi) {
-    qi.textContent = 0;
-    qi.classList.remove('show');
-  }
+function renderMesaSelector() {
+  const grid = document.getElementById('mesaGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = MESAS.map(mesa => {
+    const isBooked = mesa.status !== 'libre';
+    return `
+      <button class="mesa-btn ${isBooked ? 'booked' : ''} ${selectedMesa === mesa.id ? 'selected' : ''}"
+              onclick="selectMesa(${mesa.id})" ${isBooked ? 'disabled' : ''}>
+        ${mesa.num}
+      </button>
+    `;
+  }).join('');
 }
 
-function clearCart() {
-  cart = {};
-  updateCart();
-  renderMenu(currentCat);
+function selectMesa(mesaId) {
+  selectedMesa = mesaId;
+  const mesa = MESAS.find(m => m.id === mesaId);
+  document.getElementById('mesaTag').textContent = `⚡ ${mesa.num}`;
+  closeMesaSelector();
+  openCartSheet();
+  showToast(`Mesa ${mesa.num} seleccionada`, 'info');
 }
 
-function updateCart() {
-  const total = Object.values(cart).reduce((s, i) => s + i.price * i.qty, 0);
-  const count = Object.values(cart).reduce((s, i) => s + i.qty, 0);
+function openMesaSelector() {
+  document.getElementById('mesaSelector').style.display = 'flex';
+}
 
+function closeMesaSelector() {
+  document.getElementById('mesaSelector').style.display = 'none';
+}
+
+function updateCartUI() {
+  const count = cart.reduce((sum, item) => sum + item.qty, 0);
   document.getElementById('cartCount').textContent = count;
-  document.getElementById('cartTotal').textContent = 'S/ ' + total.toFixed(2);
-
-  const btn = document.getElementById('cartBtn');
-  count > 0 ? btn.classList.add('visible') : btn.classList.remove('visible');
-
+  
   renderCartItems();
+  updateCartTotal();
+  
+  // Mostrar selector de mesa si no hay mesa seleccionada
+  if (!selectedMesa && cart.length > 0) {
+    openMesaSelector();
+  }
 }
 
 function renderCartItems() {
   const container = document.getElementById('cartItems');
-  const items = Object.values(cart);
-  if (!items.length) {
-    container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);font-size:14px;font-family:'Exo 2',sans-serif;">Tu carrito está vacío</div>`;
+  if (!container) return;
+  
+  if (cart.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:40px 20px; color:var(--text3)">
+        <div style="font-size:36px; margin-bottom:12px">🍹</div>
+        <div>Agrega productos<br>para comenzar</div>
+      </div>
+    `;
     return;
   }
-  container.innerHTML = items.map(i => `
-    <div class="cart-item">
-      <div class="ci-info">
-        <div class="ci-name">${i.name}</div>
-        <div class="ci-price">S/ ${(i.price * i.qty).toFixed(2)}</div>
-      </div>
-      <div class="ci-qty">
-        <button class="qty-btn" onclick="updateQty(${i.id},-1)">−</button>
-        <span class="qty-num">${i.qty}</span>
-        <button class="qty-btn" onclick="updateQty(${i.id},1)">+</button>
-        <button class="qty-btn remove-btn" onclick="removeItem(${i.id})">🗑️</button>
-      </div>
-    </div>`).join('');
   
-  container.innerHTML += `
-    <div style="text-align:center;padding:12px;">
-      <button class="clear-cart-btn" onclick="clearCart()">🗑️ Vaciar Carrito</button>
+  container.innerHTML = cart.map(item => `
+    <div class="cart-row">
+      <span class="cart-emoji">${item.emoji}</span>
+      <div class="cart-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-price">S/ ${item.price.toFixed(2)} × ${item.qty} = S/ ${(item.price * item.qty).toFixed(2)}</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qbtn" onclick="changeQty(${item.id}, -1)">−</button>
+        <span class="qnum">${item.qty}</span>
+        <button class="qbtn" onclick="changeQty(${item.id}, 1)">+</button>
+      </div>
+      <button class="cart-del" onclick="removeItem(${item.id})">✕</button>
     </div>
-  `;
+  `).join('');
 }
 
-function toggleCart() {
-  document.getElementById('cartSheet').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('open');
-  renderCartItems();
+function changeQty(productId, delta) {
+  const item = cart.find(i => i.id === productId);
+  if (!item) return;
+  
+  item.qty += delta;
+  if (item.qty <= 0) {
+    cart = cart.filter(i => i.id !== productId);
+  }
+  
+  saveCartToStorage();
+  updateCartUI();
 }
 
-function selectPM(el) {
+function removeItem(productId) {
+  cart = cart.filter(i => i.id !== productId);
+  saveCartToStorage();
+  updateCartUI();
+}
+
+function updateCartTotal() {
+  const subTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const tax = subTotal * 0.10;
+  const total = subTotal + tax;
+  
+  document.getElementById('cartTotal').textContent = `S/ ${total.toFixed(2)}`;
+  document.getElementById('p-sub').textContent = `S/ ${subTotal.toFixed(2)}`;
+  document.getElementById('p-tax').textContent = `S/ ${tax.toFixed(2)}`;
+  document.getElementById('p-total').textContent = `S/ ${total.toFixed(2)}`;
+  
+  document.getElementById('btn-cobrar').disabled = cart.length === 0 || !selectedMesa;
+}
+
+function selectPayment(method, element) {
+  selectedPayment = method;
   document.querySelectorAll('.pm').forEach(p => p.classList.remove('selected'));
-  el.classList.add('selected');
+  element.classList.add('selected');
 }
 
-// ── WHATSAPP ORDER ───────────────────────────────
-function generateWhatsAppMessage() {
-  const items = Object.values(cart);
-  const note = document.getElementById('orderNote').value;
-  const paymentMethod = document.querySelector('.pm.selected')?.textContent?.trim() || 'No especificado';
-  
-  let message = `🍹 *NUEVO PEDIDO - FRV Catacaos*\n\n`;
-  message += `🪑 *Mesa:* ${MESA}\n`;
-  
-  if (anfitrionaSeleccionada) {
-    message += `👩‍💼 *Anfitriona:* ${anfitrionaSeleccionada}\n`;
-  }
-  
-  message += `\n📋 *Detalle del Pedido:*\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━\n`;
-  
-  items.forEach(item => {
-    message += `• ${item.emoji} ${item.name} x${item.qty} - S/ ${(item.price * item.qty).toFixed(2)}\n`;
-  });
-  
-  message += `━━━━━━━━━━━━━━━━━━━━\n`;
-  
-  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
-  message += `💰 *Total:* S/ ${total.toFixed(2)}\n`;
-  message += `💳 *Pago:* ${paymentMethod}\n`;
-  
-  if (note) {
-    message += `\n📝 *Nota:* ${note}\n`;
-  }
-  
-  message += `\n⏰ *Hora:* ${new Date().toLocaleTimeString('es-PE')}\n`;
-  message += `\n✅ Pedido confirmado desde el menú digital`;
-  
-  return encodeURIComponent(message);
+function openCartSheet() {
+  document.getElementById('cartSheet').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+  updateCartUI();
 }
 
-function sendWhatsApp(phone) {
-  const message = generateWhatsAppMessage();
-  const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
-  window.open(whatsappUrl, '_blank');
+function closeCartSheet() {
+  document.getElementById('cartSheet').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
 }
 
-// ── SEND TO ADMIN PANEL (Firebase) ──────────────────────────
-async function sendToAdminPanel() {
-  const items = Object.values(cart);
-  const note = document.getElementById('orderNote').value;
-  const paymentMethod = document.querySelector('.pm.selected')?.textContent?.trim() || 'No especificado';
-  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
-  
-  const orderData = {
-    mesa: MESA,
-    items: items.map(i => ({
-      name: i.name,
-      emoji: i.emoji,
-      qty: i.qty,
-      price: i.price,
-      total: i.price * i.qty,
-      cat: i.cat
-    })),
-    note: note,
-    paymentMethod: paymentMethod,
-    total: total,
-    anfitriona: anfitrionaSeleccionada,
-    anfitrionaPhone: anfitrionaPhone,
-    createdAt: new Date().toISOString(),
-    status: 'pending',
-    source: 'menu-digital'
-  };
-  
-  let orderId = null;
-  let firebaseWorking = false;
-  
-  // Función mejorada para escribir directamente en Firebase
-  const writeToFirebaseDirect = async () => {
-    // Intentar con SDK nativo directamente (más confiable)
-    try {
-      if (typeof firebase !== 'undefined' && firebase.database) {
-        console.log('📡 Escribiendo directamente en Firebase...');
-        const db = firebase.database();
-        
-        // Verificar conexión primero
-        const connected = await db.ref('.info/connected').once('value');
-        if (connected.val() !== true) {
-          console.warn('⚠️ Firebase no conectado');
-          return { success: false, error: 'no connected' };
-        }
-        
-        // Escribir pedido
-        const newRef = db.ref('orders').push();
-        await newRef.set({
-          ...orderData,
-          id: newRef.key,
-          createdAt: new Date().toISOString(),
-          status: 'pending'
-        });
-        
-        console.log('✅ Pedido guardado en Firebase:', newRef.key);
-        return { success: true, id: newRef.key };
-      }
-    } catch (error) {
-      console.error('❌ Error Firebase SDK:', error.message);
-    }
-    
-    // Intentar con FirebaseClient si SDK nativo falló
-    try {
-      if (typeof FirebaseClient !== 'undefined') {
-        console.log('📡 Intentando con FirebaseClient...');
-        const db = await FirebaseClient.init();
-        if (db) {
-          const newOrder = await FirebaseClient.createOrder(orderData);
-          if (newOrder) {
-            console.log('✅ Pedido guardado via FirebaseClient:', newOrder.id || newOrder.key);
-            return { success: true, id: newOrder.id || newOrder.key };
-          }
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error FirebaseClient:', error.message);
-    }
-    
-    return { success: false };
-  };
-  
-  // Intentar escribir a Firebase (máximo 3 intentos)
-  const maxRetries = 3;
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    console.log(`📡 Envío a Firebase - intento ${attempt}/${maxRetries}`);
-    const result = await writeToFirebaseDirect();
-    if (result.success) {
-      orderId = result.id;
-      firebaseWorking = true;
-      console.log('✅ Pedido enviado exitosamente a Firebase');
-      break;
-    }
-    if (attempt < maxRetries) {
-      console.log('⏳ Reintentando en 500ms...');
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-  }
-  
-  // Fallback: localStorage solo si Firebase absolutamente no funciona
-  if (!firebaseWorking) {
-    console.warn('⚠️ Firebase no disponible - guardando localmente');
-    const existingOrders = JSON.parse(localStorage.getItem('frv_orders') || '[]');
-    
-    orderData.id = 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    orderId = orderData.id;
-    
-    existingOrders.unshift(orderData);
-    localStorage.setItem('frv_orders', JSON.stringify(existingOrders));
-    
-    if (menuBroadcastChannel) {
-      menuBroadcastChannel.postMessage({ type: 'new_order', order: orderData });
-    }
-    
-    console.log('⚠️ Pedido en localStorage (el panel no lo verá si está en otro navegador):', orderId);
-  }
-  
-  if (orderId) {
-    localStorage.setItem('frv_last_order_id', orderId);
-  }
-  
-  updateSalesReport(items);
-  
-  return orderData;
-}
-
-// BroadcastChannel para comunicación entre pestañas
-let menuBroadcastChannel = null;
-
-function initMenuBroadcast() {
-  try {
-    if (typeof BroadcastChannel !== 'undefined') {
-      menuBroadcastChannel = new BroadcastChannel('frv_orders');
-      console.log('✅ Menu BroadcastChannel listo');
-    }
-  } catch (e) {
-    console.warn('BroadcastChannel no disponible');
-  }
-}
-
-function sendToLocalStorage(orderData) {
-  const existingOrders = JSON.parse(localStorage.getItem('frv_orders') || '[]');
-  
-  if (!orderData.id) {
-    orderData.id = 'order_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  }
-  orderData.createdAt = orderData.createdAt || new Date().toISOString();
-  orderData.status = orderData.status || 'pending';
-  
-  existingOrders.unshift(orderData);
-  localStorage.setItem('frv_orders', JSON.stringify(existingOrders));
-  
-  if (menuBroadcastChannel) {
-    menuBroadcastChannel.postMessage({ type: 'new_order', order: orderData });
-  }
-  
-  localStorage.setItem('frv_last_order', JSON.stringify(orderData));
-  localStorage.setItem('frv_last_order_time', Date.now().toString());
-  
-  console.log('✅ Pedido guardado en localStorage:', orderData.id);
-}
-
-async function decrementInventoryFromOrder(items) {
-  try {
-    if (typeof FirebaseClient === 'undefined') return;
-    
-    const db = await FirebaseClient.init();
-    if (!db) return;
-    
-    const snapshot = await db.ref('inventory').once('value');
-    const data = snapshot.val() || {};
-    const inventory = data;
-    
-    let updates = {};
-    let hasChanges = false;
-    
-    items.forEach(item => {
-      Object.keys(inventory).forEach(key => {
-        if (inventory[key].name === item.name && inventory[key].stock > 0) {
-          const currentStock = inventory[key].stock || 0;
-          const newStock = Math.max(0, currentStock - item.qty);
-          updates[`inventory/${key}/stock`] = newStock;
-          hasChanges = true;
-          
-          if (newStock <= (inventory[key].minStock || 10)) {
-            console.log(`⚠️ Stock bajo para ${item.name}: ${newStock}`);
-          }
-        }
-      });
-    });
-    
-    if (hasChanges) {
-      await db.ref().update(updates);
-      console.log('✅ Inventario actualizado');
-    }
-  } catch (error) {
-    console.error('❌ Error actualizando inventario:', error);
-  }
-}
-
-// ── SALES REPORT ─────────────────────────────────
-function updateSalesReport(items) {
-  const report = JSON.parse(localStorage.getItem('frv_sales_report') || '{}');
-  
-  items.forEach(item => {
-    if (!report[item.cat]) {
-      report[item.cat] = {};
-    }
-    if (!report[item.cat][item.name]) {
-      report[item.cat][item.name] = { qty: 0, revenue: 0 };
-    }
-    report[item.cat][item.name].qty += item.qty;
-    report[item.cat][item.name].revenue += item.price * item.qty;
-  });
-  
-  localStorage.setItem('frv_sales_report', JSON.stringify(report));
-}
-
-// ── PLACE ORDER ──────────────────────────────────
-async function placeOrder() {
-  try {
-    const count = Object.values(cart).reduce((s, i) => s + i.qty, 0);
-    if (!count) {
-      alert('Por favor agrega productos a tu pedido');
-      return;
-    }
-
-    if (!sessionStorage.getItem('user_selected_mesa')) {
-      alert('⚠️ Por favor selecciona tu número de mesa antes de hacer el pedido');
-      document.getElementById('mesaSelector').classList.add('show');
-      initMesaSelector();
-      return;
-    }
-
-    if (!anfitrionaPhone) {
-      alert('Por favor selecciona una anfitriona para atenderte');
-      return;
-    }
-
-    const orderNum = Math.floor(Math.random() * 900) + 100;
-    document.getElementById('orderNum').textContent = orderNum;
-
-    // Mostrar que se está enviando
-    console.log('📤 Enviando pedido...');
-    
-    // Enviar pedido al panel de bar (Firebase + fallback localStorage)
-    const orderData = await sendToAdminPanel();
-    console.log('✅ Pedido procesado:', orderData);
-
-    // Enviar por WhatsApp a la anfitriona
-    sendWhatsApp(anfitrionaPhone);
-
-    // Mostrar modal de éxito
-    document.getElementById('cartSheet').classList.remove('open');
-    document.getElementById('overlay').classList.remove('open');
-    document.getElementById('successModal').classList.add('show');
-
-    // Limpiar después de 6 segundos
-    setTimeout(() => {
-      cart = {};
-      updateCart();
-      renderMenu(currentCat);
-      document.getElementById('successModal').classList.remove('show');
-      document.getElementById('orderNote').value = '';
-    }, 6000);
-    
-  } catch (error) {
-    console.error('❌ Error en placeOrder:', error);
-    alert('Error al enviar el pedido: ' + error.message);
-  }
-}
-
-// ── BOTONES DEL CARRITO ────────────────────────────
 function goBackToMenu() {
-  document.getElementById('cartSheet').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
+  closeCartSheet();
 }
 
 function addMoreProducts() {
-  document.getElementById('cartSheet').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
-  document.getElementById('menuContainer').scrollIntoView({ behavior: 'smooth' });
+  closeCartSheet();
 }
 
-// ── INITIALIZATION ──────────────────────────────────
-function initMenu() {
-  try {
-    console.log('🍹 FRV Menu - Inicializando...');
-    
-    const menuContainer = document.getElementById('menuContainer');
-    const mesaTag = document.getElementById('mesaTag');
-    
-    if (!menuContainer) {
-      console.error('❌ menuContainer no encontrado');
-      return;
-    }
-    
-    if (!mesaTag) {
-      console.error('❌ mesaTag no encontrado');
+function toggleCart() {
+  const sheet = document.getElementById('cartSheet');
+  if (sheet.classList.contains('show')) {
+    closeCartSheet();
+  } else {
+    if (!selectedMesa) {
+      openMesaSelector();
     } else {
-      mesaTag.textContent = `⚡ MESA ${MESA}`;
-    }
-    
-    renderMenu();
-    initMesaSelector();
-    initMenuBroadcast();
-    
-    const preloader = document.getElementById('preloader');
-    if (preloader) {
-      preloader.classList.add('hidden');
-      setTimeout(() => { preloader.style.display = 'none'; }, 500);
-    }
-    
-    console.log('✅ Menú inicializado correctamente');
-  } catch (error) {
-    console.error('❌ Error crítico en initMenu:', error);
-    const preloader = document.getElementById('preloader');
-    if (preloader) {
-      preloader.classList.add('hidden');
-      setTimeout(() => { preloader.style.display = 'none'; }, 500);
-    }
-    const container = document.getElementById('menuContainer');
-    if (container) {
-      container.innerHTML = `
-        <div style="color:red;padding:20px;text-align:center;background:rgba(255,0,0,0.1);border-radius:8px;margin:20px;">
-          <h3>❌ Error al cargar el menú</h3>
-          <p>${error.message}</p>
-          <button onclick="location.reload()" style="margin-top:10px;padding:8px 16px;background:var(--yellow);border:none;border-radius:4px;cursor:pointer;">🔄 Recargar página</button>
-        </div>
-      `;
+      openCartSheet();
     }
   }
 }
 
-// Ejecutar cuando el DOM esté listo
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initMenu);
-} else {
-  initMenu();
+// Real-time order placement with Firebase
+async function placeOrder() {
+  if (cart.length === 0 || !selectedMesa) {
+    showToast('Selecciona una mesa y agrega productos', 'error');
+    return;
+  }
+  
+  const mesa = MESAS.find(m => m.id === selectedMesa);
+  const subTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const total = subTotal * 1.10; // +10% IGV
+  
+  const orderData = {
+    tableId: selectedMesa,
+    tableNum: mesa.num,
+    items: cart.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      qty: item.qty,
+      emoji: item.emoji
+    })),
+    method: selectedPayment,
+    total: total,
+    subTotal: subTotal,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    note: orderNote,
+    hostesses: HOSTESSES.map(h => ({ id: h.id, name: h.name, phone: h.phone }))
+  };
+  
+  try {
+    // Save to Firebase if available
+    if (typeof window.createOrder === 'function') {
+      const result = await window.createOrder(orderData);
+      if (result) {
+        console.log('📝 Pedido guardado en Firebase:', result);
+      } else {
+        console.log('📝 Pedido guardado localmente');
+      }
+    }
+    
+    // Send WhatsApp messages to selected hostesses
+    await sendWhatsAppNotifications(orderData);
+    
+    // Show success modal
+    showOrderSuccess(orderData);
+    
+    // Save order locally
+    saveOrderToStorage(orderData);
+    
+    // Clear cart
+    cart = [];
+    selectedMesa = null;
+    orderNote = '';
+    saveCartToStorage();
+    
+    // Update UI
+    closeCartSheet();
+    updateCartUI();
+    
+    // Update mesa selector
+    renderMesaSelector();
+    
+  } catch (error) {
+    console.error('Error al guardar pedido:', error);
+    showToast('Error al enviar pedido', 'error');
+  }
 }
+
+function saveOrderToStorage(order) {
+  const orders = JSON.parse(localStorage.getItem('frv_orders') || '[]');
+  orders.push({ ...order, id: Date.now() });
+  localStorage.setItem('frv_orders', JSON.stringify(orders));
+}
+
+async function sendWhatsAppNotifications(order) {
+  const whatsappNumber = '51924996961';
+  
+  // Build message text
+  let itemsText = order.items.map(item => `• ${item.emoji} ${item.name} ×${item.qty} = S/${(item.price * item.qty).toFixed(2)}`).join('\n');
+  
+  let message = `*🍽️ NUEVO PEDIDO - FRV CATACAOS*\n\n`;
+  message += `*Mesa:* ${order.tableNum}\n`;
+  message += `*Items:*\n${itemsText}\n\n`;
+  message += `*Subtotal:* S/${order.subTotal.toFixed(2)}\n`;
+  message += `*IGV (10%):* S/${(order.total - order.subTotal).toFixed(2)}\n`;
+  message += `*TOTAL:* S/${order.total.toFixed(2)}\n`;
+  message += `*Pago:* ${getPaymentMethodLabel(order.method)}\n\n`;
+  
+  if (order.note) {
+    message += `*Nota:* ${order.note}\n\n`;
+  }
+  
+  message += `*Hora:* ${new Date().toLocaleTimeString('es-PE')}\n`;
+  message += `*Por favor, preparar lo antes posible 🚀*`;
+  
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+  
+  // Try to open WhatsApp
+  try {
+    window.open(whatsappUrl, '_blank');
+  } catch (e) {
+    console.log('WhatsApp not available, message prepared:', message);
+  }
+  
+  // Send to each hostess as well
+  HOSTESSES.forEach(h => {
+    const hostessMessage = `*🍹 Nuevo pedido en tu zona (${order.tableNum})*\n\n${itemsText}\n\n*Total: S/${order.total.toFixed(2)}*`;
+    const hostessUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(hostessMessage)}`;
+    console.log(`WhatsApp for ${h.name}: ${hostessUrl}`);
+  });
+}
+
+function getPaymentMethodLabel(method) {
+  const labels = {
+    'yape': 'Yape/Plin',
+    'tarjeta': 'Tarjeta',
+    'efectivo': 'Efectivo'
+  };
+  return labels[method] || method;
+}
+
+function showOrderSuccess(order) {
+  const modal = document.getElementById('successModal');
+  if (!modal) return;
+  
+  const orderNum = `#${String(Date.now()).slice(-6)}`;
+  document.getElementById('orderNum').textContent = orderNum;
+  
+  modal.style.display = 'flex';
+  
+  setTimeout(() => {
+    modal.style.display = 'none';
+  }, 4000);
+}
+
+// Animador saludo
+function enviarSaludoAnimador() {
+  const phone = '51950729470';
+  const mesa = selectedMesa ? MESAS.find(m => m.id === selectedMesa)?.num : 'no especificada';
+  
+  const message = `*Saludo para Yaruc!*\n\n` +
+    `*Mesa:* ${mesa}\n` +
+    `*Desde:* Carta digital FRV\n\n` +
+    `*¡Que tengas un excelente show! 🎤✨*`;
+  
+  const encodedMessage = encodeURIComponent(message);
+  window.open(`https://wa.me/${phone}?text=${encodedMessage}`, '_blank');
+}
+
+// Alerta de seguridad
+function sendSafetyAlert() {
+  const phone = '51924996961';
+  const mesa = selectedMesa ? MESAS.find(m => m.id === selectedMesa)?.num : 'no especificada';
+  
+  if (confirm('¿Enviar alerta de seguridad al equipo?')) {
+    const message = `*🚨 ALERTA DE SEGURIDAD - FRV CATACAOS*\n\n` +
+      `*⚠️ Se necesita asistencia inmediata\n\n` +
+      `*🪑 Mesa:* ${mesa}\n` +
+      `*⏰ Hora:* ${new Date().toLocaleTimeString('es-PE')}\n\n` +
+      `*Por favor, acudir lo antes posible.*`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${phone}?text=${encodedMessage}`, '_blank');
+  }
+}
+
+// Toast notifications
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container') || createToastContainer();
+  
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.remove();
+  }, 3500);
+}
+
+function createToastContainer() {
+  const container = document.createElement('div');
+  container.id = 'toast-container';
+  container.className = 'toast-container';
+  document.body.appendChild(container);
+  return container;
+}
+
+// Cart storage
+function saveCartToStorage() {
+  localStorage.setItem('frv_cart', JSON.stringify(cart));
+  localStorage.setItem('frv_mesa', JSON.stringify(selectedMesa));
+}
+
+function loadCartFromStorage() {
+  const saved = localStorage.getItem('frv_cart');
+  if (saved) {
+    try {
+      cart = JSON.parse(saved);
+      updateCartUI();
+    } catch (e) {
+      cart = [];
+    }
+  }
+  
+  const savedMesa = localStorage.getItem('frv_mesa');
+  if (savedMesa) {
+    try {
+      selectedMesa = parseInt(savedMesa);
+      const mesa = MESAS.find(m => m.id === selectedMesa);
+      if (mesa) {
+        document.getElementById('mesaTag').textContent = `⚡ ${mesa.num}`;
+      }
+    } catch (e) {
+      selectedMesa = null;
+    }
+  }
+}
+
+// Event listeners
+function setupEventListeners() {
+  // Search
+  const searchInput = document.getElementById('pos-search');
+  if (searchInput) {
+    let timeout;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        renderProducts();
+      }, 300);
+    });
+  }
+  
+  // Note input
+  const noteInput = document.getElementById('orderNote');
+  if (noteInput) {
+    noteInput.addEventListener('input', (e) => {
+      orderNote = e.target.value;
+    });
+  }
+  
+  // Close cart on overlay click
+  const overlay = document.getElementById('overlay');
+  if (overlay) {
+    overlay.addEventListener('click', closeCartSheet);
+  }
+  
+  // Close mesa selector on outside click
+  const mesaSelector = document.getElementById('mesaSelector');
+  if (mesaSelector) {
+    mesaSelector.addEventListener('click', (e) => {
+      if (e.target === mesaSelector) {
+        closeMesaSelector();
+      }
+    });
+  }
+  
+  // Real-time updates from Firebase
+  if (typeof window.subscribeToOrders !== 'undefined') {
+    window.subscribeToOrders((data) => {
+      if (data && data.orders) {
+        console.log('📡 Real-time updates received:', data.orders.length, 'orders');
+        // Update local state if needed
+      }
+    });
+  }
+}
+
+// Auto-refresh products every 5 minutes
+setInterval(() => {
+  renderProducts();
+}, 300000);
+
+console.log('✅ FRV Menu System loaded successfully');

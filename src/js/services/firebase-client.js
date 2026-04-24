@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 console.log('📦 [Firebase] Iniciando...');
+console.log('🌐 Entorno:', window.location.href);
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -15,6 +16,8 @@ const firebaseConfig = {
   databaseURL: "https://frv-catacaos-default-rtdb.firebaseio.com"
 };
 
+console.log('📦 [Firebase] Config:', firebaseConfig.databaseURL);
+
 let firebaseDatabase = null;
 let initialized = false;
 
@@ -22,55 +25,46 @@ let initialized = false;
 // INICIALIZACIÓN
 // ═══════════════════════════════════════════════════════════════════════════════
 
-async function initFirebase() {
-  console.log('🔧 [Firebase] initFirebase() llamado...');
-  
-  if (initialized && firebaseDatabase) {
-    console.log('✅ [Firebase] Ya inicializado, retornando db existente');
-    return firebaseDatabase;
-  }
-  
-  console.log('🔧 [Firebase] Verificando SDK...');
-  
-  if (typeof firebase === 'undefined') {
-    console.error('❌ [Firebase] SDK no está cargado');
-    throw new Error('Firebase SDK no cargado');
-  }
-  
-  console.log('✅ [Firebase] SDK detectado');
-  console.log('🔧 [Firebase] firebase:', typeof firebase);
-  console.log('🔧 [Firebase] firebase.database:', typeof firebase.database);
-  
-  // Verificar que firebase.database exista
-  if (typeof firebase.database !== 'function') {
-    console.error('❌ [Firebase] firebase.database no disponible');
-    throw new Error('firebase.database no disponible');
-  }
-  
-  try {
-    let app;
-    try {
-      app = firebase.getApp();
-      console.log('📦 [Firebase] Usando app existente:', app ? app.name : 'sin nombre');
-    } catch (e) {
-      console.log('📦 [Firebase] Inicializando nueva app...');
-      app = firebase.initializeApp(firebaseConfig);
-      console.log('✅ [Firebase] App inicializada:', app.name);
-    }
-    
-    console.log('🔧 [Firebase] Obteniendo database...');
-    firebaseDatabase = firebase.database();
-    console.log('✅ [Firebase] Database obtained:', !!firebaseDatabase);
-    
-    initialized = true;
-    
-    console.log('✅ [Firebase] Inicializado correctamente');
-    return firebaseDatabase;
-  } catch (error) {
-    console.error('❌ [Firebase] Error de inicialización:', error.message);
-    throw new Error('Error al inicializar Firebase: ' + error.message);
-  }
-}
+ async function initFirebase() {
+   console.log('[Firebase] Inicializando...');
+
+   if (initialized && firebaseDatabase) {
+     console.log('[Firebase] Ya inicializado');
+     return firebaseDatabase;
+   }
+
+   if (typeof firebase === 'undefined') {
+     console.error('[Firebase] SDK no cargado');
+     throw new Error('Firebase SDK no disponible');
+   }
+
+   try {
+     let app;
+     // Usar firebase.app() si existe, sino inicializar
+     try {
+       app = firebase.app();
+       console.log('[Firebase] App existente reutilizada');
+     } catch (e) {
+       console.log('[Firebase] Creando nueva app...');
+       app = firebase.initializeApp(firebaseConfig);
+     }
+
+     firebaseDatabase = firebase.database();
+     
+     // Verificar conexión
+     const connectedRef = firebaseDatabase.ref('.info/connected');
+     connectedRef.on('value', (snap) => {
+       console.log('[Firebase] Conexión:', snap.val() ? '✅ Conectado' : '❌ Desconectado');
+     });
+
+     initialized = true;
+     console.log('[Firebase] Inicializado correctamente');
+     return firebaseDatabase;
+   } catch (error) {
+     console.error('[Firebase] Error:', error.message);
+     throw error;
+   }
+ }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // OPERACIONES DE PEDIDOS
@@ -172,54 +166,62 @@ async function getStats() {
   }
 }
 
-function subscribeToOrders(callback) {
-  console.log('📡 [Firebase] Suscribiendo a pedidos en tiempo real...');
-  
-  if (typeof firebase === 'undefined') {
-    console.error('❌ [Firebase] SDK no está cargado');
-    return () => {};
-  }
-  
-  let db;
-  try {
-    db = firebase.database();
-  } catch (e) {
-    console.error('❌ [Firebase] Error al obtener database:', e);
-    return () => {};
-  }
-  
-  try {
-    const ordersRef = db.ref('orders');
-    
-    const listener = ordersRef.on('value', (snapshot) => {
-      const data = snapshot.val() || {};
-      
-      const ordersList = Object.entries(data).map(([id, order]) => ({
-        id: id,
-        ...order
-      })).sort((a, b) => {
-        const dateA = new Date(a.createdAt || 0);
-        const dateB = new Date(b.createdAt || 0);
-        return dateB - dateA;
-      });
-      
-      console.log('📡 [Firebase] Cambios detectados:', ordersList.length);
-      callback({ orders: ordersList, source: 'firebase-realtime' });
-    }, (error) => {
-      console.error('❌ [Firebase] Error en listener:', error);
-    });
-    
-    console.log('✅ [Firebase] Suscripción activa');
-    
-    return () => {
-      console.log('📡 [Firebase] Cancelando suscripción...');
-      ordersRef.off('value', listener);
-    };
-  } catch (error) {
-    console.error('❌ [Firebase] Error en suscripción:', error.message);
-    return () => {};
-  }
-}
+ async function subscribeToOrders(callback) {
+   console.log('📡 [Firebase] Suscribiendo a pedidos en tiempo real...');
+
+   // Ensure Firebase is initialized first
+   try {
+     await initFirebase();
+   } catch (initErr) {
+     console.error('❌ [Firebase] Error inicializando:', initErr);
+     return () => {};
+   }
+
+   if (typeof firebase === 'undefined') {
+     console.error('❌ [Firebase] SDK no está cargado');
+     return () => {};
+   }
+
+   let db;
+   try {
+     db = firebase.database();
+   } catch (e) {
+     console.error('❌ [Firebase] Error al obtener database:', e);
+     return () => {};
+   }
+
+   try {
+     const ordersRef = db.ref('orders');
+
+     const listener = ordersRef.on('value', (snapshot) => {
+       const data = snapshot.val() || {};
+
+       const ordersList = Object.entries(data).map(([id, order]) => ({
+         id: id,
+         ...order
+       })).sort((a, b) => {
+         const dateA = new Date(a.createdAt || 0);
+         const dateB = new Date(b.createdAt || 0);
+         return dateB - dateA;
+       });
+
+       console.log('📡 [Firebase] Cambios detectados:', ordersList.length);
+       callback({ orders: ordersList, source: 'firebase-realtime' });
+     }, (error) => {
+       console.error('❌ [Firebase] Error en listener:', error);
+     });
+
+     console.log('✅ [Firebase] Suscripción activa');
+
+     return () => {
+       console.log('📡 [Firebase] Cancelando suscripción...');
+       ordersRef.off('value', listener);
+     };
+   } catch (error) {
+     console.error('❌ [Firebase] Error en suscripción:', error.message);
+     return () => {};
+   }
+ }
 
 function testConnection() {
   return new Promise(async (resolve) => {
