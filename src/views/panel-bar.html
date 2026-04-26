@@ -3,9 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://localhost:* https://localhost:*; script-src 'self' 'unsafe-inline' http://localhost:* https://localhost:* https://www.gstatic.com https://www.googleapis.com; style-src 'self' 'unsafe-inline' http://localhost:* https://localhost:* https://fonts.googleapis.com; font-src 'self' http://localhost:* https://localhost:* https://fonts.gstatic.com; connect-src 'self' http://localhost:* https://localhost:* https://frv-catacaos-default-rtdb.firebaseio.com wss://frv-catacaos-default-rtdb.firebaseio.com; img-src 'self' data: http://localhost:* https://localhost:* https:">
 <title>FRV Producciones — Panel de Bar</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Firebase SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <style>
 :root {
   --gold: #FFD600;
   --gold2: #E6B800;
@@ -1187,15 +1192,10 @@ tr:hover td{background:var(--glass);}
 </head>
 <body>
 
- <div id="print-zone"></div>
- <div class="toast-container" id="toast-container"></div>
+<div id="print-zone"></div>
+<div class="toast-container" id="toast-container"></div>
 
- <!-- Audio notificación (beep) -->
- <audio id="notification-sound" preload="auto">
-   <source src="https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.m4a" type="audio/mp4">
- </audio>
-
- <!-- MODAL -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal-box">
     <div class="modal-title" id="modal-title">Confirmar</div>
@@ -1250,7 +1250,7 @@ tr:hover td{background:var(--glass);}
       <div class="header-stat-lbl">Ventas Hoy</div>
     </div>
     <div class="header-stat">
-      <div class="header-stat-val" id="h-mesas">0/20</div>
+      <div class="header-stat-val" id="h-mesas">0/50</div>
       <div class="header-stat-lbl">Mesas Activas</div>
     </div>
     <div class="header-stat">
@@ -1261,9 +1261,15 @@ tr:hover td{background:var(--glass);}
 
    <div class="header-right">
      <div class="clock-wrap" id="clock">00:00:00</div>
-     <button class="btn-notif" id="notif-bell" onclick="toggleSound()" title="Sonido notificaciones">
-       🔊
+     <div class="btn-notif" id="notif-bell">
+       🔔
        <div class="notif-badge" id="notif-count">0</div>
+     </div>
+     <button class="btn-notif" id="btn-connect-printer" onclick="connectPrinter()" title="Conectar Impresora">
+       🖨️
+     </button>
+     <button class="btn-notif" id="btn-print-ticket" onclick="printLatestTicket()" title="Imprimir Ticket" style="display:none">
+       🧾
      </button>
    </div>
 </header>
@@ -1284,19 +1290,18 @@ tr:hover td{background:var(--glass);}
   <button class="nav-item" data-view="cashout"><span class="nav-icon">💰</span>Cierre de Caja</button>
   <button class="nav-item" data-view="reportes"><span class="nav-icon">🖨️</span>Reportes</button>
 
-   <div class="nav-section-label">// Cuenta</div>
-   <button class="nav-item" onclick="cerrarSesion()" style="color:var(--red);border-left:3px solid var(--red);background:rgba(255,59,59,0.05)">
-     <span class="nav-icon">🚪</span> Cerrar Sesión
-   </button>
    <div class="sidebar-footer">
-      <div class="user-pill">
-        <div class="user-avatar">F</div>
-        <div>
-          <div class="user-name">Administrador</div>
-          <div class="user-role">FRV · Catacaos</div>
-        </div>
-      </div>
-    </div>
+     <div class="user-pill">
+       <div class="user-avatar">F</div>
+       <div>
+         <div class="user-name">Administrador</div>
+         <div class="user-role">FRV · Catacaos</div>
+       </div>
+     </div>
+     <button class="btn-secondary" onclick="logout()" style="width:100%;margin-top:10px;">
+       Cerrar Sesión
+     </button>
+   </div>
 </nav>
 
 <!-- MAIN -->
@@ -1315,13 +1320,13 @@ tr:hover td{background:var(--glass);}
       <div class="kpi-sub" id="kpi-ventas-sub">0 transacciones</div>
       <div class="kpi-trend up" id="kpi-trend-ventas">▲ Sesión activa</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-icon">🪑</div>
-      <div class="kpi-label">Mesas Ocupadas</div>
-      <div class="kpi-val" id="kpi-mesas">0/20</div>
-      <div class="kpi-sub" id="kpi-mesas-sub">0 disponibles</div>
-      <div class="kpi-trend neutral" id="kpi-trend-mesas">Mesa más activa: —</div>
-    </div>
+     <div class="kpi-card">
+       <div class="kpi-icon">🪑</div>
+       <div class="kpi-label">Mesas Ocupadas</div>
+       <div class="kpi-val" id="kpi-mesas">0/50</div>
+       <div class="kpi-sub" id="kpi-mesas-sub">50 disponibles</div>
+       <div class="kpi-trend neutral" id="kpi-trend-mesas">Mesa más activa: —</div>
+     </div>
     <div class="kpi-card">
       <div class="kpi-icon">📋</div>
       <div class="kpi-label">Pedidos Activos</div>
@@ -1513,7 +1518,10 @@ tr:hover td{background:var(--glass);}
   </div>
 </div>
 
-</main>
+  </main>
+
+<!-- Firebase Client -->
+<script src="../js/services/firebase-client.js"></script>
 
 <!-- TABLE PICKER MODAL -->
 <div class="modal-overlay" id="table-picker-modal">
@@ -1527,10 +1535,1382 @@ tr:hover td{background:var(--glass);}
   </div>
 </div>
 
-<!-- Scripts -->
-   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-   <script src="../js/services/firebase-client.js"></script>
-   <script src="../js/modules/panel/frv-panel.js"></script>
+<script>
+// ══════════════════════════════════════════════════
+//  FRV PRODUCCIONES — CATACAOS BAR POS SYSTEM
+//  Full State Management + localStorage Persistence
+// ══════════════════════════════════════════════════
+
+// ── DEFAULT DATA ──
+
+const DEFAULT_PRODUCTS = [
+  {id:1,name:'Corona Botella',cat:'Cervezas',emoji:'🍺',price:8,cost:3.5,stock:48,maxStock:48},
+  {id:2,name:'Pilsener 330ml',cat:'Cervezas',emoji:'🍻',price:5,cost:2,stock:72,maxStock:72},
+  {id:3,name:'Heineken',cat:'Cervezas',emoji:'🍺',price:10,cost:4.5,stock:36,maxStock:36},
+  {id:4,name:'Cusqueña Dorada',cat:'Cervezas',emoji:'🍻',price:7,cost:3,stock:60,maxStock:60},
+  {id:5,name:'Shot Tequila',cat:'Tragos Cortos',emoji:'🥃',price:8,cost:2.5,stock:40,maxStock:40},
+  {id:6,name:'Shot Vodka',cat:'Tragos Cortos',emoji:'🥃',price:7,cost:2,stock:35,maxStock:35},
+  {id:7,name:'Shot Ron',cat:'Tragos Cortos',emoji:'🥃',price:7,cost:2,stock:30,maxStock:30},
+  {id:8,name:'Shot Jäger',cat:'Tragos Cortos',emoji:'🥃',price:9,cost:3.5,stock:20,maxStock:20},
+  {id:9,name:'Mojito',cat:'Cócteles',emoji:'🍹',price:18,cost:5,stock:25,maxStock:25},
+  {id:10,name:'Margarita',cat:'Cócteles',emoji:'🍸',price:18,cost:5.5,stock:25,maxStock:25},
+  {id:11,name:'Piña Colada',cat:'Cócteles',emoji:'🥥',price:20,cost:6,stock:20,maxStock:20},
+  {id:12,name:'Negroni',cat:'Cócteles',emoji:'🍷',price:22,cost:7,stock:15,maxStock:15},
+  {id:13,name:'Pisco Sour',cat:'Cócteles',emoji:'🍋',price:20,cost:6.5,stock:18,maxStock:18},
+  {id:14,name:'Aperol Spritz',cat:'Cócteles',emoji:'🍊',price:22,cost:7,stock:16,maxStock:16},
+  {id:15,name:'Johnnie Red 750ml',cat:'Botellas',emoji:'🥃',price:120,cost:60,stock:8,maxStock:8},
+  {id:16,name:'Absolut Vodka',cat:'Botellas',emoji:'🍾',price:100,cost:50,stock:6,maxStock:6},
+  {id:17,name:'Jack Daniel\'s',cat:'Botellas',emoji:'🥃',price:130,cost:70,stock:5,maxStock:5},
+  {id:18,name:'Moët Chandon',cat:'Botellas',emoji:'🍾',price:220,cost:130,stock:4,maxStock:4},
+  {id:19,name:'Patrón Silver',cat:'Botellas',emoji:'🥃',price:180,cost:110,stock:3,maxStock:3},
+  {id:20,name:'Red Bull',cat:'Soft & Mixers',emoji:'🔴',price:8,cost:3.5,stock:40,maxStock:40},
+  {id:21,name:'Agua Mineral',cat:'Soft & Mixers',emoji:'💧',price:4,cost:1,stock:60,maxStock:60},
+  {id:22,name:'Gaseosa 500ml',cat:'Soft & Mixers',emoji:'🥤',price:5,cost:1.5,stock:50,maxStock:50},
+  {id:23,name:'Jugo de Naranja',cat:'Soft & Mixers',emoji:'🍊',price:7,cost:2,stock:30,maxStock:30},
+  {id:24,name:'Piqueo Mixto',cat:'Piqueos',emoji:'🥗',price:25,cost:10,stock:15,maxStock:15},
+  {id:25,name:'Ceviche Porción',cat:'Piqueos',emoji:'🐟',price:22,cost:9,stock:12,maxStock:12},
+];
+
+const DEFAULT_HOSTESSES = [
+  {id:1,name:'Valeria R.',initials:'VR',zone:'VIP',status:'active',sales:0,tables:[],tips:0},
+  {id:2,name:'Daniela C.',initials:'DC',zone:'Pista',status:'active',sales:0,tables:[],tips:0},
+  {id:3,name:'Melissa T.',initials:'MT',zone:'Barra',status:'break',sales:0,tables:[],tips:0},
+  {id:4,name:'Paola M.',initials:'PM',zone:'Terraza',status:'active',sales:0,tables:[],tips:0},
+];
+
+const ZONES = {
+  // VIP: M01-M10
+  1:'VIP',2:'VIP',3:'VIP',4:'VIP',5:'VIP',
+  6:'VIP',7:'VIP',8:'VIP',9:'VIP',10:'VIP',
+  // Pista: M11-M20
+  11:'Pista',12:'Pista',13:'Pista',14:'Pista',15:'Pista',
+  16:'Pista',17:'Pista',18:'Pista',19:'Pista',20:'Pista',
+  // Barra: M21-M28
+  21:'Barra',22:'Barra',23:'Barra',24:'Barra',
+  25:'Barra',26:'Barra',27:'Barra',28:'Barra',
+  // Terraza: M29-M38
+  29:'Terraza',30:'Terraza',31:'Terraza',32:'Terraza',33:'Terraza',
+  34:'Terraza',35:'Terraza',36:'Terraza',37:'Terraza',38:'Terraza',
+  // Salón: M39-M50
+  39:'Salón',40:'Salón',41:'Salón',42:'Salón',43:'Salón',
+  44:'Salón',45:'Salón',46:'Salón',47:'Salón',48:'Salón',
+  49:'Salón',50:'Salón'
+};
+
+const DEFAULT_TABLES = Array.from({length:50},(_,i)=>({
+  id:i+1,
+  num:`M${String(i+1).padStart(2,'0')}`,
+  zone:ZONES[i+1],
+  status:'libre', // libre|ocupada|reservada|pedido|cerrar
+  hostessId:null,
+  total:0,
+  openedAt:null,
+  orders:[],
+}));
+
+// ── AUTH & SESSION ──
+
+function checkAuth() {
+  return localStorage.getItem('frv_admin_auth') === 'true';
+}
+
+function logout() {
+  // Sign out from Firebase anonymous auth
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    firebase.auth().signOut().catch(() => {});
+  }
+  // Clear admin session
+  localStorage.removeItem('frv_admin_auth');
+  localStorage.removeItem('frv_admin_user');
+  localStorage.removeItem('frv_login_time');
+  // Redirect
+  window.location.href = 'login.html';
+}
+
+// Redirect if not authenticated (runs immediately)
+if (!checkAuth()) {
+  window.location.href = 'login.html';
+}
+
+// ── STATE ──
+
+function loadState(){
+  try{const s=localStorage.getItem('frv_state');return s?JSON.parse(s):null;}
+  catch{return null;}
+}
+
+function saveState(){
+  try{localStorage.setItem('frv_state',JSON.stringify(state));}
+  catch(e){console.warn('Storage error',e);}
+}
+
+const stored = loadState();
+
+let state = stored || {
+  products: JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)),
+  hostesses: JSON.parse(JSON.stringify(DEFAULT_HOSTESSES)),
+  tables: JSON.parse(JSON.stringify(DEFAULT_TABLES)),
+  cart: [],
+  cartTableId: null,
+  payMethod: 'efectivo',
+  sales: [],
+  orders: [], // {id,tableId,tableNum,items,status,hostessId,total,ts,tsReady}
+  daySummary: {efectivo:0,tarjeta:0,yape:0,total:0},
+  sessionStart: new Date().toISOString(),
+  posCat: 'Todos',
+};
+
+// Migrate missing products
+DEFAULT_PRODUCTS.forEach(dp=>{
+  if(!state.products.find(p=>p.id===dp.id))
+    state.products.push(JSON.parse(JSON.stringify(dp)));
+});
+DEFAULT_HOSTESSES.forEach(dh=>{
+  if(!state.hostesses.find(h=>h.id===dh.id))
+    state.hostesses.push(JSON.parse(JSON.stringify(dh)));
+});
+if(state.tables.length<20){
+  state.tables=JSON.parse(JSON.stringify(DEFAULT_TABLES));
+}
+
+// ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+
+function goView(v){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(vv=>vv.classList.remove('active'));
+  const btn=document.querySelector(`.nav-item[data-view="${v}"]`);
+  if(btn)btn.classList.add('active');
+  const el=document.getElementById(`view-${v}`);
+  if(el)el.classList.add('active');
+  closeSidebar();
+  // Render specific views
+  if(v==='mesas')renderTables();
+  if(v==='pedidos')renderOrders();
+  if(v==='anfitrionas')renderHostesses();
+  if(v==='inventario')renderInventory();
+  if(v==='cashout')renderCashout();
+  if(v==='reportes')buildReport();
+  if(v==='dashboard')renderDashboard();
+}
+
+document.querySelectorAll('.nav-item').forEach(btn=>{
+  btn.addEventListener('click',()=>goView(btn.dataset.view));
+});
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════
+//  CLOCK & LIVE UPDATES
+// ══════════════════════════════════════════════════
+
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+setInterval(updateClock,1000);
+updateClock();
+
+// ══════════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════════
+
+function renderDashboard(){
+  const d=state.daySummary;
+  const txCount=state.sales.length;
+  const activeTables=state.tables.filter(t=>t.status!=='libre').length;
+  const pendOrders=state.orders.filter(o=>o.status!=='done').length;
+  const totalTables = state.tables.length;
+
+  document.getElementById('h-ventas').textContent=`$${d.total.toFixed(2)}`;
+  document.getElementById('h-mesas').textContent=`${activeTables}/${totalTables}`;
+  document.getElementById('h-pedidos').textContent=pendOrders;
+  document.getElementById('kpi-ventas').textContent=`$${d.total.toFixed(2)}`;
+  document.getElementById('kpi-ventas-sub').textContent=`${txCount} transacciones`;
+  document.getElementById('kpi-mesas').textContent=`${activeTables}/${totalTables}`;
+  document.getElementById('kpi-mesas-sub').textContent=`${totalTables-activeTables} disponibles`;
+  document.getElementById('kpi-pedidos').textContent=pendOrders;
+  document.getElementById('kpi-pedidos-sub').textContent=`${state.orders.filter(o=>o.status==='ready').length} listos para entregar`;
+
+  // Top hostess
+  const top=state.hostesses.reduce((a,b)=>b.sales>a.sales?b:a,{name:'—',sales:0});
+  document.getElementById('kpi-tophost').textContent=top.name;
+  document.getElementById('kpi-tophost-sub').textContent=`$${top.sales.toFixed(2)} en ventas`;
+
+  // Header badges
+  document.getElementById('nb-mesas').textContent=activeTables;
+  document.getElementById('nb-pedidos').textContent=pendOrders;
+  document.getElementById('notif-count').textContent=state.orders.filter(o=>o.status==='new').length;
+
+  // Live feed
+  renderLiveFeed();
+  renderDashHostess();
+  renderTopProducts();
+  renderInventoryAlerts();
+}
+
+function renderLiveFeed(){
+  const feed=document.getElementById('live-feed');
+  const recent=[...state.orders].reverse().slice(0,8);
+  if(!recent.length){
+    feed.innerHTML=`<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">Esperando pedidos...</div>`;
+    return;
+  }
+  const icons={new:'badge-new',preparing:'badge-prep',ready:'badge-ready',done:'badge-prep'};
+  const stClass={new:'new',preparing:'preparing',ready:'ready',done:''};
+  const stTxt={new:'Nuevo','preparing':'Preparando',ready:'Listo',done:'Entregado'};
+  feed.innerHTML=recent.map(o=>{
+    const itemsList = Array.isArray(o.items)
+      ? o.items.map(i=>typeof i==='object'?i.name:i).join(', ')
+      : 'Sin detalle';
+    return`
+    <div class="order-item ${stClass[o.status]||''}">
+      <div class="order-table-badge ${icons[o.status]||'badge-prep'}">${o.tableNum}</div>
+      <div class="order-info">
+        <div class="order-desc">${itemsList}</div>
+        <div class="order-meta">${o.ts || ''} · S/ ${(o.total||0).toFixed(2)}</div>
+      </div>
+      <div class="order-status status-${o.status==='done'?'done':o.status==='ready'?'ready':o.status==='preparing'?'prep':'new'}">${stTxt[o.status]||o.status}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDashHostess(){
+  const el=document.getElementById('dash-hostess-list');
+  const icons={active:'active',break:'break',offline:'offline'};
+  el.innerHTML=state.hostesses.map(h=>`
+    <div class="hostess-item">
+      <div class="hostess-avatar ${icons[h.status]}">${h.initials}</div>
+      <div>
+        <div class="hostess-name">${h.name}</div>
+        <div class="hostess-zone">Zona ${h.zone}</div>
+      </div>
+      <div class="h-status-dot ${icons[h.status]}"></div>
+      <div class="hostess-stat">
+        <div class="hostess-sales">$${h.sales.toFixed(2)}</div>
+        <div class="hostess-tables">${h.tables.length} mesas</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderTopProducts(){
+  const el=document.getElementById('top-products-list');
+  const freq={};
+  state.sales.forEach(s=>s.items.forEach(i=>{
+    freq[i.name]=(freq[i.name]||{qty:0,rev:0});
+    freq[i.name].qty+=i.qty;
+    freq[i.name].rev+=i.price*i.qty;
+  }));
+  const top=Object.entries(freq).sort((a,b)=>b[1].qty-a[1].qty).slice(0,6);
+  if(!top.length){
+    el.innerHTML=`<div style="color:var(--text3);font-size:12px;padding:10px">Sin ventas registradas.</div>`;
+    return;
+  }
+  const maxQty=top[0][1].qty;
+  el.innerHTML=top.map(([name,d])=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="color:var(--text)">${name}</span>
+        <span style="font-family:'JetBrains Mono',monospace;color:var(--gold)">${d.qty}× — $${d.rev.toFixed(2)}</span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${(d.qty/maxQty*100).toFixed(0)}%;background:linear-gradient(90deg,var(--gold),var(--magenta));border-radius:4px;transition:width 0.5s"></div>
+      </div>
+    </div>`).join('');
+}
+
+function renderInventoryAlerts(){
+  const el=document.getElementById('inventory-alerts');
+  const low=state.products.filter(p=>p.stock<=5);
+  if(!low.length){
+    el.innerHTML=`<div style="color:var(--green);font-size:12px;padding:10px">✅ Todo el inventario en niveles normales</div>`;
+    return;
+  }
+  el.innerHTML=low.map(p=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;margin-bottom:6px;border-radius:8px;background:rgba(255,${p.stock===0?'59,59':'165,0'},0.08);border:1px solid rgba(255,${p.stock===0?'59,59':'165,0'},0.2)">
+      <span style="font-size:12px;color:var(--text)">${p.emoji} ${p.name}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${p.stock===0?'var(--red)':'#FFA500'}">${p.stock===0?'AGOTADO':'Stock: '+p.stock}</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  TABLES
+// ══════════════════════════════════════════════════
+
+let activeZoneFilter='all';
+
+document.querySelectorAll('.zone-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.zone-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeZoneFilter=btn.dataset.zone;
+    renderTables();
+  });
+});
+
+function renderTables(){
+  const grid=document.getElementById('tables-grid');
+  const filtered = activeZoneFilter==='all'
+    ? state.tables
+    : state.tables.filter(t=>t.zone.toLowerCase()===activeZoneFilter);
+
+  const statusLabels={libre:'Libre',ocupada:'Ocupada',reservada:'Reservada',pedido:'Con Pedido',cerrar:'Por Cerrar'};
+  const h=state.hostesses;
+
+  grid.innerHTML=filtered.map(t=>{
+    const hostess=t.hostessId?h.find(hh=>hh.id===t.hostessId):null;
+    const elapsed=t.openedAt?getElapsed(t.openedAt):'';
+    return`
+      <div class="table-card ${t.status}" onclick="openTableModal(${t.id})">
+        <div class="table-num">${t.num}</div>
+        <div class="table-status-txt">${statusLabels[t.status]}</div>
+        <div class="table-info">${t.zone}</div>
+        ${t.total>0?`<div class="table-amount">$${t.total.toFixed(2)}</div>`:''}
+        ${elapsed?`<div class="table-timer">⏱ ${elapsed}</div>`:''}
+        ${hostess?`<div class="table-hostess">👑 ${hostess.name}</div>`:''}
+      </div>`;
+  }).join('');
+}
+
+function getElapsed(openedAt){
+  const ms=Date.now()-new Date(openedAt).getTime();
+  const m=Math.floor(ms/60000);
+  if(m<60)return`${m}min`;
+  return`${Math.floor(m/60)}h ${m%60}m`;
+}
+
+function openTableModal(tableId){
+  const t=state.tables.find(t=>t.id===tableId);
+  if(!t)return;
+  const statusOpts=['libre','ocupada','reservada','pedido','cerrar'];
+  openModal(
+    `Mesa ${t.num} — ${t.zone}`,
+    `Estado actual: ${t.status.toUpperCase()}\nTotal: $${t.total.toFixed(2)}\n\nCambiar estado:`,
+    null,
+    true,
+    `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      ${statusOpts.map(s=>`
+        <button onclick="changeTableStatus(${tableId},'${s}');closeModal();"
+          style="flex:1;min-width:80px;padding:8px 6px;border-radius:8px;border:1px solid;cursor:pointer;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;
+            border-color:${s===t.status?'var(--gold)':'var(--border)'};
+            background:${s===t.status?'rgba(255,214,0,0.12)':'var(--glass)'};
+            color:${s===t.status?'var(--gold)':'var(--text2)'}">
+          ${s.toUpperCase()}
+        </button>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" style="flex:1" onclick="assignTableToCart(${tableId})">🛒 Añadir Pedido</button>
+      ${t.total>0?`<button class="btn-secondary" style="flex:1" onclick="closeTableBill(${tableId})">💰 Cerrar Cuenta</button>`:''}
+    </div>`
+  );
+}
+
+function changeTableStatus(tableId,status){
+  const t=state.tables.find(t=>t.id===tableId);
+  if(!t)return;
+  if(status==='ocupada'&&t.status==='libre')t.openedAt=new Date().toISOString();
+  if(status==='libre'){t.openedAt=null;t.total=0;t.orders=[];t.hostessId=null;}
+  t.status=status;
+  saveState();
+  // Sync to Firebase
+  if (typeof window.updateTableStatus === 'function') {
+    window.updateTableStatus(tableId, status, { openedAt: t.openedAt, total: t.total, hostessId: t.hostessId }).catch(err => {
+      console.warn('[Firebase] No se pudo sincronizar mesa:', err.message);
+    });
+  }
+  renderTables();
+  renderDashboard();
+  toast(`Mesa ${t.num} → ${status}`, 'info');
+}
+
+function assignTableToCart(tableId){
+  state.cartTableId=tableId;
+  const t=state.tables.find(t=>t.id===tableId);
+  document.getElementById('selected-table-label').textContent=t?t.num:'Sin mesa';
+  saveState();
+  closeModal();
+  goView('pos');
+  toast(`Mesa ${t?t.num:''} asignada al pedido`,'info');
+}
+
+function closeTableBill(tableId){
+  const t=state.tables.find(t=>t.id===tableId);
+  if(!t)return;
+  closeModal();
+  openModal(`Cerrar Cuenta ${t.num}`,`Total a cobrar: $${t.total.toFixed(2)}\n¿Confirmar cierre de cuenta?`,()=>{
+    toast(`Mesa ${t.num} cerrada — $${t.total.toFixed(2)}`,'success');
+    t.status='libre';t.openedAt=null;t.total=0;t.orders=[];t.hostessId=null;
+    saveState();
+    // Sync to Firebase
+    if (typeof window.updateTableStatus === 'function') {
+      window.updateTableStatus(tableId, 'libre', { openedAt: null, total: 0, hostessId: null }).catch(()=>{});
+    }
+    renderTables();renderDashboard();
+  });
+}
+
+// Table picker in POS
+function openTablePicker(){
+  const grid=document.getElementById('table-picker-grid');
+  grid.innerHTML=state.tables.map(t=>{
+    const colors={libre:'var(--green)',ocupada:'var(--gold)',reservada:'var(--magenta)',pedido:'var(--blue)',cerrar:'var(--red)'};
+    return`
+      <button onclick="pickTable(${t.id})" style="
+        padding:10px 6px;border-radius:8px;border:1px solid;cursor:pointer;
+        font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;
+        border-color:${colors[t.status]||'var(--border)'};
+        color:${colors[t.status]||'var(--text)'};
+        background:rgba(0,0,0,0.4);
+        ${t.id===state.cartTableId?'outline:2px solid var(--gold);':''}"
+      >${t.num}</button>`;
+  }).join('');
+  document.getElementById('table-picker-modal').classList.add('open');
+}
+
+function pickTable(tableId){
+  state.cartTableId=tableId;
+  const t=state.tables.find(t=>t.id===tableId);
+  document.getElementById('selected-table-label').textContent=t?t.num:'Sin mesa';
+  if(t&&t.status==='libre'){changeTableStatus(tableId,'ocupada');}
+  saveState();
+  closeTablePicker();
+  toast(`Mesa ${t?t.num:''} seleccionada`,'info');
+}
+
+function closeTablePicker(){
+  document.getElementById('table-picker-modal').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════
+//  POS
+// ══════════════════════════════════════════════════
+
+const POS_CATS=['Todos',...new Set(DEFAULT_PRODUCTS.map(p=>p.cat))];
+
+function renderPosCats(){
+  const el=document.getElementById('pos-cats');
+  el.innerHTML=POS_CATS.map(c=>`
+    <button class="cat-pill ${c===state.posCat?'active':''}" onclick="setPosCat('${c}')">${c}</button>`
+  ).join('');
+}
+
+function setPosCat(cat){
+  state.posCat=cat;
+  renderPosCats();
+  renderPosProducts();
+}
+
+function renderPosProducts(){
+  const q=document.getElementById('pos-search').value.toLowerCase();
+  let prods=state.products;
+  if(state.posCat!=='Todos')prods=prods.filter(p=>p.cat===state.posCat);
+  if(q)prods=prods.filter(p=>p.name.toLowerCase().includes(q));
+
+  const grid=document.getElementById('pos-grid');
+  if(!prods.length){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:30px;font-size:12px">Sin resultados.</div>`;
+    return;
+  }
+
+  grid.innerHTML=prods.map(p=>{
+    const isOut=p.stock<=0;
+    const isLow=!isOut&&p.stock<=5;
+    return`
+      <div class="prod-card ${isOut?'out':''}" onclick="${isOut?'':` addToCart(${p.id})`}">
+        <div class="prod-add-hint">+</div>
+        <span class="prod-emoji">${p.emoji}</span>
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-price">S/ ${p.price.toFixed(2)}</div>
+        <div class="prod-stock ${isOut?'out':isLow?'low':''}">
+          ${isOut?'⛔ Agotado':isLow?`⚠️ Stock: ${p.stock}`:`Stock: ${p.stock}`}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function addToCart(id){
+  const prod=state.products.find(p=>p.id===id);
+  if(!prod||prod.stock<=0)return;
+  const item=state.cart.find(i=>i.id===id);
+  if(item){
+    if(item.qty>=prod.stock){toast('Stock insuficiente','error');return;}
+    item.qty++;
+  } else {
+    state.cart.push({id,name:prod.name,price:prod.price,emoji:prod.emoji,qty:1});
+  }
+  saveState();
+  renderPosCart();
+  renderPosProducts();
+  // brief visual feedback
+}
+
+function changePosQty(id,delta){
+  const item=state.cart.find(i=>i.id===id);
+  if(!item)return;
+  const prod=state.products.find(p=>p.id===id);
+  item.qty+=delta;
+  if(item.qty<=0){state.cart=state.cart.filter(i=>i.id!==id);}
+  else if(delta>0&&item.qty>prod.stock){item.qty--;toast('Stock insuficiente','error');}
+  saveState();renderPosCart();
+}
+
+function removePosItem(id){
+  state.cart=state.cart.filter(i=>i.id!==id);
+  saveState();renderPosCart();
+}
+
+function clearCart(){
+  if(!state.cart.length)return;
+  state.cart=[];
+  saveState();renderPosCart();toast('Orden limpiada','info');
+}
+
+function renderPosCart(){
+  const el=document.getElementById('pos-cart');
+  const count=state.cart.reduce((a,i)=>a+i.qty,0);
+
+  if(!state.cart.length){
+    el.innerHTML=`<div class="cart-empty-state"><div class="cart-empty-icon">🍹</div><div>Agrega productos<br>para comenzar</div></div>`;
+    updatePosTotal(0);
+    document.getElementById('btn-cobrar').disabled=true;
+    return;
+  }
+
+  el.innerHTML=state.cart.map(i=>`
+    <div class="cart-row">
+      <span class="cart-emoji">${i.emoji}</span>
+      <div class="cart-info">
+        <div class="cart-item-name">${i.name}</div>
+        <div class="cart-item-price">S/ ${i.price.toFixed(2)} × ${i.qty} = S/ ${(i.price*i.qty).toFixed(2)}</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qbtn" onclick="changePosQty(${i.id},-1)">−</button>
+        <span class="qnum">${i.qty}</span>
+        <button class="qbtn" onclick="changePosQty(${i.id},1)">+</button>
+      </div>
+      <button class="cart-del" onclick="removePosItem(${i.id})">✕</button>
+    </div>`).join('');
+
+  const sub=state.cart.reduce((a,i)=>a+i.price*i.qty,0);
+  updatePosTotal(sub);
+  document.getElementById('btn-cobrar').disabled=false;
+}
+
+function updatePosTotal(sub){
+  const tax=sub*0.10;
+  const total=sub+tax;
+  document.getElementById('p-sub').textContent=`S/ ${sub.toFixed(2)}`;
+  document.getElementById('p-tax').textContent=`S/ ${tax.toFixed(2)}`;
+  document.getElementById('p-total').textContent=`S/ ${total.toFixed(2)}`;
+}
+
+function setPay(method,el){
+  state.payMethod=method;
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  saveState();
+}
+
+function checkout(){
+  if(!state.cart.length)return;
+  const sub=state.cart.reduce((a,i)=>a+i.price*i.qty,0);
+  const total=sub*1.10;
+  const table=state.tables.find(t=>t.id===state.cartTableId);
+
+  // Deduct inventory
+  state.cart.forEach(item=>{
+    const prod=state.products.find(p=>p.id===item.id);
+    if(prod)prod.stock=Math.max(0,prod.stock-item.qty);
+  });
+
+  // Create sale
+  const sale={
+    id:Date.now(),
+    items:JSON.parse(JSON.stringify(state.cart)),
+    sub,total,
+    method:state.payMethod,
+    tableNum:table?table.num:'Barra',
+    tableId:state.cartTableId,
+    ts:new Date().toLocaleTimeString('es-PE'),
+    hostessId:table?table.hostessId:null,
+  };
+  state.sales.push(sale);
+
+  // Update day summary
+  state.daySummary[state.payMethod]+=total;
+  state.daySummary.total+=total;
+
+  // Update table total and status
+  if(table){
+    table.total+=total;
+    table.status='ocupada';
+    // Sync table to Firebase
+    if (typeof window.updateTableStatus === 'function') {
+      window.updateTableStatus(table.id, 'ocupada', {
+        total: table.total,
+        hostessId: table.hostessId,
+        openedAt: new Date().toISOString()
+      }).catch(()=>{});
+    }
+  }
+
+  // Create order in kanban
+  const order={
+    id: String(Date.now()+1), // Store as string for consistency
+    tableId:state.cartTableId,
+    tableNum:table?table.num:'Barra',
+    items:JSON.parse(JSON.stringify(state.cart)),
+    status:'new',
+    total,
+    ts:new Date().toLocaleTimeString('es-PE'),
+    tsReady:null,
+    hostessId:table?table.hostessId:null,
+  };
+  state.orders.push(order);
+
+  // Update hostess sales
+  if(sale.hostessId){
+    const h=state.hostesses.find(h=>h.id===sale.hostessId);
+    if(h){h.sales+=total;if(table&&!h.tables.includes(table.num))h.tables.push(table.num);}
+  }
+
+  // Clear cart
+  state.cart=[];
+  state.cartTableId=null;
+  document.getElementById('selected-table-label').textContent='Sin mesa';
+  saveState();
+
+  renderPosCart();
+  renderPosProducts();
+  renderDashboard();
+
+  toast(`✅ Venta: S/ ${total.toFixed(2)} — ${table?table.num:'Barra'}`,'success');
+  printSaleTicket(sale);
+}
+
+// ══════════════════════════════════════════════════
+//  ORDERS (KANBAN)
+// ══════════════════════════════════════════════════
+
+function renderOrders(){
+  const board=document.getElementById('orders-board');
+  const statuses=[
+    {key:'new',label:'Nuevos',cls:'new'},
+    {key:'preparing',label:'Preparando',cls:'prep'},
+    {key:'ready',label:'Listos',cls:'ready'},
+    {key:'done',label:'Entregados',cls:'done'},
+  ];
+
+  board.innerHTML=statuses.map(s=>{
+    const items=state.orders.filter(o=>o.status===s.key);
+    return`
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <span class="kanban-title ${s.cls}">${s.label}</span>
+          <span class="kanban-count ${s.cls}">${items.length}</span>
+        </div>
+        <div class="kanban-body">
+          ${items.length===0?`<div style="color:var(--text3);font-size:11px;text-align:center;padding:20px">Sin pedidos</div>`:''}
+           ${items.map(o=>{
+             const nextStatus={new:'preparing',preparing:'ready',ready:'done',done:null};
+             const nextLabel={new:'→ Preparando',preparing:'→ Listo',ready:'→ Entregado',done:null};
+             const hostess=state.hostesses.find(h=>h.id===o.hostessId);
+             const itemsList = Array.isArray(o.items)
+               ? o.items.map(i=>`${i.emoji || ''} ${i.name} ×${i.qty || 1}`).join('<br>')
+               : 'Sin detalle';
+             return`
+               <div class="kanban-card">
+                 <div class="kc-top">
+                   <span class="kc-table">${o.tableNum}</span>
+                   <span class="kc-time">${o.ts || ''}</span>
+                 </div>
+                 <div class="kc-items">${itemsList}</div>
+                 <div class="kc-bottom">
+                   <span class="kc-total">S/ ${(o.total||0).toFixed(2)}</span>
+                   <span class="kc-hostess">${hostess?'👑 '+hostess.name:''}</span>
+                 </div>
+                 ${nextStatus[o.status]?`
+                 <div class="kc-actions">
+                   <button class="kc-btn advance" onclick="advanceOrder('${o.id}')">${nextLabel[o.status]}</button>
+                   ${o.status==='new'?`<button class="kc-btn cancel" onclick="cancelOrder('${o.id}')">✕</button>`:''}
+                 </div>`:``}
+               </div>`;
+           }).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function advanceOrder(orderId){
+  const o=state.orders.find(o=>o.id===orderId);
+  if(!o)return;
+  const next={new:'preparing',preparing:'ready',ready:'done'};
+  if(next[o.status]){
+    o.status=next[o.status];
+    if(o.status==='ready'){
+      o.tsReady=new Date().toLocaleTimeString('es-PE');
+      toast(`✅ Pedido ${o.tableNum} listo para entregar`,'success');
+    }
+    if(o.status==='done')toast(`Pedido ${o.tableNum} entregado`,'info');
+    saveState();
+    renderOrders();
+    renderDashboard();
+  }
+}
+
+function cancelOrder(orderId){
+  openModal('Cancelar Pedido','¿Cancelar este pedido?',()=>{
+    state.orders=state.orders.filter(o=>o.id!==orderId);
+    saveState();renderOrders();renderDashboard();
+    toast('Pedido cancelado','error');
+  });
+}
+
+// ── FIREBASE REAL-TIME ORDERS ──
+
+function mapOrderStatus(status) {
+  const statusMap = {
+    'pending': 'new',
+    'preparing': 'preparing',
+    'ready': 'ready',
+    'done': 'done'
+  };
+  return statusMap[status] || status;
+}
+
+function handleFirebaseOrder(order) {
+  // Avoid duplicates
+  if (state.orders.find(o => o.id === order.id)) return;
+
+  const mapped = {
+    id: order.id,
+    tableId: order.mesaId || (order.mesa ? parseInt(order.mesa.replace('M','')) : null),
+    tableNum: order.mesa || 'N/A',
+    items: order.detalle ? Object.values(order.detalle) : [],
+    status: mapOrderStatus(order.status),
+    total: order.total || 0,
+    ts: order.createdAt ? new Date(order.createdAt).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '',
+    tsReady: null,
+    hostessId: order.anfitrionaId || null
+  };
+
+  state.orders.push(mapped);
+  saveState();
+  renderDashboard();
+  renderOrders();
+  toast(`📋 Nuevo pedido: ${mapped.tableNum}`, 'magenta');
+}
+
+// Setup Firebase listener for orders (assumes Firebase already initialized)
+function setupFirebaseOrdersListener() {
+  if (typeof firebase === 'undefined') {
+    console.warn('[Firebase] SDK not loaded');
+    return;
+  }
+  const ordersRef = firebase.database().ref('orders');
+  ordersRef.on('child_added', (snapshot) => {
+    const order = { id: snapshot.key, ...snapshot.val() };
+    handleFirebaseOrder(order);
+  });
+  console.log('[Firebase] Listener activo en /orders');
+}
+
+// ── BLUETOOTH PRINTING ──
+
+let printerDevice = null;
+let printerServer = null;
+let printerCharacteristic = null;
+
+// ESC/POS command helpers
+function escposInit() {
+  return new Uint8Array([0x1B, 0x40]); // Initialize printer
+}
+
+function escposAlign(center = false) {
+  return new Uint8Array(center ? [0x1B, 0x61, 0x01] : [0x1B, 0x61, 0x00]);
+}
+
+function escposBold(on = true) {
+  return new Uint8Array(on ? [0x1B, 0x45, 0x01] : [0x1B, 0x45, 0x00]);
+}
+
+function escposCut() {
+  return new Uint8Array([0x1D, 0x56, 0x00]);
+}
+
+function escposLineFeed(lines = 1) {
+  return new Uint8Array(Array(lines).fill(0x0A));
+}
+
+function escposText(text) {
+  return new TextEncoder().encode(text);
+}
+
+async function connectPrinter() {
+  try {
+    // Request Bluetooth device (common thermal printer services)
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [
+        { services: ['49535343-fe7d-4ae5-8fa9-9fafd205e455'] }, // Many ESC/POS printers
+        { services: ['18f0'] }, // Some printers
+        { services: ['000018f0-0000-1000-8000-00805F9B34FB'] }
+      ],
+      optionalServices: ['49535343-fe7d-4ae5-8fa9-9fafd205e455', '18f0']
+    });
+
+    printerDevice = device;
+    console.log('[Bluetooth] Dispositivo encontrado:', device.name);
+
+    device.addEventListener('gattserverdisconnected', onDisconnected);
+
+    const server = await device.gatt.connect();
+    printerServer = server;
+
+    // Try common service UUIDs
+    const serviceUUIDs = ['49535343-fe7d-4ae5-8fa9-9fafd205e455', '18f0'];
+    let service;
+
+    for (const uuid of serviceUUIDs) {
+      try {
+        service = await server.getPrimaryService(uuid);
+        console.log('[Bluetooth] Servicio encontrado:', uuid);
+        break;
+      } catch (e) {
+        continue;
+      }
+    }
+
+    if (!service) {
+      throw new Error('No se encontró servicio de impresión en el dispositivo');
+    }
+
+    // Get characteristic (often write without response)
+    const charUUIDs = ['49535343-8841-43f4-a8d4-ecbe34729bb3', '2a57', 'ffe1'];
+    for (const uuid of charUUIDs) {
+      try {
+        printerCharacteristic = await service.getCharacteristic(uuid);
+        console.log('[Bluetooth] Característica encontrada:', uuid);
+        break;
+      } catch (e) {
+        continue;
+      }
+    }
+
+    if (!printerCharacteristic) {
+      throw new Error('No se encontró característica de escritura');
+    }
+
+    // Show print button
+    document.getElementById('btn-connect-printer').style.display = 'none';
+    document.getElementById('btn-print-ticket').style.display = 'flex';
+    toast('🖨️ Impresora conectada', 'success');
+
+  } catch (error) {
+    console.error('[Bluetooth] Error:', error);
+    toast('⚠️ Error Bluetooth: ' + error.message, 'error');
+  }
+}
+
+function onDisconnected() {
+  console.log('[Bluetooth] Dispositivo desconectado');
+  printerDevice = null;
+  printerServer = null;
+  printerCharacteristic = null;
+  document.getElementById('btn-connect-printer').style.display = 'flex';
+  document.getElementById('btn-print-ticket').style.display = 'none';
+  toast('🖨️ Impresora desconectada', 'info');
+}
+
+async function printLatestTicket() {
+  if (!printerCharacteristic) {
+    toast('⚠️ Impresora no conectada', 'error');
+    return;
+  }
+
+  // Get latest completed sale or pending order
+  const latestOrder = state.orders[0];
+  if (!latestOrder) {
+    toast('No hay pedidos para imprimir', 'info');
+    return;
+  }
+
+  await printTicket(latestOrder);
+}
+
+async function printTicket(order) {
+  if (!printerCharacteristic) {
+    toast('⚠️ Impresora no conectada', 'error');
+    return;
+  }
+
+  try {
+    const lines = [];
+
+    // Header
+    lines.push(escposAlign(true));
+    lines.push(escposBold(true));
+    lines.push(escposText('FRV PRODUCCIONES\n'));
+    lines.push(escposText('Catacaos\n'));
+    lines.push(escposBold(false));
+    lines.push(escposText('----------------------------\n'));
+
+    // Order info
+    lines.push(escposAlign(false));
+    lines.push(escposText(`Mesa: ${order.tableNum}\n`));
+    if (order.ts) {
+      lines.push(escposText(`Hora: ${order.ts}\n`));
+    }
+    lines.push(escposText('----------------------------\n'));
+
+    // Items
+    order.items.forEach(item => {
+      const line = `${item.emoji} ${item.name} x${item.qty}  S/${(item.price * item.qty).toFixed(2)}\n`;
+      lines.push(escposText(line));
+    });
+
+    lines.push(escposText('----------------------------\n'));
+    lines.push(escposBold(true));
+    lines.push(escposAlign(true));
+    lines.push(escposText(`TOTAL: S/${order.total.toFixed(2)}\n`));
+    lines.push(escposBold(false));
+    lines.push(escposAlign(false));
+
+    // Footer
+    lines.push(escposText('----------------------------\n'));
+    lines.push(escposAlign(true));
+    lines.push(escposText('¡Gracias por su visita!\n'));
+    lines.push(escposLineFeed(3));
+
+    // Concatenate all commands
+    const data = new Uint8Array(lines.reduce((acc, arr) => acc + arr.length, 0));
+    let offset = 0;
+    for (const arr of lines) {
+      data.set(arr, offset);
+      offset += arr.length;
+    }
+
+    await printerCharacteristic.writeValue(data);
+    toast('✅ Ticket impreso', 'success');
+
+  } catch (error) {
+    console.error('[Print] Error:', error);
+    toast('⚠️ Error impresión: ' + error.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  HOSTESSES
+// ══════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════
+//  HOSTESSES
+// ══════════════════════════════════════════════════
+
+function renderHostesses(){
+  const el=document.getElementById('hostess-full-grid');
+  el.innerHTML=state.hostesses.map(h=>{
+    const stBadge=`<span class="hc-status-badge ${h.status}">${h.status==='active'?'🟢 Activa':h.status==='break'?'🟡 Descanso':'🔴 Fuera'}</span>`;
+    return`
+      <div class="hostess-card">
+        <div class="hc-top">
+          <div class="hc-avatar">${h.initials}</div>
+          <div>
+            <div class="hc-name">${h.name}</div>
+            <div class="hc-zone">Zona ${h.zone}</div>
+          </div>
+        </div>
+        <div class="hc-status-row">
+          ${stBadge}
+          <div style="display:flex;gap:6px;margin-left:auto">
+            <button style="padding:4px 10px;border-radius:6px;border:1px solid rgba(0,230,118,0.3);background:rgba(0,230,118,0.06);color:var(--green);cursor:pointer;font-size:10px;font-weight:700" onclick="setHostessStatus(${h.id},'active')">Activa</button>
+            <button style="padding:4px 10px;border-radius:6px;border:1px solid rgba(255,214,0,0.3);background:rgba(255,214,0,0.06);color:var(--gold);cursor:pointer;font-size:10px;font-weight:700" onclick="setHostessStatus(${h.id},'break')">Descanso</button>
+          </div>
+        </div>
+        <div class="hc-metrics">
+          <div class="hc-metric">
+            <div class="hc-metric-val">S/ ${h.sales.toFixed(0)}</div>
+            <div class="hc-metric-lbl">Ventas</div>
+          </div>
+          <div class="hc-metric">
+            <div class="hc-metric-val">${h.tables.length}</div>
+            <div class="hc-metric-lbl">Mesas</div>
+          </div>
+          <div class="hc-metric">
+            <div class="hc-metric-val">${state.orders.filter(o=>o.hostessId===h.id&&o.status!=='done').length}</div>
+            <div class="hc-metric-lbl">Pedidos</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'JetBrains Mono',monospace;letter-spacing:1px">MESAS ASIGNADAS</div>
+        <div class="hc-tables-row">
+          ${h.tables.length===0?`<span style="font-size:11px;color:var(--text3)">Sin mesas asignadas</span>`:
+          h.tables.map(tn=>`<span class="hc-table-chip busy">${tn}</span>`).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function setHostessStatus(id,status){
+  const h=state.hostesses.find(h=>h.id===id);
+  if(h){h.status=status;saveState();renderHostesses();renderDashboard();
+  toast(`${h.name} → ${status==='active'?'Activa':'Descanso'}`,'info');}
+}
+
+// ══════════════════════════════════════════════════
+//  INVENTORY
+// ══════════════════════════════════════════════════
+
+function renderInventory(){
+  const body=document.getElementById('inv-body');
+  body.innerHTML=state.products.map(p=>{
+    const pct=p.maxStock>0?(p.stock/p.maxStock*100):0;
+    const isOut=p.stock<=0,isLow=!isOut&&p.stock<=5;
+    const fillCls=isOut?'out':isLow?'low':'';
+    const badge=isOut?`<span class="badge-pill out">Agotado</span>`:
+      isLow?`<span class="badge-pill low">Bajo</span>`:`<span class="badge-pill ok">OK</span>`;
+    const margin=p.price>0?(((p.price-p.cost)/p.price)*100).toFixed(0):0;
+    return`
+      <tr>
+        <td><span style="margin-right:6px">${p.emoji}</span>${p.name}</td>
+        <td style="color:var(--text3)">${p.cat}</td>
+        <td>
+          <div class="stock-bar-wrap">
+            <div class="stock-track"><div class="stock-fill ${fillCls}" style="width:${pct}%"></div></div>
+            <span class="td-mono" style="color:${isOut?'var(--red)':isLow?'#FFA500':'var(--text)'}">${p.stock}</span>
+          </div>
+        </td>
+        <td>${badge}</td>
+        <td class="td-mono">S/ ${p.cost.toFixed(2)}</td>
+        <td class="td-mono" style="color:var(--gold)">S/ ${p.price.toFixed(2)}</td>
+        <td class="td-mono" style="color:${margin>=50?'var(--green)':margin>=30?'#FFA500':'var(--red)'}">${margin}%</td>
+        <td>
+          <div class="stock-edit-wrap">
+            <input type="number" id="sinp-${p.id}" value="${p.stock}" min="0">
+            <button class="btn-xs" onclick="updateStock(${p.id})">✓</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function updateStock(id){
+  const inp=document.getElementById(`sinp-${id}`);
+  const v=parseInt(inp.value);
+  if(isNaN(v)||v<0){toast('Cantidad inválida','error');return;}
+  const p=state.products.find(p=>p.id===id);
+  if(p){
+    p.stock=v;p.maxStock=Math.max(p.maxStock,v);
+    saveState();renderInventory();renderPosProducts();
+    toast(`Stock actualizado: ${p.name}`,'success');
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  CASHOUT
+// ══════════════════════════════════════════════════
+
+function renderCashout(){
+  const d=state.daySummary;
+  const txN=state.sales.length;
+  const avg=txN>0?d.total/txN:0;
+
+  document.getElementById('cashout-kpi').innerHTML=`
+    <div class="cashout-card">
+      <div class="cashout-lbl">Ventas Totales</div>
+      <div class="cashout-val">S/ ${d.total.toFixed(2)}</div>
+      <div class="cashout-sub">${txN} transacciones</div>
+    </div>
+    <div class="cashout-card">
+      <div class="cashout-lbl">Efectivo</div>
+      <div class="cashout-val">S/ ${d.efectivo.toFixed(2)}</div>
+      <div class="cashout-sub">${pct(d.efectivo,d.total)}% del total</div>
+    </div>
+    <div class="cashout-card">
+      <div class="cashout-lbl">Tarjeta</div>
+      <div class="cashout-val magenta">S/ ${d.tarjeta.toFixed(2)}</div>
+      <div class="cashout-sub">${pct(d.tarjeta,d.total)}% del total</div>
+    </div>
+    <div class="cashout-card">
+      <div class="cashout-lbl">Yape / Transfer</div>
+      <div class="cashout-val teal">S/ ${d.yape.toFixed(2)}</div>
+      <div class="cashout-sub">${pct(d.yape,d.total)}% del total</div>
+    </div>
+    <div class="cashout-card">
+      <div class="cashout-lbl">Ticket Promedio</div>
+      <div class="cashout-val" style="font-size:26px">S/ ${avg.toFixed(2)}</div>
+      <div class="cashout-sub">Por transacción</div>
+    </div>
+    <div class="cashout-card">
+      <div class="cashout-lbl">Anfitrionas Activas</div>
+      <div class="cashout-val green" style="font-size:36px">${state.hostesses.filter(h=>h.status==='active').length}</div>
+      <div class="cashout-sub">de ${state.hostesses.length} total</div>
+    </div>`;
+
+  const hist=document.getElementById('cashout-history');
+  const payIcons={efectivo:'💵',tarjeta:'💳',yape:'📲'};
+  if(!state.sales.length){
+    hist.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Sin ventas registradas.</td></tr>`;
+    return;
+  }
+  hist.innerHTML=[...state.sales].reverse().slice(0,30).map((s,i)=>{
+    const hostess=state.hostesses.find(h=>h.id===s.hostessId);
+    return`
+      <tr>
+        <td class="td-mono" style="color:var(--text3)">#${String(s.id).slice(-4)}</td>
+        <td class="td-mono">${s.ts}</td>
+        <td style="color:var(--gold);font-weight:700">${s.tableNum}</td>
+        <td style="color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.items.map(i=>i.name).join(', ')}</td>
+        <td>${payIcons[s.method]||''} ${s.method}</td>
+        <td class="td-mono" style="color:var(--gold);font-weight:700">S/ ${s.total.toFixed(2)}</td>
+        <td style="color:var(--text3)">${hostess?hostess.name:'—'}</td>
+      </tr>`;
+  }).join('');
+}
+
+function pct(val,total){return total>0?((val/total)*100).toFixed(0):0;}
+
+function confirmReset(){
+  openModal('Reiniciar Día','⚠️ Esto borrará TODAS las ventas, pedidos y resúmenes. El inventario no se restablece.',()=>{
+    state.sales=[];
+    state.orders=[];
+    state.daySummary={efectivo:0,tarjeta:0,yape:0,total:0};
+    state.sessionStart=new Date().toISOString();
+    state.hostesses.forEach(h=>{h.sales=0;h.tables=[];});
+    state.tables.forEach(t=>{t.status='libre';t.openedAt=null;t.total=0;t.orders=[];t.hostessId=null;});
+    saveState();
+    renderDashboard();renderCashout();buildReport();
+    toast('Día reiniciado correctamente','info');
+  });
+}
+
+// ══════════════════════════════════════════════════
+//  REPORTS
+// ══════════════════════════════════════════════════
+
+function buildReportText(){
+  const d=state.daySummary;
+  const now=new Date();
+  const lines=[];
+  lines.push('================================');
+  lines.push('   FRV PRODUCCIONES CATACAOS');
+  lines.push('     Panel de Bar — Reporte');
+  lines.push('================================');
+  lines.push(`Fecha: ${now.toLocaleDateString('es-PE',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`);
+  lines.push(`Hora Cierre: ${now.toLocaleTimeString('es-PE')}`);
+  lines.push('--------------------------------');
+  lines.push('RESUMEN FINANCIERO');
+  lines.push('--------------------------------');
+  lines.push(`Transacciones:     ${state.sales.length}`);
+  lines.push(`Ventas Totales:    S/ ${d.total.toFixed(2)}`);
+  lines.push(`  Efectivo:        S/ ${d.efectivo.toFixed(2)}`);
+  lines.push(`  Tarjeta:         S/ ${d.tarjeta.toFixed(2)}`);
+  lines.push(`  Yape/Transfer:   S/ ${d.yape.toFixed(2)}`);
+  lines.push(`Ticket Promedio:   S/ ${(state.sales.length>0?d.total/state.sales.length:0).toFixed(2)}`);
+  lines.push('--------------------------------');
+  lines.push('TOP PRODUCTOS');
+  lines.push('--------------------------------');
+  const freq={};
+  state.sales.forEach(s=>s.items.forEach(i=>{
+    freq[i.name]=(freq[i.name]||{qty:0,rev:0});
+    freq[i.name].qty+=i.qty;
+    freq[i.name].rev+=i.price*i.qty;
+  }));
+  const top=Object.entries(freq).sort((a,b)=>b[1].qty-a[1].qty).slice(0,8);
+  if(!top.length)lines.push('(sin ventas)');
+  top.forEach(([n,dd])=>{
+    const nm=n.padEnd(16).substring(0,16);
+    lines.push(`${nm} x${String(dd.qty).padStart(3)}  S/${dd.rev.toFixed(2)}`);
+  });
+  lines.push('--------------------------------');
+  lines.push('RENDIMIENTO ANFITRIONAS');
+  lines.push('--------------------------------');
+  [...state.hostesses].sort((a,b)=>b.sales-a.sales).forEach(h=>{
+    const nm=h.name.padEnd(14).substring(0,14);
+    lines.push(`${nm}  S/${h.sales.toFixed(2)}`);
+  });
+  lines.push('--------------------------------');
+  lines.push('INVENTARIO BAJO (≤5 unidades)');
+  lines.push('--------------------------------');
+  const low=state.products.filter(p=>p.stock<=5);
+  if(!low.length)lines.push('(niveles normales)');
+  low.forEach(p=>{
+    const nm=p.name.padEnd(16).substring(0,16);
+    lines.push(`${nm} ${p.stock===0?'AGOTADO':'Stock: '+p.stock}`);
+  });
+  lines.push('================================');
+  lines.push('  FRV Producciones — Catacaos');
+  lines.push('================================');
+  return lines.join('\n');
+}
+
+function buildReport(){
+  document.getElementById('ticket-preview').textContent=buildReportText();
+}
+
+function printDayReport(){
+  const zone=document.getElementById('print-zone');
+  zone.style.display='block';
+  zone.innerHTML=`<pre>${buildReportText()}</pre>`;
+  window.print();
+  setTimeout(()=>{zone.style.display='none';zone.innerHTML='';},800);
+}
+
+function printCashoutReport(){printDayReport();}
+
+function printSaleTicket(sale){
+  const table=state.tables.find(t=>t.id===sale.tableId);
+  const lines=[
+    '================================',
+    '   FRV PRODUCCIONES CATACAOS',
+    '================================',
+    `Ticket: #${String(sale.id).slice(-6)}`,
+    `Mesa:   ${sale.tableNum}`,
+    `Hora:   ${sale.ts}`,
+    '--------------------------------',
+    ...sale.items.map(i=>{
+      const n=i.name.padEnd(14).substring(0,14);
+      return`${n} x${i.qty}  S/${(i.price*i.qty).toFixed(2)}`;
+    }),
+    '--------------------------------',
+    `Subtotal:    S/ ${sale.sub.toFixed(2)}`,
+    `IGV (10%):   S/ ${(sale.total-sale.sub).toFixed(2)}`,
+    `TOTAL:       S/ ${sale.total.toFixed(2)}`,
+    `Pago:        ${sale.method.toUpperCase()}`,
+    '================================',
+    '    ¡Gracias por su visita!',
+    '================================',
+  ];
+  const zone=document.getElementById('print-zone');
+  zone.style.display='block';
+  zone.innerHTML=`<pre>${lines.join('\n')}</pre>`;
+  window.print();
+  setTimeout(()=>{zone.style.display='none';zone.innerHTML='';},800);
+}
+
+// ══════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════
+
+function toast(msg,type='success'){
+  const c=document.getElementById('toast-container');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.textContent=msg;
+  c.appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+// ══════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════
+
+let modalCb=null;
+
+function openModal(title,body,cb,hasExtra=false,extraHtml=''){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').innerHTML=body.replace(/\n/g,'<br>')+
+    (hasExtra?`<div style="margin-top:14px">${extraHtml}</div>`:'');
+  modalCb=cb;
+  const confirmBtn=document.getElementById('modal-confirm');
+  if(cb){confirmBtn.style.display='';confirmBtn.onclick=()=>{if(modalCb)modalCb();closeModal();};}
+  else{confirmBtn.style.display='none';}
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  modalCb=null;
+}
+
+document.getElementById('modal-overlay').addEventListener('click',e=>{
+  if(e.target===e.currentTarget)closeModal();
+});
+
+document.getElementById('table-picker-modal').addEventListener('click',e=>{
+  if(e.target===e.currentTarget)closeTablePicker();
+});
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+
+if (checkAuth()) {
+  renderPosCats();
+  renderPosProducts();
+  renderPosCart();
+  renderDashboard();
+
+  // Initialize Firebase and sync
+  if (typeof window.FirebaseClient !== 'undefined') {
+    window.FirebaseClient.init().then(() => {
+      const db = firebase.database();
+
+      // Orders listener
+      setupFirebaseOrdersListener();
+
+      // Ensure /tables exists (seed if empty)
+      const tablesRef = db.ref('tables');
+      tablesRef.once('value').then(snap => {
+        const existing = snap.val();
+        if (!existing) {
+          console.log('[Firebase] Inicializando /tables...');
+          const updates = {};
+          const user = firebase.auth().currentUser;
+          state.tables.forEach(t => {
+            updates[`/tables/${t.id}`] = {
+              id: t.id,
+              num: t.num,
+              zone: t.zone,
+              status: t.status,
+              hostessId: t.hostessId,
+              total: t.total,
+              openedAt: t.openedAt,
+              ...(user ? { user_id: user.uid } : {})
+            };
+          });
+          return tablesRef.update(updates);
+        }
+      }).then(() => {
+        // Now attach real-time listener
+        tablesRef.on('value', (snapshot) => {
+          const data = snapshot.val() || {};
+          Object.entries(data).forEach(([id, tableData]) => {
+            const t = state.tables.find(t => t.id === parseInt(id));
+            if (t && tableData.status) {
+              t.status = tableData.status;
+              t.total = tableData.total || 0;
+              t.hostessId = tableData.hostessId || null;
+              t.openedAt = tableData.openedAt || null;
+            }
+          });
+          saveState();
+          renderTables();
+          renderDashboard();
+        });
+        console.log('[Firebase] Listener /tables activo');
+      }).catch(err => {
+        console.error('[Firebase] Error /tables:', err);
+      });
+    }).catch(err => {
+      console.error('[Firebase] Init falló:', err);
+    });
+  }
+
+  // Auto-refresh dashboard every 10s
+  setInterval(()=>{
+    if(document.getElementById('view-dashboard').classList.contains('active'))renderDashboard();
+  },10000);
+}
+
+console.log('%cFRV Catacaos — Panel Bar v2.0','color:#FFD600;font-size:14px;font-weight:bold');
+</script>
 </body>
 </html>
