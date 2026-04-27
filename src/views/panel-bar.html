@@ -1259,19 +1259,13 @@ tr:hover td{background:var(--glass);}
     </div>
   </div>
 
-   <div class="header-right">
-     <div class="clock-wrap" id="clock">00:00:00</div>
-     <div class="btn-notif" id="notif-bell">
-       🔔
-       <div class="notif-badge" id="notif-count">0</div>
-     </div>
-     <button class="btn-notif" id="btn-connect-printer" onclick="connectPrinter()" title="Conectar Impresora">
-       🖨️
-     </button>
-     <button class="btn-notif" id="btn-print-ticket" onclick="printLatestTicket()" title="Imprimir Ticket" style="display:none">
-       🧾
-     </button>
-   </div>
+    <div class="header-right">
+      <div class="clock-wrap" id="clock">00:00:00</div>
+      <div class="btn-notif" id="notif-bell">
+        🔔
+        <div class="notif-badge" id="notif-count">0</div>
+      </div>
+    </div>
 </header>
 
 <!-- SIDEBAR -->
@@ -1419,11 +1413,10 @@ tr:hover td{background:var(--glass);}
       </div>
 
       <div class="panel-footer">
-        <div class="totals-block">
-          <div class="total-line"><span class="lbl">Subtotal</span><span class="val" id="p-sub">$0.00</span></div>
-          <div class="total-line"><span class="lbl">IGV (10%)</span><span class="val" id="p-tax">$0.00</span></div>
-          <div class="total-line grand"><span class="lbl">TOTAL</span><span class="val" id="p-total">$0.00</span></div>
-        </div>
+       <div class="totals-block">
+         <div class="total-line"><span class="lbl">Subtotal</span><span class="val" id="p-sub">$0.00</span></div>
+         <div class="total-line grand"><span class="lbl">TOTAL</span><span class="val" id="p-total">$0.00</span></div>
+       </div>
         <div class="pay-tabs">
           <button class="ptab active" onclick="setPay('efectivo',this)">💵 Efectivo</button>
           <button class="ptab" onclick="setPay('tarjeta',this)">💳 Tarjeta</button>
@@ -2106,11 +2099,8 @@ function renderPosCart(){
 }
 
 function updatePosTotal(sub){
-  const tax=sub*0.10;
-  const total=sub+tax;
   document.getElementById('p-sub').textContent=`S/ ${sub.toFixed(2)}`;
-  document.getElementById('p-tax').textContent=`S/ ${tax.toFixed(2)}`;
-  document.getElementById('p-total').textContent=`S/ ${total.toFixed(2)}`;
+  document.getElementById('p-total').textContent=`S/ ${sub.toFixed(2)}`;
 }
 
 function setPay(method,el){
@@ -2122,8 +2112,8 @@ function setPay(method,el){
 
 function checkout(){
   if(!state.cart.length)return;
-  const sub=state.cart.reduce((a,i)=>a+i.price*i.qty,0);
-  const total=sub*1.10;
+   const sub=state.cart.reduce((a,i)=>a+i.price*i.qty,0);
+   const total=sub;
   const table=state.tables.find(t=>t.id===state.cartTableId);
 
   // Deduct inventory
@@ -2774,16 +2764,15 @@ function printSaleTicket(sale){
     `Ticket: #${String(sale.id).slice(-6)}`,
     `Mesa:   ${sale.tableNum}`,
     `Hora:   ${sale.ts}`,
-    '--------------------------------',
-    ...sale.items.map(i=>{
-      const n=i.name.padEnd(14).substring(0,14);
-      return`${n} x${i.qty}  S/${(i.price*i.qty).toFixed(2)}`;
-    }),
-    '--------------------------------',
-    `Subtotal:    S/ ${sale.sub.toFixed(2)}`,
-    `IGV (10%):   S/ ${(sale.total-sale.sub).toFixed(2)}`,
-    `TOTAL:       S/ ${sale.total.toFixed(2)}`,
-    `Pago:        ${sale.method.toUpperCase()}`,
+     '--------------------------------',
+     ...sale.items.map(i=>{
+       const n=i.name.padEnd(14).substring(0,14);
+       return`${n} x${i.qty}  S/${(i.price*i.qty).toFixed(2)}`;
+     }),
+     '--------------------------------',
+     `Subtotal:    S/ ${sale.sub.toFixed(2)}`,
+     `TOTAL:       S/ ${sale.total.toFixed(2)}`,
+     `Pago:        ${sale.method.toUpperCase()}`,
     '================================',
     '    ¡Gracias por su visita!',
     '================================',
